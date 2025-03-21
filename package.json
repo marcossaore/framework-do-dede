@@ -1,0 +1,19 @@
+{
+  "name": "uai",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/main/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.5",
+    "@types/reflect-metadata": "^0.1.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "elysia": "^1.2.25",
+    "reflect-metadata": "^0.2.2"
+  }
+}
