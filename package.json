@@ -1,24 +1,42 @@
 {
-  "name": "uai",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "./dist/index.js",
+  "name": "framework-do-dede",
+  "version": "0.0.1",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "scripts": {
-    "dev": "bun --watch src/main/index.ts",
-    "build:js": "bun build ./src/index.ts --outdir ./dist --format esm",
-    "build:types": "tsc --emitDeclarationOnly --outDir dist",
-    "build": "bun run build:js && bun run build:types"
+  "description": "",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
   },
+  "scripts": {
+    "build": "bun run build.ts",
+    "prepare": "bun run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "bun"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/marcossaore/uai#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcossaore/uai.git"
+  },
+  "bugs": "https://github.com/marcossaore/uai/issues",
+  "author": "Marcos Soares",
   "devDependencies": {
-    "@types/bun": "^1.2.5",
     "@types/reflect-metadata": "^0.1.0",
-    "bun-plugin-dts": "^0.3.0"
+    "bun-plugin-dtsx": "^0.21.9"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@types/bun": "^1.2.5",
     "reflect-metadata": "^0.2.2"
   }
 }
