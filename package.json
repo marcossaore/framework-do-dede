@@ -21,12 +21,12 @@
     "bun"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/marcossaore/uai#readme",
+  "homepage": "https://github.com/marcossaore/framework-do-dede#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/marcossaore/uai.git"
+    "url": "git+https://github.com/marcossaore/framework-do-dede.git"
   },
-  "bugs": "https://github.com/marcossaore/uai/issues",
+  "bugs": "https://github.com/marcossaore/framework-do-dede/issues",
   "author": "Marcos Soares",
   "devDependencies": {
     "@types/reflect-metadata": "^0.1.0",
