@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "bun run build.ts",
-    "prepare": "bun run build"
+    "prepare": "bun i && bun run build"
   },
   "files": [
     "dist"
