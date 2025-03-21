@@ -2,13 +2,18 @@
   "name": "uai",
   "version": "1.0.0",
   "type": "module",
-  "main": "src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "bun --watch src/main/index.ts"
+    "dev": "bun --watch src/main/index.ts",
+    "build:js": "bun build ./src/index.ts --outdir ./dist --format esm",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist",
+    "build": "bun run build:js && bun run build:types"
   },
   "devDependencies": {
     "@types/bun": "^1.2.5",
-    "@types/reflect-metadata": "^0.1.0"
+    "@types/reflect-metadata": "^0.1.0",
+    "bun-plugin-dts": "^0.3.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

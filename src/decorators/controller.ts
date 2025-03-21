@@ -1,7 +1,7 @@
 import { FrameworkError } from "@/http/FrameworkError";
-import type { HttpMiddleware } from "@/protocols/HttpMiddleware";
 import type Validation from "@/protocols/Validation";
 import { Registry } from "@/di/registry";
+import type { HttpMiddleware } from "@/protocols";
 const middlewares: Map<string, HttpMiddleware> = new Map();
 
 export function Controller(basePath: string) {

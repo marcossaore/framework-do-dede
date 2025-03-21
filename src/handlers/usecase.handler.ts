@@ -1,5 +1,5 @@
-import type { UseCase } from "@/protocols/UseCase";
 import { Registry } from "@/di/registry";
+import type { UseCase } from "@/protocols";
 
 type RequestData = {
   headers: any,

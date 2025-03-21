@@ -8,6 +8,14 @@
     "jsx": "react-jsx",
     "allowJs": true,
 
+
+    //output mode
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationDir": "./dist",
+    "rootDir": "./src",
+    "esModuleInterop": true,
+
     // Bundler mode
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -32,5 +40,6 @@
     "paths": {
       "@/*": ["./src/*"]
     }
-  }
+  },
+  "include": ["src/**/*"] 
 }
