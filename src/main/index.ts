@@ -5,9 +5,9 @@ import HttpServer from "@/http/HttpServer";
 import { BadRequest } from "@/http/ServerError";
 import type { HttpMiddleware } from "@/protocols/HttpMiddleware";
 import type { UseCase } from "@/protocols/UseCase";
-import type Validation from "@/protocols/Validation";
 import { Registry } from "@/di/registry";
 import Elysia from "elysia";
+import type { Validation } from "@/protocols";
 
 Registry.register('controllers', []);
 
