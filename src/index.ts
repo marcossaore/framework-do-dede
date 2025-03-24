@@ -17,10 +17,12 @@ interface Validation {
     validate(input: any): any;
 }
  
-interface RequestData {
-    headers: any,
-    data: any,
-    middlewareData: any
+class RequestData {
+    constructor(
+        public headers: any,
+        public data: any,
+        public middlewareData: any
+    ) {}
 }
 
 class UseCaseHandler {
