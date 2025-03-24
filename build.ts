@@ -11,6 +11,20 @@ await Promise.all([
   Bun.build({
     ...defaultBuildConfig,
     format: 'esm',
+    naming: "[dir]/[name].ts",
+    plugins: [
+      dts({
+        cwd: './',
+        root: './src', 
+        outdir: './dist',
+        keepComments: true,
+        tsconfigPath: './tsconfig.json',
+      }),
+    ],
+  }),
+  Bun.build({
+    ...defaultBuildConfig,
+    format: 'esm',
     naming: "[dir]/[name].js",
     plugins: [
       dts({
