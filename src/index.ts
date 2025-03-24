@@ -16,6 +16,11 @@ export interface Validation {
     validate(input: any): any;
 }
  
+export type RequestData = {
+    headers: any,
+    data: any,
+    middlewareData: any
+}
 
 export {
     Dede,
