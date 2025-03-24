@@ -2,7 +2,20 @@ import { Dede, Register as DedeRegister, Options as DedeOptions } from './dede'
 import { Controller, Post, Put, Get, Delete, Patch, Validator, Middleware, Auth, Inject } from './decorators'
 import { UseCaseHandler } from './handlers'
 import { ServerError } from './http'
-import { HttpMiddleware, Validation, UseCase } from './protocols'
+
+
+export interface HttpMiddleware {
+    execute(input: any): Promise<any>
+}
+
+export interface UseCase<Input, Output>  {
+    execute(input: Input): Promise<Output>
+}
+
+export interface Validation {
+    validate(input: any): any;
+}
+ 
 
 export {
     Dede,
@@ -10,9 +23,6 @@ export {
     DedeOptions,
     UseCaseHandler,
     ServerError,
-    HttpMiddleware,
-    Validation,
-    UseCase,
     Controller,
     Post,
     Put,
