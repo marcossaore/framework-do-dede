@@ -1,4 +1,4 @@
-export default interface HttpMiddleware {
+export type HttpMiddleware = {
     execute(input: any): Promise<any>
   }
   

@@ -1,4 +1,4 @@
-export default interface Validation {
+export type Validation = {
     validate(input: any): any;
 }
   
