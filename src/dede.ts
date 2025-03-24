@@ -1,0 +1,49 @@
+import { Registry } from "./di/registry";
+import { ControllerHandler } from "./handlers";
+import { HttpServer } from "./http";
+import { ElysiaHttpServer } from "./http/ElysiaHttpServer";
+
+export type Register = {
+    name: string,
+    classLoader: any,
+    autoLoad?: boolean
+}
+
+export type Options = {
+    framework: {
+        use: 'elysia' | 'express',
+        port?: number,
+        middlewares?: CallableFunction[]
+    },
+    registries: Register[]
+}
+
+
+export class Dede {
+    static async init ({ framework, registries }: Options): Promise<void> {
+        this.registerControllers();
+        await this.loadRegistries(registries);
+        let httpServer!: HttpServer
+        if (framework.use === 'elysia') {
+            httpServer = new ElysiaHttpServer(framework.middlewares || [])
+        }
+        new ControllerHandler(httpServer, framework.port || 80)
+        this.clearControllers()
+    }
+
+
+    private static registerControllers() {
+        Registry.register('controllers', []);
+    }
+
+    private static clearControllers() {
+        Registry.clear('controllers');
+    }
+
+    private static async loadRegistries(registries: Register []) {
+        registries.forEach(({ classLoader, name, autoLoad = true}) => {
+            if (autoLoad) Registry.register(name, Registry.classLoader(classLoader));
+            else Registry.register(name, classLoader);
+        })
+    }
+}

@@ -1,25 +1,18 @@
-import { Registry } from "./di/registry";
-import { Auth, Controller, Delete, Get, Post, Put, Validator } from "@/decorators";
-import { HttpMiddleware, UseCase, Validation } from '@/protocols';
-import { HttpServer, ServerError } from '@/http';
-import { UseCaseHandler, ControllerHandler } from "@/handlers";
-
-Registry.register('controllers', []);
+import { Dede, Register as DedeRegister, Options as DedeOptions } from './dede'
+import { Controller, Post, Put, Get, Delete, Patch, Validator, Middleware, Auth, Inject } from './decorators'
 
 export {
-    Registry,
-    Auth,
+    Dede,
+    DedeRegister,
+    DedeOptions,
     Controller,
-    Delete,
-    Get,
     Post,
     Put,
+    Get,
+    Delete,
+    Patch,
     Validator,
-    HttpMiddleware,
-    UseCase,
-    Validation,
-    HttpServer,
-    ServerError,
-    UseCaseHandler,
-    ControllerHandler
+    Middleware,
+    Auth,
+    Inject
 }

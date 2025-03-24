@@ -39,7 +39,7 @@ export default abstract class HttpServer {
         return this;
     }
 
-    register(httpServerParams: HttpServerParams, handler: CallableFunction) {
+    register(httpServerParams: HttpServerParams, handler: CallableFunction): void {
         const route = this.mountRoute(httpServerParams)
         if (this.frameworkName === 'elysia') return this.elysia(httpServerParams, route, handler)
     }
