@@ -4,16 +4,19 @@ import { UseCaseHandler } from './handlers'
 import { ServerError } from './http'
 import { HttpMiddleware, Validation, UseCase } from './protocols'
 
-
-export {
-    Dede,
-    DedeRegister,
-    DedeOptions,
-    UseCaseHandler,
-    ServerError,
+export type {
     HttpMiddleware,
     Validation,
     UseCase,
+    DedeRegister,
+    DedeOptions,
+}
+
+
+export {
+    Dede,
+    UseCaseHandler,
+    ServerError,
     Controller,
     Post,
     Put,
