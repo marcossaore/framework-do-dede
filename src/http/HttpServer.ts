@@ -42,6 +42,7 @@ export default abstract class HttpServer {
     register(httpServerParams: HttpServerParams, handler: CallableFunction): void {
         const route = this.mountRoute(httpServerParams)
         if (this.frameworkName === 'elysia') return this.elysia(httpServerParams, route, handler)
+        return this.express(httpServerParams, route, handler)
     }
 
     listen(port: number): void {
@@ -85,6 +86,32 @@ export default abstract class HttpServer {
                   statusCode: 500
                 }
               }
+        })
+    }
+
+    private express (httpServerParams: HttpServerParams, route: string, handler: CallableFunction) {
+        const method = httpServerParams.method as AllowedMethods
+        this.framework[method](route, async (request: any, res: any) => {
+            try {
+                const output = await handler({
+                    headers: request.headers,
+                    query: request.query,
+                    params: request.params,
+                    body: request.body
+                })
+                return res.status(httpServerParams.statusCode ?? 200).json(output)
+            } catch (error: any) {
+                if (error instanceof ServerError) {
+                    return res.status(error.getStatusCode()).json({
+                        error: error.message,
+                        statusCode: error.getStatusCode()
+                    })
+                }
+                return res.status(500).json({
+                    error: this.defaultMessageError,
+                    statusCode: 500
+                })
+            }
         })
     }
 }

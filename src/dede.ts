@@ -2,6 +2,7 @@ import { Registry } from "./di/registry";
 import { ControllerHandler } from "./handlers";
 import { HttpServer } from "./http";
 import { ElysiaHttpServer } from "./http/ElysiaHttpServer";
+import { ExpressHttpServer } from "./http/ExpressHttpServer";
 
 export type Register = {
     name: string,
@@ -26,6 +27,9 @@ export class Dede {
         let httpServer!: HttpServer
         if (framework.use === 'elysia') {
             httpServer = new ElysiaHttpServer(framework.middlewares || [])
+        }
+        if (framework.use === 'express') {
+            httpServer = new ExpressHttpServer(framework.middlewares || [])
         }
         new ControllerHandler(httpServer, framework.port || 80)
         this.clearControllers()
