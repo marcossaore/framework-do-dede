@@ -4,25 +4,29 @@ import { UseCaseHandler } from './handlers'
 import { ServerError } from './http'
 
 
-export interface HttpMiddleware {
+interface HttpMiddleware {
     execute(input: any): Promise<any>
 }
 
-export interface UseCase<Input, Output>  {
+interface UseCase<Input, Output>  {
     execute(input: Input): Promise<Output>
 }
 
-export interface Validation {
+interface Validation {
     validate(input: any): any;
 }
  
-export type RequestData = {
+type RequestData = {
     headers: any,
     data: any,
     middlewareData: any
 }
 
 export {
+    UseCase,
+    HttpMiddleware,
+    Validation,
+    RequestData,
     Dede,
     DedeRegister,
     DedeOptions,
