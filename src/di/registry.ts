@@ -1,4 +1,4 @@
-import { Inject } from '@/decorators';
+import { Inject } from '../decorators';
 import 'reflect-metadata';
 
 class ComponentRegistry {
