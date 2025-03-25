@@ -30,8 +30,10 @@ export class Dede {
         if (framework.use === 'express') {
             httpServer = new ExpressHttpServer(framework.middlewares || [])
         }
-        new ControllerHandler(httpServer, framework.port || 80)
-        this.clearControllers()
+        if(Registry.has('controllers')){
+            new ControllerHandler(httpServer, framework.port || 80)
+            this.clearControllers()
+        }
     }
 
     private static clearControllers() {
