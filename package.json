@@ -14,7 +14,7 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && tsc-alias",
     "prepare": "npm run build"
   },
   "files": [
@@ -39,6 +39,7 @@
     "@types/reflect-metadata": "^0.1.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.3.0",
+    "tsc-alias": "^1.8.11",
     "typescript": "^5.8.2"
   },
   "peerDependencies": {
