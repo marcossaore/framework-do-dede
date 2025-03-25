@@ -1,6 +1,6 @@
 import type { AllowedMethods, HttpStatusCode } from "@/http/HttpServer"
-import type Validation from "./Validation"
-import type HttpMiddleware from "./HttpMiddleware"
+import type { Validation } from "./Validation"
+import type { HttpMiddleware } from "./HttpMiddleware"
 
 export type Controller = {
     instance: any

@@ -22,7 +22,6 @@ export type Options = {
 
 export class Dede {
     static async init ({ framework, registries }: Options): Promise<void> {
-        this.registerControllers();
         await this.loadRegistries(registries);
         let httpServer!: HttpServer
         if (framework.use === 'elysia') {
@@ -33,11 +32,6 @@ export class Dede {
         }
         new ControllerHandler(httpServer, framework.port || 80)
         this.clearControllers()
-    }
-
-
-    private static registerControllers() {
-        Registry.register('controllers', []);
     }
 
     private static clearControllers() {

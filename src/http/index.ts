@@ -1,4 +1,4 @@
 import HttpServer from "./HttpServer";
-import { ServerError } from "./ServerError";
+import { ServerError, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, BadRequest } from "./ServerError";
 
-export { ServerError, HttpServer }  
+export { ServerError, BadRequest, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, HttpServer }  

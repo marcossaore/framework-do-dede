@@ -1,12 +1,13 @@
 import { FrameworkError } from "@/http/FrameworkError";
-import type Validation from "@/protocols/Validation";
+import { Validation } from "@/protocols/Validation";
 import { Registry } from "@/di/registry";
-import type { HttpMiddleware } from "@/protocols";
+import { HttpMiddleware } from "@/protocols";
 const middlewares: Map<string, HttpMiddleware> = new Map();
 
 export function Controller(basePath: string) {
     return function (target: any) {
         Reflect.defineMetadata('basePath', basePath, target);
+        if(!Registry.has('controllers')) Registry.register('controllers', []);
         Registry.addDependency('controllers', target);
     };
 }

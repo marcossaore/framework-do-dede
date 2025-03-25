@@ -1,21 +1,8 @@
 import { Dede, Register as DedeRegister, Options as DedeOptions } from './dede'
 import { Controller, Post, Put, Get, Delete, Patch, Validator, Middleware, Auth, Inject } from './decorators'
-import { UseCaseHandler } from './handlers'
-import { ServerError } from './http'
-import { Registry } from './di/registry'
-
-
-interface HttpMiddleware {
-    execute(input: any): Promise<any>
-}
-
-interface UseCase<Input, Output>  {
-    execute(input: Input): Promise<Output>
-}
-
-interface Validation {
-    validate(input: any): any;
-}
+import { BadRequest, Conflict, Forbidden, HttpServer, NotFound, ServerError, Unauthorized, UnprocessableEntity } from './http'
+import { Validation, HttpMiddleware, UseCase } from './protocols'
+import { Registry } from './di/registry';
  
 class RequestData {
     constructor(
@@ -38,7 +25,7 @@ class UseCaseHandler {
       }
       return instance
     }
-  }
+}
 
 export {
     UseCase,
@@ -50,6 +37,13 @@ export {
     DedeOptions,
     UseCaseHandler,
     ServerError,
+    BadRequest,
+    Conflict,
+    Forbidden,
+    HttpServer,
+    NotFound,
+    Unauthorized,
+    UnprocessableEntity,
     Controller,
     Post,
     Put,

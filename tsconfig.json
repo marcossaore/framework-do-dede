@@ -1,25 +1,15 @@
 {
   "compilerOptions": {
-    "incremental": true,
-    "target": "esnext",
-    "lib": ["esnext"],
-    "moduleDetection": "force",
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "types": ["node"],
-    "allowImportingTsExtensions": true,
-    "strict": true,
-    "strictNullChecks": true,
+    "target": "ESNext",
+    "module": "ESNext",
     "declaration": true,
-    "declarationMap": true,
-    "noEmit": true,
     "outDir": "./dist",
+    "rootDir": ".",
+    "strict": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedDeclarations": true,
-    "skipDefaultLibCheck": true,
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "bundler",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "baseUrl": ".",
@@ -27,5 +17,28 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*"] 
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules"]
 }
+
+
+// {
+//   "compilerOptions": {
+//     "target": "ES2024",
+//     "module": "commonjs",
+//     "rootDir": ".",
+//     "outDir": "./dist",
+//     "baseUrl": ".",
+//     "paths": {
+//       "@/*": ["./src/*"]
+//     },
+//     "strict": true,
+//     "esModuleInterop": true,
+//     "skipLibCheck": true,
+//     "forceConsistentCasingInFileNames": true, 
+//     "emitDecoratorMetadata": true,
+//     "experimentalDecorators": true
+//   },
+//   "include": ["src/**/*", "tests/**/*"],
+//   "exclude": ["node_modules"]
+// }

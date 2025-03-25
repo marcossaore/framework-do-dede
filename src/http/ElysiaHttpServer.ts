@@ -1,3 +1,4 @@
+// @ts-ignore 
 import Elysia from "elysia";
 import HttpServer from "./HttpServer";
 

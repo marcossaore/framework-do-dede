@@ -6,14 +6,18 @@ class ComponentRegistry {
     private dependencies: Map<string, any> = new Map();
 
     static getInstance(): ComponentRegistry {
-        if (!ComponentRegistry.instance) {
-            ComponentRegistry.instance = new ComponentRegistry();
+        if (!this.instance) {
+            this.instance = new ComponentRegistry();
         }
-        return ComponentRegistry.instance;
+        return this.instance;
     }
 
     register(token: string, dependency: any): void {
         this.dependencies.set(token, dependency);
+    }
+
+    has(token: string): boolean {
+        return this.dependencies.has(token);
     }
 
     addDependency(token: string, dependency: any): void {

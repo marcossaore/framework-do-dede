@@ -12,8 +12,10 @@
     "require": "./dist/index.cjs"
   },
   "scripts": {
-    "build": "bun run build.ts",
-    "prepare": "bun run build"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build"
   },
   "files": [
     "dist"
@@ -30,14 +32,21 @@
   "bugs": "https://github.com/marcossaore/framework-do-dede/issues",
   "author": "Marcos Soares",
   "devDependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/preset-env": "^7.26.9",
+    "@babel/preset-typescript": "^7.27.0",
+    "@types/jest": "^29.5.14",
     "@types/reflect-metadata": "^0.1.0",
-    "bun-plugin-dtsx": "^0.21.9"
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.0",
+    "typescript": "^5.8.2"
   },
   "peerDependencies": {
+    "elysia": "^1.2.25",
+    "express": "^4.21.2",
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "@types/bun": "^1.2.5",
     "reflect-metadata": "^0.2.2"
   }
 }

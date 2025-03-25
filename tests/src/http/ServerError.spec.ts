@@ -1,5 +1,4 @@
 import { BadRequest, Conflict, Forbidden, NotFound, ServerError, Unauthorized, UnprocessableEntity } from '@/http/ServerError';
-import { describe, expect, it } from 'bun:test'
 
   // Test subclass to validate abstract class behavior
   class TestServerError extends ServerError {

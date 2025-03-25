@@ -1,6 +1,5 @@
-import { beforeEach, describe, expect, it, test } from 'bun:test'
 import { Registry } from '@/di/registry';
-import type Validation from '@/protocols/Validation';
+import type { Validation } from '@/protocols/Validation';
 import { Controller, Delete, Get, Post, Put, Validator } from '@/decorators';
 
 
@@ -13,7 +12,7 @@ describe('Controller Decorators', () => {
   describe('@controller', () => {
     it('should register controller and set basePath metadata', () => {
       @Controller('/users')
-      class UserController {}
+      class UserController { }
 
       const controllers = Registry.resolve<any[]>('controllers');
       expect(controllers).toContain(UserController);
@@ -23,10 +22,10 @@ describe('Controller Decorators', () => {
 
     it('should accumulate multiple controllers', () => {
       @Controller('/auth')
-      class AuthController {}
+      class AuthController { }
 
       @Controller('/products')
-      class ProductController {}
+      class ProductController { }
 
       const controllers = Registry.resolve<any[]>('controllers');
       expect(controllers).toHaveLength(2);
@@ -38,8 +37,8 @@ describe('Controller Decorators', () => {
       {
         decorator: Post,
         method: 'post',
-        config: { 
-          path: '/custom', 
+        config: {
+          path: '/custom',
           statusCode: 201,
           params: ['id'],
           query: ['filter']
@@ -66,7 +65,7 @@ describe('Controller Decorators', () => {
       @Controller('/api')
       class TestController {
         @decorator(config)
-        testMethod() {}
+        testMethod() { }
       }
 
       const metadata = Reflect.getMetadata(
@@ -88,10 +87,10 @@ describe('Controller Decorators', () => {
       @Controller('/multi')
       class MultiController {
         @Post({ path: '/create' })
-        create() {}
+        create() { }
 
         @Get({ path: '/list' })
-        list() {}
+        list() { }
       }
 
       const postMetadata = Reflect.getMetadata(
@@ -99,7 +98,7 @@ describe('Controller Decorators', () => {
         MultiController.prototype,
         'create'
       );
-      
+
       const getMetadata = Reflect.getMetadata(
         'route',
         MultiController.prototype,
@@ -113,7 +112,7 @@ describe('Controller Decorators', () => {
     it('should use default values when config omitted', () => {
       class DefaultController {
         @Get()
-        fetch() {}
+        fetch() { }
       }
 
       const metadata = Reflect.getMetadata(
@@ -135,7 +134,7 @@ describe('Controller Decorators', () => {
   describe('Edge Cases', () => {
     it('should handle empty basePath', () => {
       @Controller('')
-      class EmptyPathController {}
+      class EmptyPathController { }
 
       expect(Reflect.getMetadata('basePath', EmptyPathController)).toBe('');
     });
@@ -146,7 +145,7 @@ describe('Controller Decorators', () => {
 
       expect(() => {
         @Controller('/invalid')
-        class InvalidController {}
+        class InvalidController { }
       }).toThrowError('Dependency must be an array');
     });
   });
@@ -162,7 +161,7 @@ describe('validation decorator', () => {
 
     class TestClass {
       @Validator(Validate)
-      someMethod() {}
+      someMethod() { }
     }
 
     const metadata = Reflect.getMetadata(
