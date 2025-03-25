@@ -1,8 +1,9 @@
 import { Dede, Register as DedeRegister, Options as DedeOptions } from './dede'
-import { Controller, Post, Put, Get, Delete, Patch, Validator, Middleware, Auth, Inject } from './decorators'
+import { Controller, Post, Put, Get, Delete, Patch, Validator, Middleware, Auth, Inject, Restrict } from './decorators'
 import { BadRequest, Conflict, Forbidden, HttpServer, NotFound, ServerError, Unauthorized, UnprocessableEntity } from './http'
 import { Validation, HttpMiddleware, UseCase } from './protocols'
 import { Registry } from './di/registry';
+import { Entity } from './domain/Entity'
  
 class RequestData {
     constructor(
@@ -53,5 +54,7 @@ export {
     Validator,
     Middleware,
     Auth,
-    Inject
+    Inject,
+    Entity,
+    Restrict
 }
