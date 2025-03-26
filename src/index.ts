@@ -19,10 +19,10 @@ class UseCaseHandler {
       request?: RequestData
     ): T {
       const instance = Registry.classLoader(useCaseClass);
-      const auth = Reflect.getMetadata("auth", useCaseClass);
+      const authProperty  = Reflect.getMetadata("auth", useCaseClass.prototype.constructor);
       const context = request
-      if (auth && context?.middlewareData) {
-        (instance as any)[auth] = context.middlewareData[auth]
+      if (authProperty  && context?.middlewareData?.[authProperty]) {
+        (instance as any)[authProperty] = {...context.middlewareData[authProperty]}
       }
       return instance
     }
