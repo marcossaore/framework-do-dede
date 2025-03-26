@@ -6,7 +6,7 @@ import { HttpMiddleware } from "@/protocols";
 export function Controller(basePath: string) {
     return function (target: any) {
         Reflect.defineMetadata('basePath', basePath, target);
-        if(!Registry.has('controllers')) Registry.register('controllers', []);
+        if (!Registry.has('controllers')) Registry.register('controllers', []);
         Registry.addDependency('controllers', target);
     };
 }
@@ -30,35 +30,18 @@ export function Controller(basePath: string) {
 //     };
 // }
 
-export function Middleware(
-    middlewareClass: new (...args: any[]) => HttpMiddleware,
-    constructorArgs: any[]
-  ) {
+export function Middleware(middlewareClass: new (...args: any[]) => HttpMiddleware) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-      if (typeof middlewareClass.prototype.execute !== 'function') {
-        throw new FrameworkError('The concrete class does not implement the Middleware interface.');
-      }
-  
-      // Retrieve existing middlewares for this method or initialize an empty array
-      const middlewares: HttpMiddleware[] = Reflect.getMetadata('middlewares', target, propertyKey) || [];
+        if (!middlewareClass.prototype.execute) {
+            throw new FrameworkError('Middleware must implement execute()');
+        }
 
-      if (constructorArgs && constructorArgs.length > 0) {
-        constructorArgs = constructorArgs.map(arg => {
-          if (typeof arg === 'function') {
-            return Registry.resolve(arg);
-          }
-          return arg;
-        });
-      }
-  
-      // Create a new instance of the middleware with provided arguments
-      const middlewareInstance = new middlewareClass(...constructorArgs);
-      middlewares.push(middlewareInstance);
-  
-      // Update the metadata with the new array of middleware instances
-      Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
+        const middlewares: Array<new (...args: any[]) => HttpMiddleware> = Reflect.getMetadata('middlewares', target, propertyKey) || [];
+
+        middlewares.push(middlewareClass);
+        Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
     };
-  }
+}
 
 
 export function Post(config: { path?: string, statusCode?: number, params?: string[], query?: string[] } = {}) {

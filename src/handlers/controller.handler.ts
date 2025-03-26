@@ -1,6 +1,7 @@
 import HttpServer from "@/http/HttpServer"
 import type { Controller } from "@/protocols/Controller"
 import { Registry } from "@/di/registry"
+import { HttpMiddleware } from "@/protocols"
 
 type Input = {
     headers: any
@@ -52,7 +53,7 @@ export default class ControllerHandler {
             for (const methodName of methodNames) {
                 const validation = Reflect.getMetadata('validation', controller.prototype, methodName);
                 const routeConfig = Reflect.getMetadata('route', controller.prototype, methodName);
-                const middlewares = Reflect.getMetadata('middlewares', controller.prototype, methodName);
+                const middlewares:  Array<new (...args: any[]) => HttpMiddleware> = Reflect.getMetadata('middlewares', controller.prototype, methodName);
                 controllers.push({
                     method: routeConfig.method,
                     route: basePath + routeConfig.path,
@@ -61,7 +62,7 @@ export default class ControllerHandler {
                     statusCode: routeConfig.statusCode,
                     instance,
                     instanceMethod: methodName,
-                    middlewares,
+                    middlewares: middlewares.map(middleware => Registry.classLoader(middleware)),
                     validation
                 });
             }
