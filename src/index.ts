@@ -1,7 +1,7 @@
 import { Dede, Register as DedeRegister, Options as DedeOptions } from './dede'
 import { Controller, Post, Put, Get, Delete, Patch, Validator, Middleware, Auth, Inject, Restrict } from './decorators'
 import { BadRequest, Conflict, Forbidden, HttpServer, NotFound, ServerError, Unauthorized, UnprocessableEntity } from './http'
-import { Validation, HttpMiddleware, UseCase } from './protocols'
+import { Validation, HttpMiddleware, UseCase, CreateRepository, DeleteRepository, UpdateRepository, RestoreRepository } from './protocols'
 import { Registry } from './di/registry';
 import { Entity } from './domain/Entity'
  
@@ -32,6 +32,10 @@ export {
     UseCase,
     HttpMiddleware,
     Validation,
+    CreateRepository,
+    DeleteRepository,
+    UpdateRepository,
+    RestoreRepository,
     RequestData,
     Dede,
     DedeRegister,
