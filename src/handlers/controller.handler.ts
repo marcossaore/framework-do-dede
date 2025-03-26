@@ -62,7 +62,7 @@ export default class ControllerHandler {
                     statusCode: routeConfig.statusCode,
                     instance,
                     instanceMethod: methodName,
-                    middlewares: middlewares.map(middleware => Registry.classLoader(middleware)),
+                    middlewares: middlewares ? middlewares.map(middleware => Registry.classLoader(middleware)) : [],
                     validation
                 });
             }

@@ -37,8 +37,8 @@ export function Middleware(middlewareClass: new (...args: any[]) => HttpMiddlewa
         }
 
         const middlewares: Array<new (...args: any[]) => HttpMiddleware> = Reflect.getMetadata('middlewares', target, propertyKey) || [];
-
         middlewares.push(middlewareClass);
+        
         Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
     };
 }
