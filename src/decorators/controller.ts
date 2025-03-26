@@ -30,22 +30,36 @@ export function Controller(basePath: string) {
 //     };
 // }
 
-export function Middleware(middlewareClass: new (...args: any[]) => HttpMiddleware) {
+export function Middleware(
+    middlewareClass: new (...args: any[]) => HttpMiddleware,
+    constructorArgs: any[]
+  ) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-      if (!middlewareClass.prototype.execute) {
-        throw new FrameworkError('Middleware must implement execute()');
+      if (typeof middlewareClass.prototype.execute !== 'function') {
+        throw new FrameworkError('The concrete class does not implement the Middleware interface.');
       }
   
-      // Get existing middlewares or initialize empty array
-      const middlewares = Reflect.getMetadata('middlewares', target, propertyKey) || [];
-      
-      // Store the middleware class reference
-      middlewares.push(middlewareClass);
-      
-      // Update metadata
+      // Retrieve existing middlewares for this method or initialize an empty array
+      const middlewares: HttpMiddleware[] = Reflect.getMetadata('middlewares', target, propertyKey) || [];
+
+      if (constructorArgs && constructorArgs.length > 0) {
+        constructorArgs = constructorArgs.map(arg => {
+          if (typeof arg === 'function') {
+            return Registry.resolve(arg);
+          }
+          return arg;
+        });
+      }
+  
+      // Create a new instance of the middleware with provided arguments
+      const middlewareInstance = new middlewareClass(...constructorArgs);
+      middlewares.push(middlewareInstance);
+  
+      // Update the metadata with the new array of middleware instances
       Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
     };
   }
+
 
 export function Post(config: { path?: string, statusCode?: number, params?: string[], query?: string[] } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
