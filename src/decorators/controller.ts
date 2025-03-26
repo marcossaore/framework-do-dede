@@ -2,7 +2,6 @@ import { FrameworkError } from "@/http/FrameworkError";
 import { Validation } from "@/protocols/Validation";
 import { Registry } from "@/di/registry";
 import { HttpMiddleware } from "@/protocols";
-const middlewares: Map<string, HttpMiddleware> = new Map();
 
 export function Controller(basePath: string) {
     return function (target: any) {
@@ -12,24 +11,41 @@ export function Controller(basePath: string) {
     };
 }
 
-export function Middleware(middlewareClass: new () => HttpMiddleware) {
+// export function Middleware(middlewareClass: new () => HttpMiddleware) {
+//     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+//         if (typeof middlewareClass.prototype.execute !== 'function') {
+//             throw new FrameworkError('The concrete class does not implement the Middleware interface.');
+//         }
+
+//         // Retrieve existing middlewares for this method or initialize an empty array
+//         const middlewares: HttpMiddleware[] = Reflect.getMetadata('middlewares', target, propertyKey) || [];
+
+//         // Create a new instance of the middleware and add it to the array
+//         const middlewareInstance = new middlewareClass();
+//         middlewares.push(middlewareInstance);
+
+
+//         // Update the metadata with the new array of middleware instances
+//         Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
+//     };
+// }
+
+export function Middleware(middlewareClass: new (...args: any[]) => HttpMiddleware) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        if (typeof middlewareClass.prototype.execute !== 'function') {
-            throw new FrameworkError('The concrete class does not implement the Middleware interface.');
-        }
-
-        // Retrieve existing middlewares for this method or initialize an empty array
-        const middlewares: HttpMiddleware[] = Reflect.getMetadata('middlewares', target, propertyKey) || [];
-
-        // Create a new instance of the middleware and add it to the array
-        const middlewareInstance = new middlewareClass();
-        middlewares.push(middlewareInstance);
-
-
-        // Update the metadata with the new array of middleware instances
-        Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
+      if (!middlewareClass.prototype.execute) {
+        throw new FrameworkError('Middleware must implement execute()');
+      }
+  
+      // Get existing middlewares or initialize empty array
+      const middlewares = Reflect.getMetadata('middlewares', target, propertyKey) || [];
+      
+      // Store the middleware class reference
+      middlewares.push(middlewareClass);
+      
+      // Update metadata
+      Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
     };
-}
+  }
 
 export function Post(config: { path?: string, statusCode?: number, params?: string[], query?: string[] } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
