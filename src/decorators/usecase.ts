@@ -1,8 +1,8 @@
-export function Auth(propertyName: string = 'auth'): Function {
+export function Auth(): Function {
   return function (target: any, propertyKey: string): void {
     Reflect.defineMetadata(
       "auth",
-      propertyName,
+      "auth",
       target.constructor
     );
   };
