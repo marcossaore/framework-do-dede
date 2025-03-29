@@ -62,8 +62,9 @@ export default abstract class HttpServer {
 
     private elysia (httpServerParams: HttpServerParams, route: string, handler: CallableFunction) {
         const method = httpServerParams.method as AllowedMethods
-        (this.framework[method])(route, async ({ headers, set, query, params, body, request, path }: any) => {
+        (this.framework[method])(route, async ({ headers, set, query, params, body, request }: any) => {
             try {
+                headers['ip'] = (this.framework as any).server?.requestIP(request).address
                 set.status = httpServerParams.statusCode ?? 200
                 const output = await handler({
                   headers,
@@ -92,6 +93,7 @@ export default abstract class HttpServer {
     private express (httpServerParams: HttpServerParams, route: string, handler: CallableFunction) {
         const method = httpServerParams.method as AllowedMethods
         this.framework[method](route, async (request: any, res: any) => {
+            request.headers['ip'] = request.ip
             try {
                 const output = await handler({
                     headers: request.headers,

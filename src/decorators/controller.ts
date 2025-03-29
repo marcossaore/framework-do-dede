@@ -1,7 +1,7 @@
 import { FrameworkError } from "@/http/FrameworkError";
 import { Validation } from "@/protocols/Validation";
 import { Registry } from "@/di/registry";
-import { HttpMiddleware } from "@/protocols";
+import { HttpMiddleware, RequestMetricsHandler } from "@/protocols";
 
 export function Controller(basePath: string) {
     return function (target: any) {
@@ -10,25 +10,6 @@ export function Controller(basePath: string) {
         Registry.addDependency('controllers', target);
     };
 }
-
-// export function Middleware(middlewareClass: new () => HttpMiddleware) {
-//     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-//         if (typeof middlewareClass.prototype.execute !== 'function') {
-//             throw new FrameworkError('The concrete class does not implement the Middleware interface.');
-//         }
-
-//         // Retrieve existing middlewares for this method or initialize an empty array
-//         const middlewares: HttpMiddleware[] = Reflect.getMetadata('middlewares', target, propertyKey) || [];
-
-//         // Create a new instance of the middleware and add it to the array
-//         const middlewareInstance = new middlewareClass();
-//         middlewares.push(middlewareInstance);
-
-
-//         // Update the metadata with the new array of middleware instances
-//         Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
-//     };
-// }
 
 export function Middleware(middlewareClass: new (...args: any[]) => HttpMiddleware) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
@@ -115,3 +96,14 @@ export function Validator(validationClass: new () => Validation) {
     };
 }
 
+export function Metrics(...handlers: (new (...args: any[]) => RequestMetricsHandler)[]): MethodDecorator {
+    return (target: Object, propertyKey: string | symbol, descriptor: PropertyDescriptor) => {
+        Reflect.defineMetadata('metricsHandlers', handlers, target, propertyKey);
+    };
+}
+
+export function OffConsoleLog() {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        Reflect.defineMetadata('offConsoleLog', true, target, propertyKey);
+    };
+}

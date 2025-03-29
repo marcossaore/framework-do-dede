@@ -5,6 +5,7 @@ import type { CreateRepository } from './CreateRepository'
 import type { DeleteRepository } from './DeleteRepository'
 import type { UpdateRepository } from './UpdateRepository'
 import type { RestoreRepository } from './RestoreRepository'
+import type { RequestMetricsHandler } from './RequestMetricsHandler'
 
 export type {
     HttpMiddleware,
@@ -13,5 +14,6 @@ export type {
     CreateRepository,
     DeleteRepository,
     UpdateRepository,
-    RestoreRepository
+    RestoreRepository,
+    RequestMetricsHandler
 }
