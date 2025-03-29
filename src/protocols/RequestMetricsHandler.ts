@@ -1,5 +1,7 @@
 import { RequestMetrics } from "@/handlers/controller.handler";
+import type { RequestData } from './RequestData'
+
 
 export interface RequestMetricsHandler {
-    handle(metrics: RequestMetrics): Promise<void> | void;
+    handle(metrics: RequestMetrics, request?: RequestData): Promise<void> | void;
 }

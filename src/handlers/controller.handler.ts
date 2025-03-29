@@ -1,7 +1,7 @@
 import HttpServer from "@/http/HttpServer"
 import type { Controller } from "@/protocols/Controller"
 import { Registry } from "@/di/registry"
-import { HttpMiddleware, RequestMetricsHandler } from "@/protocols"
+import { HttpMiddleware, RequestData, RequestMetricsHandler } from "@/protocols"
 import { ServerError } from "@/http"
 
 type Input = {
@@ -74,7 +74,7 @@ export default class ControllerHandler {
                             middlewareData = { ...middlewareResult, ...middlewareData }
                         }
                     }
-                    const request = { headers: input.headers, data: mergedParams, middlewareData }
+                    const request: RequestData = { headers: input.headers, data: mergedParams, middlewareData }
                     try {
                         const response = await instance[instanceMethod](mergedParams, request)
                         if (!offLogs) console.log('\x1b[32m%s\x1b[0m', `✅ [LOG] Finish: "${logger.handler.instance}.${logger.handler.method}:" - ${requestMetrics.elapsedTime}ms`)
@@ -88,7 +88,7 @@ export default class ControllerHandler {
 
                         if (metricsHandlers?.length) {
                             await Promise.all(
-                                metricsHandlers.map((handler: RequestMetricsHandler) => handler.handle(requestMetrics))
+                                metricsHandlers.map((handler: RequestMetricsHandler) => handler.handle(requestMetrics, request))
                             );
                         }
                     }
