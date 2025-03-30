@@ -1,5 +1,5 @@
-import { RequestMetrics } from "@/handlers/controller.handler";
 import type { RequestData } from './RequestData'
+import type { RequestMetrics } from './RequestMetrics';
 
 
 export interface RequestMetricsHandler {

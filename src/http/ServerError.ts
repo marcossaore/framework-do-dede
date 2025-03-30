@@ -47,4 +47,16 @@ export abstract class ServerError extends Error {
       super(message, 400)
     }
   }
+
+  export class InternalServerError extends ServerError {
+    private unexpectedError: string;
+    constructor(unexpectedError: string, defaultMessage: string = 'Ops, An unexpected error occurred') {
+      super(defaultMessage, 500)
+      this.unexpectedError = unexpectedError; 
+    }
+
+    getUnexpectedError() {
+      return this.unexpectedError;
+    }
+  }
   

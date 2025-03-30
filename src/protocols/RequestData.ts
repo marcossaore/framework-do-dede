@@ -1,4 +1,4 @@
-export type RequestData =  {
+export interface RequestData  {
     headers: any,
     data: any,
     middlewareData: any

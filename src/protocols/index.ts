@@ -7,10 +7,12 @@ import type { UpdateRepository } from './UpdateRepository'
 import type { RestoreRepository } from './RestoreRepository'
 import type { RequestMetricsHandler } from './RequestMetricsHandler'
 import type { RequestData } from './RequestData'
-
+import type { RequestMetrics } from './RequestMetrics'
+import type { HttpServerError } from './HttpServerError'
 
 export type {
     RequestData,
+    RequestMetrics,
     HttpMiddleware,
     UseCase,
     Validation,
@@ -18,5 +20,6 @@ export type {
     DeleteRepository,
     UpdateRepository,
     RestoreRepository,
-    RequestMetricsHandler
+    RequestMetricsHandler,
+    HttpServerError
 }

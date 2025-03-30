@@ -1,5 +1,4 @@
 import { FrameworkError } from "./FrameworkError"
-import { ServerError } from "./ServerError"
 
 export type HttpStatusCode = 200 | 201 | 204 | 401 | 403 | 404 | 409 | 422 | 500
 
@@ -26,7 +25,7 @@ type FrameworkWeb = {
 export default abstract class HttpServer {
     protected framework: FrameworkWeb
     protected frameworkName: string;
-    protected defaultMessageError = 'Ops, An unexpected error occurred';
+    private defaultMessageError: string | undefined;
 
     constructor(framework: FrameworkWeb, frameworkName: 'elysia' | 'express') {
         if (frameworkName !== 'elysia' && frameworkName !== 'express') throw new FrameworkError('Framework not supported')
@@ -45,6 +44,14 @@ export default abstract class HttpServer {
         return this.express(httpServerParams, route, handler)
     }
 
+    setDefaultMessageError(message: string): void {
+        this.defaultMessageError = message
+    }
+
+    getDefaultMessageError(): string | undefined {
+        return this.defaultMessageError
+    }
+
     listen(port: number): void {
         this.framework.listen(port)
     }
@@ -60,60 +67,34 @@ export default abstract class HttpServer {
         return httpServerParams.route
     }
 
-    private elysia (httpServerParams: HttpServerParams, route: string, handler: CallableFunction) {
+    private elysia(httpServerParams: HttpServerParams, route: string, handler: CallableFunction) {
         const method = httpServerParams.method as AllowedMethods
         (this.framework[method])(route, async ({ headers, set, query, params, body, request }: any) => {
-            try {
-                headers['ip'] = (this.framework as any).server?.requestIP(request).address
-                set.status = httpServerParams.statusCode ?? 200
-                const output = await handler({
-                  headers,
-                  query,
-                  params,
-                  body
-                })
-                return output
-              } catch (error: any) {
-                if (error instanceof ServerError) {
-                  set.status = error.getStatusCode()
-                  return {
-                    error: error.message,
-                    statusCode: error.getStatusCode()
-                  }
-                }
-                set.status = 500
-                return {
-                  error: this.defaultMessageError,
-                  statusCode: 500
-                }
-              }
+            headers['ip'] = (this.framework as any).server?.requestIP(request).address
+            set.status = httpServerParams.statusCode ?? 200
+            const output = await handler({
+                setStatus: (statusCode: HttpStatusCode) => set.status = statusCode,
+                headers,
+                query,
+                params,
+                body
+            })
+            return output
         })
     }
 
-    private express (httpServerParams: HttpServerParams, route: string, handler: CallableFunction) {
+    private express(httpServerParams: HttpServerParams, route: string, handler: CallableFunction) {
         const method = httpServerParams.method as AllowedMethods
         this.framework[method](route, async (request: any, res: any) => {
             request.headers['ip'] = request.ip
-            try {
-                const output = await handler({
-                    headers: request.headers,
-                    query: request.query,
-                    params: request.params,
-                    body: request.body
-                })
-                return res.status(httpServerParams.statusCode ?? 200).json(output)
-            } catch (error: any) {
-                if (error instanceof ServerError) {
-                    return res.status(error.getStatusCode()).json({
-                        error: error.message,
-                        statusCode: error.getStatusCode()
-                    })
-                }
-                return res.status(500).json({
-                    error: this.defaultMessageError,
-                    statusCode: 500
-                })
-            }
+            const output = await handler({
+                setStatus: (statusCode: HttpStatusCode) => res.status(statusCode),
+                headers: request.headers,
+                query: request.query,
+                params: request.params,
+                body: request.body
+            })
+            return res.status(httpServerParams.statusCode ?? 200).json(output)
         })
     }
 }
