@@ -25,6 +25,7 @@ export default class ControllerHandler {
                     query,
                 },
                 async (input: Input) => {
+                    let wasError = false;
                     const startTime = performance.now()
                     const requestMetrics: RequestMetrics = {
                         date: new Date(),
@@ -52,13 +53,42 @@ export default class ControllerHandler {
                     const filterParams = this.filter(input.params, params)
                     const queryParams = this.filter(input.query, query)
                     let mergedParams = { ...filterParams, ...queryParams, ...(input.body || {}) }
-                    if (validation) mergedParams = validation.validate({ ...filterParams, ...queryParams, ...(input.body || {}) });
                     const request: RequestData = { headers: input.headers, data: mergedParams, middlewareData: {} }
+                    try {
+                        if (validation) {
+                            if (!offLogs) Log.info(`⏳  [LOG] Executing validations`)
+                            mergedParams = validation.validate({ ...filterParams, ...queryParams, ...(input.body || {}) });
+                        }
+                    } catch (error) {
+                        const capturedError = this.extractError(error, httpServer);
+                        requestMetrics.error = capturedError;
+                        input.setStatus(capturedError.statusCode);
+                        const endTime = performance.now();
+                        if (!offLogs) {
+                            Log.error(`❌ [LOG] Error validations: "${logger.handler.instance}.${logger.handler.method}"` + ` - in: ${(endTime - startTime).toFixed(2)} ms`)
+                            Log.error(JSON.stringify(error))
+                        }
+                        wasError = true
+                        return {
+                            message: capturedError.message,
+                            statusCode: capturedError.statusCode
+                        };
+                    } finally {
+                        if (wasError) {
+                            const endTime = performance.now();
+                            requestMetrics.elapsedTime = `${(endTime - startTime).toFixed(2)} ms`;
+
+                            if (metricsHandlers?.length) {
+                                await Promise.all(
+                                    metricsHandlers.map((handler: RequestMetricsHandler) => handler.handle(requestMetrics, request))
+                                );
+                            }
+                        }
+                    }
                     let middlewareData = {}
                     if (middlewares) {
                         if (!offLogs) Log.info(`⏳  [LOG] Executing middlewares`)
                         let count = 0;
-                        let wasError = false;
                         for (const middleware of middlewares) {
                             try {
                                 const endTime = performance.now()
@@ -93,7 +123,7 @@ export default class ControllerHandler {
                             }
                         }
                     }
-                   if (middlewareData) request.middlewareData = middlewareData
+                    if (middlewareData) request.middlewareData = middlewareData
                     try {
                         const response = await instance[instanceMethod](mergedParams, request)
                         if (!offLogs) {
@@ -107,7 +137,7 @@ export default class ControllerHandler {
                         input.setStatus(capturedError.statusCode)
                         if (!offLogs) {
                             const endTime = performance.now()
-                            Log.error(`❌ [LOG] Error: "${logger.handler.instance}.${logger.handler.method}"` + ` - in: ${(endTime -startTime).toFixed(2)} ms`)
+                            Log.error(`❌ [LOG] Error: "${logger.handler.instance}.${logger.handler.method}"` + ` - in: ${(endTime - startTime).toFixed(2)} ms`)
                             Log.error(JSON.stringify(error))
                         }
                         return {

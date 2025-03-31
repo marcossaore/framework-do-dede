@@ -8,6 +8,7 @@ export class ExpressHttpServer extends HttpServer {
     
     constructor(uses?: CallableFunction[]) {
         super(app, 'express')
+        this.framework.use(express.json());
         uses?.forEach(use => this.framework.use(use))
     }
 

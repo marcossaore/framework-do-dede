@@ -86,15 +86,16 @@ export default abstract class HttpServer {
     private express(httpServerParams: HttpServerParams, route: string, handler: CallableFunction) {
         const method = httpServerParams.method as AllowedMethods
         this.framework[method](route, async (request: any, res: any) => {
-            request.headers['ip'] = request.ip
+            request.headers['ip'] = request.ipç
+            res.status(httpServerParams.statusCode ?? 200)
             const output = await handler({
                 setStatus: (statusCode: HttpStatusCode) => res.status(statusCode),
                 headers: request.headers,
                 query: request.query,
                 params: request.params,
-                body: request.body
+                body: method !== 'get' ? request.body : {}
             })
-            return res.status(httpServerParams.statusCode ?? 200).json(output)
+            return res.json(output)
         })
     }
 }
