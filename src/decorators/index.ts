@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Put, Delete, Patch, Validator, Middleware, Metrics, OffConsoleLog } from './controller';
 import { Auth } from './usecase'
 import { Inject } from './di'
-import { Restrict } from './entity'
+import { Restrict, DbColumn } from './entity'
 
 export {
     Controller, Middleware,
@@ -11,5 +11,6 @@ export {
     Post, Get, Put, Delete, Patch,
     Auth,
     Inject,
-    Restrict
+    Restrict, 
+    DbColumn
 }
