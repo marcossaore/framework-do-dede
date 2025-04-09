@@ -1,5 +1,5 @@
 import { Entity } from "@/domain/Entity";
 
-export interface UpdateRepository {
-    update(input: Entity): Promise<void>
+export interface UpdateRepository <T extends Entity> {
+    update(input: T): Promise<void>
 }
