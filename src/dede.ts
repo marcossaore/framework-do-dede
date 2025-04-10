@@ -16,12 +16,13 @@ export type Options = {
         port?: number,
         middlewares?: CallableFunction[]
     },
-    registries: Register[]
+    registries: Register[],
+    defaultServerError?: string
 }
 
 
 export class Dede {
-    static async init ({ framework, registries }: Options): Promise<void> {
+    static async init ({ framework, registries, defaultServerError }: Options): Promise<void> {
         await this.loadRegistries(registries);
         let httpServer!: HttpServer
         if (framework.use === 'elysia') {
@@ -30,6 +31,7 @@ export class Dede {
         if (framework.use === 'express') {
             httpServer = new ExpressHttpServer(framework.middlewares || [])
         }
+        if (defaultServerError) httpServer.setDefaultMessageError(defaultServerError)
         if(Registry.has('controllers')){
             new ControllerHandler(httpServer, framework.port || 80)
             this.clearControllers()
