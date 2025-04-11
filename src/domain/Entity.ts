@@ -10,6 +10,7 @@ export abstract class Entity {
     }
 
     public toSave(): Record<string, any> {
+        this.beforeSave();
         const result: Record<string, any> = {};
         const processedKeys = new Set<string>();
         
@@ -47,4 +48,6 @@ export abstract class Entity {
     
         return result;
     }
+
+    public beforeSave() {}
 }
