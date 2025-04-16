@@ -59,14 +59,14 @@ export default class ControllerHandler {
                             if (!offLogs) Log.info(`⏳  [LOG] Executing validations`)
                             mergedParams = validation.validate({ ...filterParams, ...queryParams, ...(input.body || {}) });
                         }
-                    } catch (error) {
+                    } catch (error: any) {
                         const capturedError = this.extractError(error, httpServer);
                         requestMetrics.error = capturedError;
                         input.setStatus(capturedError.statusCode);
                         const endTime = performance.now();
                         if (!offLogs) {
                             Log.error(`❌ [LOG] Error validations: "${logger.handler.instance}.${logger.handler.method}"` + ` - in: ${(endTime - startTime).toFixed(2)} ms`)
-                            Log.error(JSON.stringify(error))
+                            Log.error(JSON.stringify(this.transformErrorOnJSON(error)))
                         }
                         wasError = true
                         return {
@@ -103,7 +103,7 @@ export default class ControllerHandler {
                                 const endTime = performance.now()
                                 if (!offLogs) {
                                     Log.error(`❌ [LOG] Error middleware: "${logger.handler.instance}.${logger.handler.method}"` + ` - in: ${(endTime - startTime).toFixed(2)} ms`)
-                                    Log.error(JSON.stringify(error))
+                                    Log.error(JSON.stringify(this.transformErrorOnJSON(error)))
                                 }
                                 return {
                                     message: capturedError.message,
@@ -138,7 +138,7 @@ export default class ControllerHandler {
                         if (!offLogs) {
                             const endTime = performance.now()
                             Log.error(`❌ [LOG] Error: "${logger.handler.instance}.${logger.handler.method}"` + ` - in: ${(endTime - startTime).toFixed(2)} ms`)
-                            Log.error(JSON.stringify(error))
+                            Log.error(JSON.stringify(this.transformErrorOnJSON(error)))
                         }
                         return {
                             message: capturedError.message,
@@ -158,6 +158,10 @@ export default class ControllerHandler {
             )
         }
         httpServer.listen(port)
+    }
+
+    private transformErrorOnJSON (error: any) {
+        return error instanceof ServerError ? error : { message: error.message, stack: error.stack }
     }
 
     private registryControllers() {
