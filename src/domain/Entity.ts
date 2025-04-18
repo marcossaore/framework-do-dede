@@ -49,5 +49,5 @@ export abstract class Entity {
         return result;
     }
 
-    public beforeSave() {}
+    protected beforeSave() {}
 }
