@@ -51,13 +51,13 @@ export default class ControllerHandler {
                         Log.info(JSON.stringify(logger))
                     }
                     const filterParams = this.filter(input.params, params)
-                    const queryParams = this.filter(input.query, query)
-                    let mergedParams = { ...filterParams, ...queryParams, ...(input.body || {}) }
+                    const filterQueryParams = this.filter(input.query, query)
+                    let mergedParams = { ...filterParams, ...filterQueryParams, ...(input.body || {}) }
                     const request: RequestData = { headers: input.headers, data: mergedParams, middlewareData: {} }
                     try {
                         if (validation) {
                             if (!offLogs) Log.info(`⏳  [LOG] Executing validations`)
-                            mergedParams = validation.validate({ ...filterParams, ...queryParams, ...(input.body || {}) });
+                            mergedParams = validation.validate({ ...filterParams, ...filterQueryParams, ...(input.body || {}) });
                         }
                     } catch (error: any) {
                         const capturedError = this.extractError(error, httpServer);
@@ -202,7 +202,7 @@ export default class ControllerHandler {
         for (const paramName of filterParams || []) {
             const [paramNameFiltered, type] = paramName.split('|')
             let value = params[paramName] || params[paramNameFiltered]
-            if (!value) return
+            if (!value) continue
             if (type === 'boolean') value = value === 'true'
             if (type === 'integer') {
                 value = value.replace(/[^0-9]/g, '')
