@@ -1,4 +1,4 @@
 
 export interface ExistsById  {
-    create(id: number | string): Promise<boolean>
+    existsById(id: number | string): Promise<boolean>
 }
