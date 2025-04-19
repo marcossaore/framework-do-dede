@@ -5,6 +5,7 @@ import type { CreateRepository } from './CreateRepository'
 import type { DeleteRepository } from './DeleteRepository'
 import type { UpdateRepository } from './UpdateRepository'
 import type { RestoreRepository } from './RestoreRepository'
+import type { ExistsById } from './ExistsById'
 import type { RestoreManyRepository } from './RestoreManyRepository'
 import type { RequestMetricsHandler } from './RequestMetricsHandler'
 import type { RequestData } from './RequestData'
@@ -23,5 +24,6 @@ export type {
     RestoreRepository,
     RestoreManyRepository,
     RequestMetricsHandler,
-    HttpServerError
+    HttpServerError,
+    ExistsById
 }
