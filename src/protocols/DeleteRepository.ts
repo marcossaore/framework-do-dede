@@ -1,5 +1,3 @@
-import { Entity } from "@/domain/Entity";
-
-export interface DeleteRepository <T extends Entity> {
-    delete(input: T): Promise<void>
+export interface DeleteRepository{
+    delete(id: string | number): Promise<void>
 }
