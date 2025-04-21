@@ -1,6 +1,10 @@
-export function Auth(): PropertyDecorator {
+export function Auth(metadataKey: string): PropertyDecorator {
   return function (target: Object, propertyKey: string | symbol): void {
     const type = Reflect.getMetadata('design:type', target, propertyKey);
-    Reflect.defineMetadata('propertyType', type, target.constructor);
+    Reflect.defineMetadata(
+      metadataKey,
+      type,
+      target.constructor
+    );
   };
 }
