@@ -94,7 +94,7 @@ export default class ControllerHandler {
                                 const endTime = performance.now()
                                 const middlewareResult = await middleware.execute({ headers: input.headers, ...mergedParams })
                                 Log.info(` ${++count} - middleware : ${(endTime - startTime).toFixed(2)} ms`)
-                                middlewareData = { ...middlewareResult, ...middlewareData }
+                                middlewareData = Object.assign(middlewareData, middlewareResult)
                             } catch (error) {
                                 wasError = true
                                 const capturedError = this.extractError(error, httpServer);
