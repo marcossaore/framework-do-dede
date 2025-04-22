@@ -12,10 +12,10 @@ class UseCaseHandler {
   ): T {
     const instance = Registry.classLoader(useCaseClass);
     const context = request;
-    const prototype = useCaseClass.prototype;
-    Reflect.ownKeys(prototype).forEach((propertyKey) => {
-      const middlewareKey = Reflect.getMetadata('auth', prototype, propertyKey);
-      if (middlewareKey && context?.middlewareData?.[middlewareKey]) {
+    const authMetadata: Array<{ propertyKey: string, middlewareKey: string }> = 
+      Reflect.getMetadata('auth', useCaseClass) || [];
+    authMetadata.forEach(({ propertyKey, middlewareKey }) => {
+      if (context?.middlewareData?.[middlewareKey]) {
         (instance as any)[propertyKey] = context.middlewareData[middlewareKey];
       }
     });
