@@ -1,7 +1,7 @@
-export function Auth(middlewareKey: string) {
+export function Context(middlewareKey: string) {
   return function (target: any, propertyKey: string) {
-    const metadata = Reflect.getMetadata('auth', target.constructor) || [];
+    const metadata = Reflect.getMetadata('context', target.constructor) || [];
     metadata.push({ propertyKey, middlewareKey });
-    Reflect.defineMetadata('auth', metadata, target.constructor);
+    Reflect.defineMetadata('context', metadata, target.constructor);
   };
 }

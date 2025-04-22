@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Put, Delete, Patch, Validator, Middleware, Metrics, OffConsoleLog } from './controller';
-import { Auth } from './usecase'
+import { Context } from './usecase'
 import { Inject } from './di'
 import { Restrict, DbColumn } from './entity'
 
@@ -9,7 +9,7 @@ export {
     Metrics,
     OffConsoleLog,
     Post, Get, Put, Delete, Patch,
-    Auth,
+    Context,
     Inject,
     Restrict, 
     DbColumn
