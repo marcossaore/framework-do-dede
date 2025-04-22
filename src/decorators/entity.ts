@@ -7,6 +7,16 @@ export function Restrict() {
     };
 }
 
+export function VirtualProperty(propertyName: string) {
+    return function (target: any, methodName: string, descriptor: PropertyDescriptor) {
+        const ctor = target.constructor;
+        if (!ctor._exposedProperties) {
+            ctor._exposedProperties = new Map();
+        }
+        ctor._exposedProperties.set(propertyName, methodName);
+    };
+}
+
 export function DbColumn(mapping: string | Record<string, string>) {
     return function (target: Object, propertyKey: string) {
         const ctor = target.constructor as any;

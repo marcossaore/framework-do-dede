@@ -4,9 +4,24 @@ export abstract class Entity {
     public attributes (): Record<string, any> {
         const ctor = this.constructor as any;
         const restrictedProps = ctor._restrictedProperties || new Set();
-        return Object.fromEntries(
-            Object.entries(this).filter(([key]) => !restrictedProps.has(key))
-        );
+        const exposedProps = ctor._exposedProperties || new Map();
+        const attributes: Record<string, any> = {};
+
+        for (const [key, value] of Object.entries(this)) {
+            if (!restrictedProps.has(key)) {
+                attributes[key] = value;
+            }
+        }
+
+        for (const [propName, methodName] of exposedProps) {
+            // @ts-ignore
+            if (!restrictedProps.has(propName) && typeof this[methodName] === "function") {
+                // @ts-ignore
+                attributes[propName] = this[methodName]();
+            }
+        }
+
+        return attributes;
     }
 
     public toSave(): Record<string, any> {
