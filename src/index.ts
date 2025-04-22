@@ -14,7 +14,7 @@ class UseCaseHandler {
       const authProperty  = Reflect.getMetadata("auth", useCaseClass.prototype.constructor);
       const context = request
       if (authProperty  && context?.middlewareData?.[authProperty]) {
-        (instance as any)[authProperty] = {...context.middlewareData[authProperty]}
+        (instance as any)[authProperty] = context.middlewareData[authProperty]
       }
       return instance
     }
