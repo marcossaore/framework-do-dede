@@ -1,7 +1,7 @@
 import { Dede, Register as DedeRegister, Options as DedeOptions } from './dede'
-import { Controller, Post, Put, Get, Delete, Patch, Validator, Middleware, Context, Inject, Restrict, Metrics, DbColumn, VirtualProperty, OffConsoleLog } from './decorators'
+import { Controller, Post, Put, Get, Delete, Patch, Validator, Middleware, Context, Inject, Restrict, Metrics, DbColumn, VirtualProperty, OffConsoleLog, Storage } from './decorators'
 import { BadRequest, Conflict, Forbidden, HttpServer, NotFound, ServerError, Unauthorized, UnprocessableEntity } from './http'
-import { Validation, HttpMiddleware, UseCase, CreateRepository, ExistsById, DeleteRepository, UpdateRepository, RestoreRepository, RestoreManyRepository, RequestMetricsHandler, RequestData, RequestMetrics, HttpServerError } from './protocols'
+import { Validation, HttpMiddleware, UseCase, CreateRepository, ExistsById, DeleteRepository, UpdateRepository, RestoreRepository, RestoreManyRepository, RequestMetricsHandler, RequestData, RequestMetrics, HttpServerError, StorageGateway } from './protocols'
 import { Registry } from './di/registry';
 import { Entity } from './domain/Entity'
 
@@ -64,5 +64,7 @@ export {
   DbColumn,
   VirtualProperty,
   Metrics,
-  OffConsoleLog
+  OffConsoleLog,
+  StorageGateway,
+  Storage
 }

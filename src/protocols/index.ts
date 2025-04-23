@@ -11,6 +11,7 @@ import type { RequestMetricsHandler } from './RequestMetricsHandler'
 import type { RequestData } from './RequestData'
 import type { RequestMetrics } from './RequestMetrics'
 import type { HttpServerError } from './HttpServerError'
+import type { StorageGateway } from './StorageGateway'
 
 export type {
     RequestData,
@@ -25,5 +26,6 @@ export type {
     RestoreManyRepository,
     RequestMetricsHandler,
     HttpServerError,
+    StorageGateway,
     ExistsById
 }
