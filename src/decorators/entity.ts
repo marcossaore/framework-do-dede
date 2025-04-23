@@ -7,13 +7,43 @@ export function Restrict() {
     };
 }
 
+export type ExposeConfig = {
+    mapping?: string | Record<string, string>;
+    deserialize?: (value: any) => any | Promise<any>;
+};
+
+export function Expose(configOrMapping: ExposeConfig | string): PropertyDecorator {
+    return function (target: any, propertyKey: string | symbol) {
+        const ctor = target.constructor;
+        const configs = ctor._exposeConfigs || (ctor._exposeConfigs = new Map<string | symbol, ExposeConfig[]>());
+        if (typeof configOrMapping === "string") {
+            configs.set(propertyKey, [
+                ...(configs.get(propertyKey) || []),
+                { 
+                    mapping: configOrMapping,
+                    deserialize: (value: any) => value
+                }
+            ]);
+        } 
+        else {
+            configs.set(propertyKey, [
+                ...(configs.get(propertyKey) || []),
+                {
+                    mapping: configOrMapping.mapping,
+                    deserialize: configOrMapping.deserialize || ((value: any) => value)
+                }
+            ]);
+        }
+    };
+}
+
 export function VirtualProperty(propertyName: string) {
     return function (target: any, methodName: string, descriptor: PropertyDescriptor) {
         const ctor = target.constructor;
-        if (!ctor._exposedProperties) {
-            ctor._exposedProperties = new Map();
+        if (!ctor._virtualProperties) {
+            ctor._virtualProperties = new Map();
         }
-        ctor._exposedProperties.set(propertyName, methodName);
+        ctor._virtualProperties.set(propertyName, methodName);
     };
 }
 

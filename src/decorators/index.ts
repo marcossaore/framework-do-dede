@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Put, Delete, Patch, Validator, Middleware, Metrics, OffConsoleLog } from './controller';
 import { Context } from './usecase'
 import { Inject } from './di'
-import { Restrict, DbColumn, VirtualProperty } from './entity'
+import { Restrict, DbColumn, VirtualProperty, Expose } from './entity'
 import { Storage } from './services'
 
 export {
@@ -15,5 +15,6 @@ export {
     Restrict, 
     DbColumn,
     Storage,
+    Expose,
     VirtualProperty
 }
