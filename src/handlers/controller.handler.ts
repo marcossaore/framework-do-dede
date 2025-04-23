@@ -125,7 +125,7 @@ export default class ControllerHandler {
                     }
                     if (middlewareData) request.middlewareData = middlewareData
                     try {
-                        const response = await instance[instanceMethod](mergedParams, request)
+                        const response = await instance[instanceMethod]({ input: mergedParams, request })
                         if (!offLogs) {
                             const endTime = performance.now()
                             Log.success(`✅ [LOG] Finish: "${logger.handler.instance}.${logger.handler.method}" - in: ${(endTime - startTime).toFixed(2)} ms`)
