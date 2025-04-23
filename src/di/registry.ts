@@ -55,12 +55,6 @@ class ComponentRegistry {
         this.isLoading = false
     }
 
-    whenLoaded(callback: () => void): void {
-        while (this.isLoading) {
-            setTimeout(callback, 100);
-        }
-        callback();
-    }
 }
 
 export const Registry = ComponentRegistry.getInstance();
