@@ -4,7 +4,7 @@ import 'reflect-metadata';
 class ComponentRegistry {
     private static instance: ComponentRegistry;
     private dependencies: Map<string, any> = new Map();
-    private isLoading: boolean = true
+    private isLoading: boolean = true;
 
     static getInstance(): ComponentRegistry {
         if (!this.instance) {
@@ -55,8 +55,11 @@ class ComponentRegistry {
         this.isLoading = false
     }
 
-    isLoaded(): boolean {
-        return !this.isLoading
+    whenLoaded(callback: () => void): void {
+        while (this.isLoading) {
+            setTimeout(callback, 100);
+        }
+        callback();
     }
 }
 
