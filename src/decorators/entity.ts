@@ -17,17 +17,30 @@ export function VirtualProperty(propertyName: string) {
     };
 }
 
-export function DbColumn(mapping: string | Record<string, string>) {
+type DbColumnConfig = {
+    mapping?: string | Record<string, string>;
+    serialize?: (value: any) => any | Promise<any>;
+};
+
+export function DbColumn(config: string | Record<string, string> | DbColumnConfig) {
     return function (target: Object, propertyKey: string) {
         const ctor = target.constructor as any;
+        let actualMapping: string | Record<string, string>;
+        let serialize: ((value: any) => any | Promise<any>) | undefined;
 
-        if (!Object.prototype.hasOwnProperty.call(ctor, '_dbColumns')) {
-            ctor._dbColumns = new Set();
+        if (typeof config === 'string') {
+            actualMapping = config;
+        } else if (typeof config === 'object') {
+            if ('serialize' in config || 'mapping' in config) {
+                actualMapping = config.mapping ?? propertyKey;
+                // @ts-ignore
+                serialize = config.serialize;
+            } else {
+                // @ts-ignore
+                actualMapping = config;
+            }
+        } else {
+            throw new Error('Configuração inválida para @DbColumn');
         }
-
-        ctor._dbColumns.add({
-            property: propertyKey,
-            mapping: mapping
-        });
     };
 }
