@@ -1,11 +1,12 @@
 
 export abstract class Entity {
 
-    public attributes (): Record<string, any> {
+    public async get(): Promise<Record<string, any>> {
         const ctor = this.constructor as any;
         const restrictedProps = ctor._restrictedProperties || new Set();
         const exposedProps = ctor._exposedProperties || new Map();
         const attributes: Record<string, any> = {};
+        await this.beforeGet();
 
         for (const [key, value] of Object.entries(this)) {
             if (!restrictedProps.has(key)) {
@@ -24,8 +25,8 @@ export abstract class Entity {
         return attributes;
     }
 
-    public toSave(): Record<string, any> {
-        this.beforeSave();
+    public async toSave(): Promise<Record<string, any>> {
+        await this.beforeSave();
         const result: Record<string, any> = {};
         const processedKeys = new Set<string>();
         
@@ -64,5 +65,6 @@ export abstract class Entity {
         return result;
     }
 
-    protected beforeSave() {}
+    protected async beforeSave() {}
+    protected async beforeGet() {}
 }
