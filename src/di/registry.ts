@@ -4,6 +4,7 @@ import 'reflect-metadata';
 class ComponentRegistry {
     private static instance: ComponentRegistry;
     private dependencies: Map<string, any> = new Map();
+    private isLoading: boolean = true
 
     static getInstance(): ComponentRegistry {
         if (!this.instance) {
@@ -48,6 +49,14 @@ class ComponentRegistry {
 
     inject(token: string) {
         return Inject(token)
+    }
+
+    loaded(): void {
+        this.isLoading = false
+    }
+
+    isLoaded(): boolean {
+        return !this.isLoading
     }
 }
 

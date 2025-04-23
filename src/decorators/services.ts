@@ -4,14 +4,16 @@ import { Log } from "@/utils/Log";
 
 export function Storage(gatewayName: string) {
     return function (target: any, propertyKey: string) {
-      // Verifica se a classe está registrada
+      while (!Registry.isLoaded()) {
+        Log.info('Waiting for dependencies to be loaded...');
+      }
+
       if (!Registry.has(gatewayName)) {
         throw new Error(`StorageGateway ${gatewayName} not registered`);
       }
   
       const GatewayClass = Registry.resolve(gatewayName)!;
       
-      // Valida se a classe registrada é uma subclasse de StorageGateway
       if (!(GatewayClass instanceof StorageGateway)) {
         throw new Error(`${gatewayName} is not a valid StorageGateway`);
       }

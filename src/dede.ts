@@ -47,5 +47,6 @@ export class Dede {
             if (autoLoad) Registry.register(name, Registry.classLoader(classLoader));
             else Registry.register(name, classLoader);
         })
+        Registry.loaded()
     }
 }
