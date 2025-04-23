@@ -4,7 +4,6 @@ import { BadRequest, Conflict, Forbidden, HttpServer, NotFound, ServerError, Una
 import { Validation, HttpMiddleware, UseCase, CreateRepository, ExistsById, DeleteRepository, UpdateRepository, RestoreRepository, RestoreManyRepository, RequestMetricsHandler, RequestData, RequestMetrics, HttpServerError, StorageGateway } from './protocols'
 import { Registry } from './di/registry';
 import { Entity } from './domain/Entity'
-import { Testing } from './utils/Testing';
 
 class UseCaseHandler {
   static load<T extends UseCase<any, any>>(
@@ -68,6 +67,5 @@ export {
   OffConsoleLog,
   StorageGateway,
   Storage,
-  Expose,
-  Testing
+  Expose
 }

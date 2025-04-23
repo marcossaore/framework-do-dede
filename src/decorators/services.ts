@@ -1,16 +1,9 @@
 import { Registry } from "@/di/registry";
 import { StorageGateway } from "@/protocols/StorageGateway";
 import { Log } from "@/utils/Log";
-import { Testing } from "@/utils/Testing";
 
 export function Storage(gatewayName: string) {
     return function (target: any, propertyKey: string) {
-
-      if(Testing.isEnabled()) {
-        Log.info(`@Storage ${gatewayName} is ignored in testing mode`);
-        return
-      }
-
       // Verifica se a classe está registrada
       if (!Registry.has(gatewayName)) {
         throw new Error(`StorageGateway ${gatewayName} not registered`);
