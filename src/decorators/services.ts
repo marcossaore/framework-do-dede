@@ -1,35 +1,34 @@
 import { Registry } from "@/di/registry";
 import { StorageGateway } from "@/protocols/StorageGateway";
 
-export function Storage() {
+export function Storage(gatewayName: string) {
     return function (target: any, propertyKey: string) {
-        const designType = Reflect.getMetadata('design:type', target, propertyKey);
-
-        if (!(designType?.prototype instanceof StorageGateway)) {
-            throw new Error(`@Storage() can only be used with StorageGateway subclasses`);
-        }
-
-        const gatewayName = designType.name;
-
-        if (!Registry.has(gatewayName)) {
-            throw new Error(`StorageGateway ${gatewayName} not registered`);
-        }
-
-        const instanceSymbol = Symbol();
-
-        Object.defineProperty(target, propertyKey, {
-            get: function () {
-                if (!this[instanceSymbol]) {
-                    const GatewayClass = Registry.resolve(gatewayName)!;
-                    this[instanceSymbol] = GatewayClass
-                }
-                return this[instanceSymbol];
-            },
-            set: () => {
-                throw new Error('Cannot assign new value to @Storage() property');
-            },
-            enumerable: true,
-            configurable: true
-        });
+      // Verifica se a classe está registrada
+      if (!Registry.has(gatewayName)) {
+        throw new Error(`StorageGateway ${gatewayName} not registered`);
+      }
+  
+      const GatewayClass = Registry.resolve(gatewayName)!;
+      
+      // Valida se a classe registrada é uma subclasse de StorageGateway
+      if (!(GatewayClass instanceof StorageGateway)) {
+        throw new Error(`${gatewayName} is not a valid StorageGateway`);
+      }
+  
+      const instanceSymbol = Symbol();
+  
+      Object.defineProperty(target, propertyKey, {
+        get: function () {
+          if (!this[instanceSymbol]) {
+            this[instanceSymbol] = GatewayClass
+          }
+          return this[instanceSymbol];
+        },
+        set: () => {
+          throw new Error('Cannot assign new value to @Storage() property');
+        },
+        enumerable: true,
+        configurable: true
+      });
     };
-}
+  }
