@@ -8,7 +8,6 @@ export abstract class Entity {
         const virtualProperties = ctor._virtualProperties || new Map();
         const exposeConfigs = ctor._exposeConfigs || new Map<string, ExposeConfig[]>();
         const attributes: Record<string, any> = {};
-        await this.beforeGet();
 
         for (const [key, value] of Object.entries(this)) {
             if (!restrictedProps.has(key)) {
@@ -56,7 +55,7 @@ export abstract class Entity {
         return attributes;
     }
 
-    public async toSave(): Promise<Record<string, any>> {
+    public async toEntity(): Promise<Record<string, any>> {
         await this.beforeSave();
         const result: Record<string, any> = {};
         const processedKeys = new Set<string>();
@@ -96,6 +95,40 @@ export abstract class Entity {
         return result;
     }
 
+    public async toMap(properties: string[]): Promise<Record<string, any>> {
+        const ctor = this.constructor as any;
+        const exposeConfigs = ctor._exposeConfigs || new Map<string, ExposeConfig[]>();
+        const attributes: Record<string, any> = {};
+        for (const property of properties) {
+            if (exposeConfigs.has(property)) {
+                const rawValue = (this as any)[property];
+                const config = exposeConfigs.get(property);
+                try {
+                    let value = config.deserialize ? await config.deserialize(rawValue) : rawValue;
+
+                    if (config.mapping) {
+                        if (typeof config.mapping === "string") {
+                            attributes[config.mapping] = value;
+                        } else {
+                            Object.entries(config.mapping).forEach(([srcKey, destKey]) => {
+                                // @ts-ignore
+                                attributes[destKey] = value[srcKey];
+                            });
+                        }
+                    } else {
+                        if (typeof value === "object" && value !== null) {
+                            Object.assign(attributes, value);
+                        } else {
+                            attributes[property as string] = value;
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Error in @Expose for ${String(property)}:`, error);
+                }
+            }
+        }
+        return attributes;
+    }
+
     protected async beforeSave() { }
-    protected async beforeGet() { }
 }
