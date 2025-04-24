@@ -100,6 +100,9 @@ export abstract class Entity {
         const exposeConfigs = ctor._exposeConfigs || new Map<string, ExposeConfig[]>();
         const attributes: Record<string, any> = {};
         for (const property of properties) {
+            const rawValue = (this as any)[property];
+            if (!rawValue) continue;
+            attributes[property] = rawValue;
             if (exposeConfigs.has(property)) {
                 const rawValue = (this as any)[property];
                 const config = exposeConfigs.get(property);
