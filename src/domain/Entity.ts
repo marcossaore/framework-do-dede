@@ -60,6 +60,10 @@ export abstract class Entity {
         const dbColumnConfigs = ctor._dbColumnConfigs || new Map<string | symbol, DbColumnConfig<any>[]>();
         const dbRecord: Record<string, any> = {};
 
+        for (const [key, value] of Object.entries(this)) {
+            dbRecord[key] = value;
+        }
+
         for (const [propertyKey, configs] of dbColumnConfigs) {
             const rawValue = (this as any)[propertyKey];
 
