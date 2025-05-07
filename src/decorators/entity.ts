@@ -47,30 +47,33 @@ export function VirtualProperty(propertyName: string) {
     };
 }
 
-type DbColumnConfig = {
-    mapping?: string | Record<string, string>;
-    serialize?: (value: any) => any | Promise<any>;
+export type DbColumnConfig<T = any> = {
+    column?: string | Record<string, string>;
+    serialize?: (value: T) => any | Promise<any>;
 };
 
-export function DbColumn(config: string | Record<string, string> | DbColumnConfig) {
-    return function (target: Object, propertyKey: string) {
-        const ctor = target.constructor as any;
-        let actualMapping: string | Record<string, string>;
-        let serialize: ((value: any) => any | Promise<any>) | undefined;
+export function DbColumn<T>(configOrColumn: DbColumnConfig<T> | string): PropertyDecorator {
+    return function (target: any, propertyKey: string | symbol) {
+        const ctor = target.constructor;
+        const configs = ctor._dbColumnConfigs || (ctor._dbColumnConfigs = new Map<string | symbol, DbColumnConfig<any>[]>());
 
-        if (typeof config === 'string') {
-            actualMapping = config;
-        } else if (typeof config === 'object') {
-            if ('serialize' in config || 'mapping' in config) {
-                actualMapping = config.mapping ?? propertyKey;
-                // @ts-ignore
-                serialize = config.serialize;
-            } else {
-                // @ts-ignore
-                actualMapping = config;
-            }
-        } else {
-            throw new Error('Configuração inválida para @DbColumn');
+        if (typeof configOrColumn === "string") {
+            configs.set(propertyKey, [
+                ...(configs.get(propertyKey) || []),
+                { 
+                    column: configOrColumn,
+                    serialize: (value: any) => value
+                }
+            ]);
+        } 
+        else {
+            configs.set(propertyKey, [
+                ...(configs.get(propertyKey) || []),
+                {
+                    column: configOrColumn.column,
+                    serialize: configOrColumn.serialize || ((value: any) => value)
+                }
+            ]);
         }
     };
 }

@@ -1,4 +1,4 @@
-import { ExposeConfig } from "@/decorators/entity";
+import { DbColumnConfig, ExposeConfig } from "@/decorators/entity";
 
 export abstract class Entity {
 
@@ -56,43 +56,34 @@ export abstract class Entity {
     }
 
     public async toEntity(): Promise<Record<string, any>> {
-        await this.beforeSave();
-        const result: Record<string, any> = {};
-        const processedKeys = new Set<string>();
+        const ctor = this.constructor as any;
+        const dbColumnConfigs = ctor._dbColumnConfigs || new Map<string | symbol, DbColumnConfig<any>[]>();
+        const dbRecord: Record<string, any> = {};
 
-        const dbColumns = (this.constructor as any)._dbColumns as Set<{
-            property: string;
-            mapping: string | Record<string, string>;
-        }>;
+        for (const [propertyKey, configs] of dbColumnConfigs) {
+            const rawValue = (this as any)[propertyKey];
 
-        if (dbColumns) {
-            for (const { property, mapping } of dbColumns) {
-                const value = (this as any)[property];
+            for (const config of configs) {
+                try {
+                    let serializedValue = config.serialize ? await config.serialize(rawValue) : rawValue;
 
-                if (value === undefined) continue;
-
-                processedKeys.add(property);
-
-                if (typeof mapping === 'string') {
-                    result[mapping] = value;
-                } else {
-                    for (const [subProp, column] of Object.entries(mapping)) {
-                        const subValue = value[subProp];
-                        if (subValue !== undefined) {
-                            result[column] = subValue;
+                    if (config.column) {
+                        if (typeof config.column === "string") {
+                            dbRecord[config.column] = serializedValue;
+                        } else {
+                            for (const [srcKey, destKey] of Object.entries(config.column)) {
+                                dbRecord[destKey as string] = serializedValue[srcKey];
+                            }
                         }
+                    } else {
+                        dbRecord[propertyKey as string] = serializedValue;
                     }
+                } catch (error) {
+                    console.error(`Error in @DbColumn for ${String(propertyKey)}:`, error);
                 }
             }
         }
-
-        for (const [key, value] of Object.entries(this)) {
-            if (!processedKeys.has(key) && value !== undefined) {
-                result[key] = value;
-            }
-        }
-
-        return result;
+        return dbRecord;
     }
 
     public async toMap(properties: string[]): Promise<Record<string, any>> {
@@ -132,6 +123,4 @@ export abstract class Entity {
         }
         return attributes;
     }
-
-    protected async beforeSave() { }
 }
