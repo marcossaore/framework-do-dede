@@ -30,6 +30,8 @@ export abstract class Entity {
                 try {
                     let value = config.deserialize ? await config.deserialize(rawValue) : rawValue;
 
+                    if (!value) continue;
+
                     if (config.mapping) {
                         if (typeof config.mapping === "string") {
                             attributes[config.mapping] = value;
