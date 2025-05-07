@@ -71,6 +71,8 @@ export abstract class Entity {
                 try {
                     let serializedValue = config.serialize ? await config.serialize(rawValue) : rawValue;
 
+                    if (!serializedValue) continue;
+
                     if (config.column) {
                         if (typeof config.column === "string") {
                             dbRecord[config.column] = serializedValue;
