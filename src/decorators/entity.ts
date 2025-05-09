@@ -49,7 +49,7 @@ export function VirtualProperty(propertyName: string) {
 
 export type DbColumnConfig<T = any> = {
     column?: string | Record<string, string>;
-    serialize?: (value: T) => any | Promise<any>;
+    serialize?: (value: T, data: any) => any | Promise<any>;
 };
 
 export function DbColumn<T>(configOrColumn: DbColumnConfig<T> | string): PropertyDecorator {
@@ -62,7 +62,7 @@ export function DbColumn<T>(configOrColumn: DbColumnConfig<T> | string): Propert
                 ...(configs.get(propertyKey) || []),
                 { 
                     column: configOrColumn,
-                    serialize: (value: any) => value
+                    serialize: (value: any, ctor: any) => value
                 }
             ]);
         } 
@@ -71,7 +71,7 @@ export function DbColumn<T>(configOrColumn: DbColumnConfig<T> | string): Propert
                 ...(configs.get(propertyKey) || []),
                 {
                     column: configOrColumn.column,
-                    serialize: configOrColumn.serialize || ((value: any) => value)
+                    serialize: configOrColumn.serialize || ((value: any, ctor: any) => value)
                 }
             ]);
         }
