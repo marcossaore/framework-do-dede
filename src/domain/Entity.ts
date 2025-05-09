@@ -71,7 +71,7 @@ export abstract class Entity {
 
             for (const config of configs) {
                 try {
-                    let serializedValue = config.serialize ? await config.serialize(rawValue, ctor) : rawValue;
+                    let serializedValue = config.serialize ? await config.serialize(rawValue, dbRecord) : rawValue;
 
                     if (!serializedValue) continue;
 

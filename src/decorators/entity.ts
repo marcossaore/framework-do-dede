@@ -62,7 +62,7 @@ export function DbColumn<T>(configOrColumn: DbColumnConfig<T> | string): Propert
                 ...(configs.get(propertyKey) || []),
                 { 
                     column: configOrColumn,
-                    serialize: (value: any, ctor: any) => value
+                    serialize: (value: any, constructorProps: any) => value
                 }
             ]);
         } 
@@ -71,7 +71,7 @@ export function DbColumn<T>(configOrColumn: DbColumnConfig<T> | string): Propert
                 ...(configs.get(propertyKey) || []),
                 {
                     column: configOrColumn.column,
-                    serialize: configOrColumn.serialize || ((value: any, ctor: any) => value)
+                    serialize: configOrColumn.serialize || ((value: any, constructorProps: any) => value)
                 }
             ]);
         }
