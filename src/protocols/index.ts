@@ -8,6 +8,7 @@ import type { UpdateRepository } from './UpdateRepository'
 import type { RestoreRepository } from './RestoreRepository'
 import type { RestoreRepositoryBy } from './RestoreRepositoryBy'
 import type { ExistsBy } from './ExistsBy'
+import type { NotExistsBy } from './NotExistsBy'
 import type { RestoreManyRepository } from './RestoreManyRepository'
 import type { RequestMetricsHandler } from './RequestMetricsHandler'
 import type { Request } from './Request'
@@ -31,5 +32,6 @@ export type {
     RequestMetricsHandler,
     HttpServerError,
     StorageGateway,
-    ExistsBy
+    ExistsBy,
+    NotExistsBy
 }
