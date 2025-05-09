@@ -1,14 +1,58 @@
 import { Dede, Register as DedeRegister, Options as DedeOptions } from './dede'
-import { Controller, Post, Put, Get, Delete, Patch, Validator, Middleware, Context, Inject, Restrict, Metrics, DbColumn, VirtualProperty, OffConsoleLog, Storage, Expose } from './decorators'
-import { BadRequest, Conflict, Forbidden, HttpServer, NotFound, ServerError, Unauthorized, UnprocessableEntity } from './http'
-import { Validation, HttpMiddleware, UseCase, CreateRepository, ExistsById, DeleteRepository, UpdateRepository, RestoreRepository, RestoreManyRepository, RequestMetricsHandler, RequestData, RequestMetrics, HttpServerError, StorageGateway } from './protocols'
+import { 
+  Controller, 
+  Post, 
+  Put, 
+  Get,
+  Delete, 
+  Patch, 
+  Validator, 
+  Middleware, 
+  Context, 
+  Inject, 
+  Restrict, 
+  Metrics, 
+  DbColumn, 
+  VirtualProperty, 
+  OffConsoleLog, 
+  Storage, 
+  Expose
+ } from './decorators'
+import { 
+  BadRequest,
+  Conflict,
+  Forbidden,
+  HttpServer,
+  NotFound,
+  ServerError, 
+  Unauthorized,
+  UnprocessableEntity 
+} from './http'
+import { 
+  Validation, 
+  HttpMiddleware, 
+  UseCase, 
+  CreateRepository, 
+  ExistsBy, 
+  DeleteRepository,
+  DeleteRepositoryBy,
+  UpdateRepository, 
+  RestoreRepository, 
+  RestoreRepositoryBy,
+  RestoreManyRepository, 
+  RequestMetricsHandler, 
+  Request, 
+  RequestMetrics, 
+  HttpServerError, 
+  StorageGateway 
+} from './protocols'
 import { Registry } from './di/registry';
 import { Entity } from './domain/Entity'
 
 class UseCaseHandler {
   static load<T extends UseCase<any, any>>(
     useCaseClass: new (...args: any[]) => T,
-    request?: RequestData
+    request?: Request
   ): T {
     const instance = Registry.classLoader(useCaseClass);
     const context = request;
@@ -32,11 +76,13 @@ export {
   HttpServerError,
   CreateRepository,
   DeleteRepository,
+  DeleteRepositoryBy,
   UpdateRepository,
   RestoreRepository,
-  ExistsById,
+  RestoreRepositoryBy,
+  ExistsBy,
   RestoreManyRepository,
-  RequestData,
+  Request,
   Dede,
   DedeRegister,
   DedeOptions,

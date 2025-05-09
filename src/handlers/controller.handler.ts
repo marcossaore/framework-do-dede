@@ -1,7 +1,7 @@
 import HttpServer from "@/http/HttpServer"
 import type { Controller } from "@/protocols/Controller"
 import { Registry } from "@/di/registry"
-import { HttpMiddleware, RequestData, RequestMetrics, RequestMetricsHandler } from "@/protocols"
+import { HttpMiddleware, Request, RequestMetrics, RequestMetricsHandler } from "@/protocols"
 import { InternalServerError, ServerError } from "@/http"
 import { Log } from "@/utils/Log"
 
@@ -53,7 +53,7 @@ export default class ControllerHandler {
                     const filterParams = this.filter(input.params, params)
                     const filterQueryParams = this.filter(input.query, query)
                     let mergedParams = { ...filterParams, ...filterQueryParams, ...(input.body || {}) }
-                    const request: RequestData = { headers: input.headers, data: mergedParams, middlewareData: {} }
+                    const request: Request = { headers: input.headers, data: mergedParams, middlewareData: {} }
                     try {
                         if (validation) {
                             if (!offLogs) Log.info(`⏳  [LOG] Executing validations`)

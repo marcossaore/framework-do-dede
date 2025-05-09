@@ -1,5 +1,3 @@
-import { Entity } from "@/domain/Entity";
-
-export interface RestoreRepository<T extends Entity> {
+export interface RestoreRepository<T> {
     restore(id: string | number): Promise<T>
 }

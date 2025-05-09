@@ -1,7 +1,7 @@
-import type { RequestData } from './RequestData'
+import type { Request } from './Request'
 import type { RequestMetrics } from './RequestMetrics';
 
 
 export interface RequestMetricsHandler {
-    handle(metrics: RequestMetrics, request?: RequestData): Promise<void> | void;
+    handle(metrics: RequestMetrics, request?: Request): Promise<void> | void;
 }
