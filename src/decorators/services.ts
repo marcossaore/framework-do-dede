@@ -1,5 +1,5 @@
 import { Registry } from "@/di/registry";
-import { StorageGateway } from "@/protocols/StorageGateway";
+import { StorageGateway } from "@/protocols";
 
 export function Storage(gatewayName: string) {
   return function (target: any, propertyKey: string) {
@@ -11,8 +11,8 @@ export function Storage(gatewayName: string) {
           if (!Registry.has(gatewayName)) {
             throw new Error(`StorageGateway ${gatewayName} not registered`);
           }
-          const GatewayClass = Registry.resolve(gatewayName)!;
-          if (!(GatewayClass instanceof StorageGateway)) {
+          const GatewayClass = Registry.resolve(gatewayName)! as StorageGateway
+          if (!GatewayClass.save || !GatewayClass.get || !GatewayClass.delete) {
             throw new Error(`${gatewayName} is not a valid StorageGateway`);
           }
           this[instanceSymbol] = GatewayClass;
