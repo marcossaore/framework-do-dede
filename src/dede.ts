@@ -25,7 +25,7 @@ export class Dede {
 
     private static httpServer: HttpServer;
 
-    static async init ({ framework, registries, defaultServerError }: Options): Promise<void> {
+    static async init ({ framework, registries, defaultServerError }: Options): Promise<Dede> {
         await this.loadRegistries(registries);
         if (framework.use === 'elysia') {
             Dede.httpServer = new ElysiaHttpServer(framework.middlewares || [])
@@ -38,6 +38,7 @@ export class Dede {
             new ControllerHandler(Dede.httpServer, framework.port || 80)
             this.clearControllers()
         }
+        return Dede
     }
 
     static async close() {
