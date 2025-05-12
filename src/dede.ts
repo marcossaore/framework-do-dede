@@ -22,20 +22,26 @@ export type Options = {
 
 
 export class Dede {
+
+    private static httpServer: HttpServer;
+
     static async init ({ framework, registries, defaultServerError }: Options): Promise<void> {
         await this.loadRegistries(registries);
-        let httpServer!: HttpServer
         if (framework.use === 'elysia') {
-            httpServer = new ElysiaHttpServer(framework.middlewares || [])
+            Dede.httpServer = new ElysiaHttpServer(framework.middlewares || [])
         }
         if (framework.use === 'express') {
-            httpServer = new ExpressHttpServer(framework.middlewares || [])
+            Dede.httpServer = new ExpressHttpServer(framework.middlewares || [])
         }
-        if (defaultServerError) httpServer.setDefaultMessageError(defaultServerError)
+        if (defaultServerError) Dede.httpServer.setDefaultMessageError(defaultServerError)
         if(Registry.has('controllers')){
-            new ControllerHandler(httpServer, framework.port || 80)
+            new ControllerHandler(Dede.httpServer, framework.port || 80)
             this.clearControllers()
         }
+    }
+
+    static async close() {
+        await Dede.httpServer.close()
     }
 
     private static clearControllers() {

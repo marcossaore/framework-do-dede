@@ -3,6 +3,9 @@ import Elysia from "elysia";
 import HttpServer from "./HttpServer";
 
 export class ElysiaHttpServer extends HttpServer {
+    async close(): Promise<void> {
+        await (this.framework as Elysia).stop()
+    }
     
     constructor(uses?: CallableFunction[]) {
         super(new Elysia(), 'elysia')

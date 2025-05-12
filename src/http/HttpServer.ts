@@ -56,6 +56,8 @@ export default abstract class HttpServer {
         this.framework.listen(port)
     }
 
+    abstract close(): Promise<void>
+
     private mountRoute(httpServerParams: HttpServerParams) {
         const params = httpServerParams.params?.map((param) => param.split('|')[0])
         if (params && params.length > 0) {

@@ -5,6 +5,9 @@ import HttpServer from "./HttpServer";
 const app = express()
 
 export class ExpressHttpServer extends HttpServer {
+    async close(): Promise<void> {
+        await (this.framework as any).close()
+    }
     
     constructor(uses?: CallableFunction[]) {
         super(app, 'express')
