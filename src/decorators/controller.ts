@@ -16,11 +16,33 @@ export function Middleware(middlewareClass: new (...args: any[]) => HttpMiddlewa
         if (!middlewareClass.prototype.execute) {
             throw new FrameworkError('Middleware must implement execute()');
         }
+        Reflect.getMetadata('context', middlewareClass) || [];
 
         const middlewares: Array<new (...args: any[]) => HttpMiddleware> = Reflect.getMetadata('middlewares', target, propertyKey) || [];
         middlewares.push(middlewareClass);
         
         Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
+    };
+}
+
+
+export function Middlewares(middlewareClasses: (new (...args: any[]) => HttpMiddleware)[]) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        for (const middlewareClass of middlewareClasses) {
+            if (!middlewareClass.prototype.execute) {
+                throw new FrameworkError('Middleware must implement execute()');
+            }
+            Reflect.getMetadata('context', middlewareClass) || [];
+        }
+
+        const existingMiddlewares: Array<new (...args: any[]) => HttpMiddleware> = 
+            Reflect.getMetadata('middlewares', target, propertyKey) || [];
+
+        // Add the new middleware classes to the list
+        existingMiddlewares.push(...middlewareClasses);
+
+        // Update the metadata with the combined list
+        Reflect.defineMetadata('middlewares', existingMiddlewares, target, propertyKey);
     };
 }
 
