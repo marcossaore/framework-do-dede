@@ -5,6 +5,7 @@ import HttpServer from "./HttpServer";
 export class ElysiaHttpServer extends HttpServer {
     async close(): Promise<void> {
         await (this.framework as Elysia).stop()
+        console.log('server closed')
     }
     
     constructor(uses?: CallableFunction[]) {
