@@ -34,10 +34,11 @@ export class Dede {
             Dede.httpServer = new ExpressHttpServer(framework.middlewares || [])
         }
         if (defaultServerError) Dede.httpServer.setDefaultMessageError(defaultServerError)
-        if(Registry.has('controllers')){
-            new ControllerHandler(Dede.httpServer, framework.port || 80)
-            this.clearControllers()
+        if(!Registry.has('controllers')){
+            throw new Error("No controllers registered");
         }
+        new ControllerHandler(Dede.httpServer, framework.port || 80)
+        this.clearControllers()
         return Dede
     }
 
