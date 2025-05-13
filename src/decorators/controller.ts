@@ -16,7 +16,6 @@ export function Middleware(middlewareClass: new (...args: any[]) => HttpMiddlewa
         if (!middlewareClass.prototype.execute) {
             throw new FrameworkError('Middleware must implement execute()');
         }
-        Reflect.getMetadata('context', middlewareClass) || [];
 
         const middlewares: Array<new (...args: any[]) => HttpMiddleware> = Reflect.getMetadata('middlewares', target, propertyKey) || [];
         middlewares.push(middlewareClass);
@@ -32,7 +31,6 @@ export function Middlewares(middlewareClasses: (new (...args: any[]) => HttpMidd
             if (!middlewareClass.prototype.execute) {
                 throw new FrameworkError('Middleware must implement execute()');
             }
-            Reflect.getMetadata('context', middlewareClass) || [];
         }
 
         const existingMiddlewares: Array<new (...args: any[]) => HttpMiddleware> = 
