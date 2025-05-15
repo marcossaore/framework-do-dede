@@ -8,40 +8,49 @@ export default class UseCaseHandler {
         request?: Request
     ): T {
         const useCaseDecorators = Reflect.getMetadata(USE_CASE_DECORATORS, useCaseClass) || [];
-        const useCaseDecoratorsInstances: UseCase<any, any>[] = []
+        const useCaseDecoratorsInstances: UseCase<any, any>[] = [];
+
+        // Processa decorators
         for (const useCaseDecorator of useCaseDecorators) {
+            let instance: UseCase<any, any>;
+
             if (typeof useCaseDecorator === 'function') {
-                const instanceDecorator: UseCase<any, any> = Registry.classLoader(useCaseDecorator);
-                const context = request;
-                const contextDecoratorsMetadata: Array<{ propertyKey: string, middlewareKey: string }> = Reflect.getMetadata('context', useCaseDecorator) || [];
-                contextDecoratorsMetadata.forEach(({ propertyKey, middlewareKey }) => {
-                    if (context?.middlewareData?.[middlewareKey]) {
-                        (instanceDecorator as any)[propertyKey] = context.middlewareData[middlewareKey];
-                    }
-                });
-                useCaseDecoratorsInstances.push(instanceDecorator);
+                // Cria instância via DI
+                instance = Registry.classLoader(useCaseDecorator);
             } else {
-                useCaseDecoratorsInstances.push(useCaseDecorator);
+                // Usa instância existente
+                instance = useCaseDecorator;
             }
+
+            // Injeta contexto na instância (seja nova ou existente)
+            injectContext(instance, request);
+            useCaseDecoratorsInstances.push(instance);
         }
+
+        // Cria e configura a instância principal
         const instance = Registry.classLoader(useCaseClass);
-        const context = request;
-        const contextMetadata: Array<{ propertyKey: string, middlewareKey: string }> =
-            Reflect.getMetadata('context', useCaseClass) || [];
-        contextMetadata.forEach(({ propertyKey, middlewareKey }) => {
-            if (context?.middlewareData?.[middlewareKey]) {
-                (instance as any)[propertyKey] = context.middlewareData[middlewareKey];
-            }
-        });
+        injectContext(instance, request);
 
+        // Decora o método execute
         const originalExecute = instance.execute.bind(instance);
-
         instance.execute = async (input: any) => {
-            for await (const useCaseDecoratorsInstance of useCaseDecoratorsInstances) {
-                await useCaseDecoratorsInstance.execute(input);
+            for (const decoratorInstance of useCaseDecoratorsInstances) {
+                await decoratorInstance.execute(input);
             }
             return originalExecute(input);
-        }
+        };
+
         return instance;
     }
+}
+
+function injectContext(instance: any, request?: Request) {
+  const contextMetadata: Array<{ propertyKey: string, middlewareKey: string }> = 
+    Reflect.getMetadata('context', instance.constructor) || [];
+  
+  contextMetadata.forEach(({ propertyKey, middlewareKey }) => {
+    if (request?.middlewareData?.[middlewareKey]) {
+      instance[propertyKey] = request.middlewareData[middlewareKey];
+    }
+  });
 }
