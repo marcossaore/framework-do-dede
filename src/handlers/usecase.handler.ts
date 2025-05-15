@@ -12,7 +12,14 @@ export default class UseCaseHandler {
         const useCaseDecoratorsInstances: UseCase<any, any>[] = []
         for (const useCaseDecorator of useCaseDecorators) {
             if (typeof useCaseDecorator === 'function') {
-                useCaseDecoratorsInstances.push(Registry.classLoader(useCaseDecorator));
+                const instanceDecorator: UseCase<any, any> = Registry.classLoader(useCaseDecorator);
+                const contextDecoratorsMetadata: Array<{ propertyKey: string, middlewareKey: string }> = Reflect.getMetadata('context', useCaseClass) || [];
+                contextDecoratorsMetadata.forEach(({ propertyKey, middlewareKey }) => {
+                    if (context?.middlewareData?.[middlewareKey]) {
+                        (instanceDecorator as any)[propertyKey] = context.middlewareData[middlewareKey];
+                    }
+                });
+                useCaseDecoratorsInstances.push(instanceDecorator);
             } else {
                 useCaseDecoratorsInstances.push(useCaseDecorator);
             }
@@ -23,9 +30,6 @@ export default class UseCaseHandler {
         contextMetadata.forEach(({ propertyKey, middlewareKey }) => {
             if (context?.middlewareData?.[middlewareKey]) {
                 (instance as any)[propertyKey] = context.middlewareData[middlewareKey];
-                for (let index = 0; index < useCaseDecoratorsInstances.length; index++) {
-                    (useCaseDecoratorsInstances[index] as any)[propertyKey] = context.middlewareData[middlewareKey];
-                }
             }
         });
 
