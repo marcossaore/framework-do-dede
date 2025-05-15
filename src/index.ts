@@ -1,55 +1,57 @@
 import { Dede, Register as DedeRegister, Options as DedeOptions } from './dede'
-import { 
-  Controller, 
-  Post, 
-  Put, 
+import {
+  Controller,
+  Post,
+  Put,
   Get,
-  Delete, 
-  Patch, 
-  Validator, 
-  Middleware, 
+  Delete,
+  Patch,
+  Validator,
+  Middleware,
   Middlewares,
-  Context, 
-  Inject, 
-  Restrict, 
-  Metrics, 
-  DbColumn, 
-  VirtualProperty, 
-  OffConsoleLog, 
-  Storage, 
+  Context,
+  DecorateUseCase,
+  Inject,
+  Restrict,
+  Metrics,
+  DbColumn,
+  VirtualProperty,
+  OffConsoleLog,
+  Storage,
   Expose
- } from './decorators'
-import { 
+} from './decorators'
+import {
   BadRequest,
   Conflict,
   Forbidden,
   HttpServer,
   NotFound,
-  ServerError, 
+  ServerError,
   Unauthorized,
-  UnprocessableEntity 
+  UnprocessableEntity
 } from './http'
-import { 
-  Validation, 
-  HttpMiddleware, 
-  UseCase, 
-  CreateRepository, 
-  ExistsBy, 
+import {
+  Validation,
+  HttpMiddleware,
+  UseCase,
+  CreateRepository,
+  ExistsBy,
   NotExistsBy,
   DeleteRepository,
   DeleteRepositoryBy,
-  UpdateRepository, 
-  RestoreRepository, 
+  UpdateRepository,
+  RestoreRepository,
   RestoreRepositoryBy,
-  RestoreManyRepository, 
-  RequestMetricsHandler, 
-  Request, 
-  RequestMetrics, 
-  HttpServerError, 
-  StorageGateway 
+  RestoreManyRepository,
+  RequestMetricsHandler,
+  Request,
+  RequestMetrics,
+  HttpServerError,
+  StorageGateway
 } from './protocols'
 import { Registry } from './di/registry';
 import { Entity } from './domain/Entity'
+import { USE_CASE_DECORATORS } from './decorators/usecase';
 
 class UseCaseHandler {
   static load<T extends UseCase<any, any>>(
@@ -57,14 +59,31 @@ class UseCaseHandler {
     request?: Request
   ): T {
     const instance = Registry.classLoader(useCaseClass);
+    const useCaseDecorators = Reflect.getMetadata(USE_CASE_DECORATORS, useCaseClass) || [];
+    const useCaseDecoratorsInstances: UseCase<any, any>[] = []
+    for (const useCaseDecorator of useCaseDecorators) {
+      useCaseDecoratorsInstances.push(Registry.classLoader(useCaseDecorator));
+    }
     const context = request;
-    const contextMetadata: Array<{ propertyKey: string, middlewareKey: string }> = 
+    const contextMetadata: Array<{ propertyKey: string, middlewareKey: string }> =
       Reflect.getMetadata('context', useCaseClass) || [];
-      contextMetadata.forEach(({ propertyKey, middlewareKey }) => {
+    contextMetadata.forEach(({ propertyKey, middlewareKey }) => {
       if (context?.middlewareData?.[middlewareKey]) {
         (instance as any)[propertyKey] = context.middlewareData[middlewareKey];
+        for (let index = 0; index < useCaseDecoratorsInstances.length; index++) {
+          (useCaseDecoratorsInstances[index] as any)[propertyKey] = context.middlewareData[middlewareKey];
+        }
       }
     });
+
+    const originalExecute = instance.execute.bind(instance);
+
+    instance.execute = async (input: any) => {
+      for await (const useCaseDecoratorsInstance of useCaseDecoratorsInstances) {
+        await useCaseDecoratorsInstance.execute(input);
+      }
+      return originalExecute(input);
+    }
     return instance;
   }
 }
@@ -108,6 +127,7 @@ export {
   Middleware,
   Middlewares,
   Context,
+  DecorateUseCase,
   Inject,
   Entity,
   Restrict,
