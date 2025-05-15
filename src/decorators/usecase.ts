@@ -11,7 +11,8 @@ export function Context(middlewareKey: string) {
 }
 
 export function DecorateUseCase(
-  useCases: (new (...args: any[]) => UseCase<any, any>) | Array<new (...args: any[]) => UseCase<any, any>>
+   useCases: (new (...args: any[]) => UseCase<any, any> | UseCase<any, any>) | 
+  Array<new (...args: any[]) => UseCase<any, any> | UseCase<any, any>>
 ): ClassDecorator {
   return function (target: any) {
     const decorators = Array.isArray(useCases) ? useCases : [useCases];
