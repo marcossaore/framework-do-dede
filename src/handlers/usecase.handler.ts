@@ -13,7 +13,7 @@ export default class UseCaseHandler {
         for (const useCaseDecorator of useCaseDecorators) {
             if (typeof useCaseDecorator === 'function') {
                 const instanceDecorator: UseCase<any, any> = Registry.classLoader(useCaseDecorator);
-                const contextDecoratorsMetadata: Array<{ propertyKey: string, middlewareKey: string }> = Reflect.getMetadata('context', useCaseClass) || [];
+                const contextDecoratorsMetadata: Array<{ propertyKey: string, middlewareKey: string }> = Reflect.getMetadata('context', useCaseDecorator) || [];
                 contextDecoratorsMetadata.forEach(({ propertyKey, middlewareKey }) => {
                     if (context?.middlewareData?.[middlewareKey]) {
                         (instanceDecorator as any)[propertyKey] = context.middlewareData[middlewareKey];
