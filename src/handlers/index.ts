@@ -1,5 +1,7 @@
 import ControllerHandler from "./controller.handler";
+import UseCaseHandler from "./usecase.handler";
 
 export {
-    ControllerHandler
+    ControllerHandler,
+    UseCaseHandler
 }
