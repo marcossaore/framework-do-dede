@@ -7,12 +7,12 @@ export default class UseCaseHandler {
         useCaseClass: new (...args: any[]) => T,
         request?: Request
     ): T {
-        const instance = Registry.classLoader(useCaseClass);
         const useCaseDecorators = Reflect.getMetadata(USE_CASE_DECORATORS, useCaseClass) || [];
         const useCaseDecoratorsInstances: UseCase<any, any>[] = []
         for (const useCaseDecorator of useCaseDecorators) {
             if (typeof useCaseDecorator === 'function') {
                 const instanceDecorator: UseCase<any, any> = Registry.classLoader(useCaseDecorator);
+                const context = request;
                 const contextDecoratorsMetadata: Array<{ propertyKey: string, middlewareKey: string }> = Reflect.getMetadata('context', useCaseDecorator) || [];
                 contextDecoratorsMetadata.forEach(({ propertyKey, middlewareKey }) => {
                     if (context?.middlewareData?.[middlewareKey]) {
@@ -24,6 +24,7 @@ export default class UseCaseHandler {
                 useCaseDecoratorsInstances.push(useCaseDecorator);
             }
         }
+        const instance = Registry.classLoader(useCaseClass);
         const context = request;
         const contextMetadata: Array<{ propertyKey: string, middlewareKey: string }> =
             Reflect.getMetadata('context', useCaseClass) || [];
