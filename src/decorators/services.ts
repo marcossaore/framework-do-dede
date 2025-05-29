@@ -1,24 +1,9 @@
 import { Registry } from "@/di/registry";
 import { StorageGateway } from "@/protocols";
 
-export class StorageMock  {
-
-  private static enabled = false;
-  static on() {
-    StorageMock.enabled = true
-  }
-  static off() {
-    StorageMock.enabled
-  }
-
-  static isEnabled() {
-    return StorageMock.enabled
-  }
-}
 
 export function Storage(gatewayName: string) {
   return function (target: any, propertyKey: string) {
-    if (StorageMock.isEnabled()) return;
     const instanceSymbol = Symbol();
     Object.defineProperty(target, propertyKey, {
       get: function () {

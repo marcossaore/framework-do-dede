@@ -2,7 +2,7 @@ import { Controller, Post, Get, Put, Delete, Patch, Validator, Middleware, Middl
 import { Context, DecorateUseCase } from './usecase'
 import { Inject } from './di'
 import { Restrict, DbColumn, VirtualProperty, Expose } from './entity'
-import { Storage, StorageMock } from './services'
+import { Storage } from './services'
 
 export {
     Controller, Middleware, Middlewares,
@@ -16,7 +16,6 @@ export {
     Restrict, 
     DbColumn,
     Storage,
-    StorageMock,
     Expose,
     VirtualProperty
 }

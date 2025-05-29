@@ -18,7 +18,6 @@ import {
   VirtualProperty,
   OffConsoleLog,
   Storage,
-  StorageMock,
   Expose
 } from './decorators'
 import {
@@ -102,6 +101,5 @@ export {
   OffConsoleLog,
   StorageGateway,
   Storage,
-  StorageMock,
   Expose
 }
