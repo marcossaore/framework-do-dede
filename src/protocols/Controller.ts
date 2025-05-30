@@ -1,5 +1,4 @@
 import type { AllowedMethods, HttpStatusCode } from "@/http/HttpServer"
-import type { Validation } from "./Validation"
 import type { HttpMiddleware } from "./HttpMiddleware"
 import { RequestMetricsHandler } from "./RequestMetricsHandler"
 
@@ -10,7 +9,6 @@ export type Controller = {
     method: AllowedMethods
     middlewares?: HttpMiddleware[]
     statusCode?: HttpStatusCode
-    validation?: Validation
     params?: any
     query?: any
     metricsHandlers?: RequestMetricsHandler[]

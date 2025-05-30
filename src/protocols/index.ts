@@ -1,6 +1,5 @@
 import type { HttpMiddleware } from './HttpMiddleware'
 import type { UseCase } from './UseCase'
-import type { Validation } from './Validation'
 import type { CreateRepository } from './CreateRepository'
 import type { DeleteRepository } from './DeleteRepository'
 import type { DeleteRepositoryBy } from './DeleteRepositoryBy'
@@ -21,7 +20,6 @@ export type {
     RequestMetrics,
     HttpMiddleware,
     UseCase,
-    Validation,
     CreateRepository,
     DeleteRepository,
     DeleteRepositoryBy,

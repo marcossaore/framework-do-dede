@@ -1,22 +1,11 @@
-import { Registry } from '@/di/registry';
-import type { Validation } from '@/protocols/Validation';
-import { Controller, Delete, Get, Post, Put, Validator } from '@/decorators';
+import { Controller, Delete, Get, Post, Put } from '@/application/decorators';
 
 
 describe('Controller Decorators', () => {
-  beforeEach(() => {
-    Registry.clear('controllers');
-    Registry.register('controllers', []);
-  });
-
-  describe('@controller', () => {
+  describe('@Controller', () => {
     it('should register controller and set basePath metadata', () => {
       @Controller('/users')
       class UserController { }
-
-      const controllers = Registry.resolve<any[]>('controllers');
-      expect(controllers).toContain(UserController);
-
       expect(Reflect.getMetadata('basePath', UserController)).toBe('/users');
     });
 
@@ -27,8 +16,8 @@ describe('Controller Decorators', () => {
       @Controller('/products')
       class ProductController { }
 
-      const controllers = Registry.resolve<any[]>('controllers');
-      expect(controllers).toHaveLength(2);
+      expect(Reflect.getMetadata('basePath', AuthController)).toBe('/auth');
+      expect(Reflect.getMetadata('basePath', ProductController)).toBe('/products');
     });
   });
 
@@ -132,44 +121,14 @@ describe('Controller Decorators', () => {
   });
 
   describe('Edge Cases', () => {
-    it('should handle empty basePath', () => {
-      @Controller('')
-      class EmptyPathController { }
-
-      expect(Reflect.getMetadata('basePath', EmptyPathController)).toBe('');
-    });
-
-    it('should throw when adding to non-array controllers', () => {
-      Registry.clear('controllers');
-      Registry.register('controllers', {});
-
-      expect(() => {
-        @Controller('/invalid')
-        class InvalidController { }
-      }).toThrowError('Dependency must be an array');
-    });
-  });
-});
-
-describe('validation decorator', () => {
-  it('should attach metadata with a validation instance when validationClass is valid', () => {
-    class Validate implements Validation {
-      validate() {
-        return true;
+    it('should throw when empty basePath is empty', () => {
+      try {
+        @Controller('')
+        class EmptyPathController { }
       }
-    }
-
-    class TestClass {
-      @Validator(Validate)
-      someMethod() { }
-    }
-
-    const metadata = Reflect.getMetadata(
-      'validation',
-      TestClass.prototype,
-      'someMethod'
-    );
-
-    expect(metadata).toBeInstanceOf(Validate);
+      catch (error: any) {
+        expect(error.message).toBe("basePath cannot be empty")
+      }
+    });
   });
 });

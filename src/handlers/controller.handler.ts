@@ -1,6 +1,6 @@
 import HttpServer from "@/http/HttpServer"
 import type { Controller } from "@/protocols/Controller"
-import { Registry } from "@/di/registry"
+import { Registry } from "@/infra/di/registry"
 import { HttpMiddleware, Request, RequestMetrics, RequestMetricsHandler } from "@/protocols"
 import { InternalServerError, ServerError } from "@/http"
 import { Log } from "@/utils/Log"
@@ -15,7 +15,7 @@ type Input = {
 
 export default class ControllerHandler {
     constructor(httpServer: HttpServer, port: number) {
-        for (const { instance, instanceMethod, middlewares, method, route, statusCode, params, query, validation, offLogs, metricsHandlers } of this.registryControllers()) {
+        for (const { instance, instanceMethod, middlewares, method, route, statusCode, params, query, offLogs, metricsHandlers } of this.registryControllers()) {
             httpServer.register(
                 {
                     method,
@@ -54,37 +54,6 @@ export default class ControllerHandler {
                     const filterQueryParams = this.filter(input.query, query)
                     let mergedParams = { ...filterParams, ...filterQueryParams, ...(input.body || {}) }
                     const request: Request = { headers: input.headers, data: mergedParams, middlewareData: {} }
-                    try {
-                        if (validation) {
-                            if (!offLogs) Log.info(`⏳  [LOG] Executing validations`)
-                            mergedParams = validation.validate({ ...filterParams, ...filterQueryParams, ...(input.body || {}) });
-                        }
-                    } catch (error: any) {
-                        const capturedError = this.extractError(error, httpServer);
-                        requestMetrics.error = capturedError;
-                        input.setStatus(capturedError.statusCode);
-                        const endTime = performance.now();
-                        if (!offLogs) {
-                            Log.error(`❌ [LOG] Error validations: "${logger.handler.instance}.${logger.handler.method}"` + ` - in: ${(endTime - startTime).toFixed(2)} ms`)
-                            Log.error(JSON.stringify(this.transformErrorOnJSON(error)))
-                        }
-                        wasError = true
-                        return {
-                            message: capturedError.message,
-                            statusCode: capturedError.statusCode
-                        };
-                    } finally {
-                        if (wasError) {
-                            const endTime = performance.now();
-                            requestMetrics.elapsedTime = `${(endTime - startTime).toFixed(2)} ms`;
-
-                            if (metricsHandlers?.length) {
-                                await Promise.all(
-                                    metricsHandlers.map((handler: RequestMetricsHandler) => handler.handle(requestMetrics, request))
-                                );
-                            }
-                        }
-                    }
                     let middlewareData = {}
                     if (middlewares) {
                         if (!offLogs) Log.info(`⏳  [LOG] Executing middlewares`)
@@ -174,7 +143,6 @@ export default class ControllerHandler {
             const instance = new controller(...args)
             const methodNames = Object.getOwnPropertyNames(controller.prototype).filter(method => method !== 'constructor')
             for (const methodName of methodNames) {
-                const validation = Reflect.getMetadata('validation', controller.prototype, methodName);
                 const routeConfig = Reflect.getMetadata('route', controller.prototype, methodName);
                 const middlewares: Array<new (...args: any[]) => HttpMiddleware> = Reflect.getMetadata('middlewares', controller.prototype, methodName);
                 const metricsHandlers: Array<new (...args: any[]) => RequestMetricsHandler> = Reflect.getMetadata('metricsHandlers', controller.prototype, methodName);
@@ -188,7 +156,6 @@ export default class ControllerHandler {
                     instance,
                     instanceMethod: methodName,
                     middlewares: middlewares ? middlewares.map(middleware => Registry.classLoader(middleware)) : [],
-                    validation,
                     metricsHandlers: metricsHandlers ? metricsHandlers.map(metricsHandler => Registry.classLoader(metricsHandler)) : [],
                     offLogs: offConsoleLog
                 });
