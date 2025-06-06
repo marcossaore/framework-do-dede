@@ -1,4 +1,4 @@
-import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix } from '@/application/domain/entity';
+import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix, Id, EntityIdentifier } from '@/application/domain/entity';
 
 describe('Entity', () => {
 
@@ -47,7 +47,17 @@ describe('Entity', () => {
     firstAccess?: boolean
   };
 
+  class SimpleStringEntityIdentifier implements EntityIdentifier<string> {
+    getValue(): string {
+      return 'simpleId';
+    }
+  }
+
   class TestEntitySync extends Entity {
+
+    @Id()
+    private readonly testId: EntityIdentifier<string>;
+
     private readonly name: string;
 
     @Serialize((email: Email) => email.getValue())
@@ -68,8 +78,9 @@ describe('Entity', () => {
       return this.name.toUpperCase();
     }
 
-    private constructor({ name, email, complex, secret, firstAccess }: TestingEntityInput) {
+    private constructor({ name, email, complex, secret, firstAccess, testId }: { name: string, email: string, complex?: { id: number, value: string }, secret: string, firstAccess?: boolean, testId: EntityIdentifier<string> }) {
       super();
+      this.testId = new SimpleStringEntityIdentifier();
       this.name = name;
       this.email = new Email(email);
       this.secret = secret;
@@ -83,7 +94,10 @@ describe('Entity', () => {
     }
 
     static create(input: TestingEntityInput) {
-      return new TestEntitySync(input);
+      return new TestEntitySync({
+        ...input,
+        testId: new SimpleStringEntityIdentifier()
+      });
     }
   }
 
@@ -104,6 +118,10 @@ describe('Entity', () => {
   }
 
   class TestEntityAsync extends Entity {
+
+    @Id()
+    private readonly testId: EntityIdentifier<string>;
+
     private readonly name: string;
 
     @Serialize(async (photo: Photo) => await photo.getSavedObjectUrl() )
@@ -112,8 +130,9 @@ describe('Entity', () => {
     @Restrict()
     private readonly secret: string;
 
-    private constructor({ name, file }: { name: string, file: any }) {
+    private constructor({ name, file, testId }: { name: string, file: any, testId: EntityIdentifier<string> }) {
       super();
+      this.testId = testId;
       this.name = name;
       this.photo = new Photo(file);
       this.secret = 'confidential';
@@ -130,9 +149,34 @@ describe('Entity', () => {
     }
 
     static create(input: { name: string, file: any }) {
-      return new TestEntityAsync(input);
+      return new TestEntityAsync({
+        ...input,
+        testId: new SimpleStringEntityIdentifier()
+      });
     }
   }
+
+  class TestEntityWithoutStrategyId extends Entity {
+    private readonly name: string;
+    private readonly testId: EntityIdentifier<string>;
+
+    private constructor({ name, testId }: { name: string, testId: EntityIdentifier<string> }) {
+      super();
+      this.name = name;
+      this.testId = testId;
+    }
+
+    static create({ name }: { name: string }) {
+      return new TestEntityWithoutStrategyId({
+        name,
+        testId: new SimpleStringEntityIdentifier()
+      });
+    }
+  }
+
+  it('should throw an error if the strategyId is not implemented', () => {
+    expect(() => TestEntityWithoutStrategyId.create({ name: 'test' })).toThrow('StrategyId must to be implement.');
+  });
 
   it('should generate getters for all properties', async () => {
     const entity = TestEntitySync.create({
@@ -148,6 +192,7 @@ describe('Entity', () => {
     expect(entity.getEmail()).toBeInstanceOf(Email);
     expect(entity.getSecret()).toBe('confidential');
     expect(entity.isFirstAccess()).toBeTruthy();
+    expect(entity.getTestId()).toBe('simpleId');
   });
 
   it('should generate getters for all properties with undefined for properties that are not defined', async () => {
@@ -161,6 +206,7 @@ describe('Entity', () => {
     expect(entity.hasComplex()).toBeUndefined();
     expect(entity.getEmail().getValue()).toBe('4YlYX@example.com');
     expect(entity.getSecret()).toBe('confidential');
+    expect(entity.getTestId()).toBe('simpleId');
     expect(entity.isFirstAccess()).toBeUndefined();
   });
 
@@ -180,6 +226,7 @@ describe('Entity', () => {
       secret: 'confidential',
       complex: { id: 1, value: 'ABC' },
       firstAccess: true,
+      testId: 'simpleId'
     });
   });
 
@@ -195,6 +242,7 @@ describe('Entity', () => {
       name: 'test',
       photo: 'https://blobstorage.com/file/1234567890',
       secret: 'confidential',
+      testId: 'simpleId'
     });
   });
 
@@ -212,6 +260,7 @@ describe('Entity', () => {
       secret: 'confidential',
       complex: null,
       firstAccess: null,
+      testId: 'simpleId'
     });
   });
 
@@ -228,6 +277,7 @@ describe('Entity', () => {
     expect(result.firstAccess).toBeUndefined();
     expect(result.name).toBe('test');
     expect(result).not.toHaveProperty('secret');
+    expect(result.testId).toBe('simpleId');
   });
 
   it('should get properties correctly when toData is called - sync - with serialize', async () => {

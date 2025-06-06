@@ -1,5 +1,10 @@
+export interface EntityIdentifier<T> {
+    getValue(): T;
+}
+
 export abstract class Entity {
     [x: string]: any;
+
     toEntity(): Record<string, any> {
         // @ts-ignore
         const propertiesConfigs = this.constructor.propertiesConfigs as Record<string, any>;
@@ -83,8 +88,15 @@ export abstract class Entity {
     }
 
     protected generateGetters() {
+        // @ts-ignore
         for (const property of Object.keys(this)) {
             if (typeof property === 'function') continue;
+            // @ts-ignore
+            if (this.constructor.strategyId === property) {
+                this[property] = this[property].getValue();
+                this[`get${property[0].toUpperCase()}${property.slice(1)}`] = () => this[property];
+                continue;
+            }
             if (!this[property]) {
                 // @ts-ignore
                 const prefixName = this.constructor.propertiesConfigs[property].prefix;
@@ -98,6 +110,13 @@ export abstract class Entity {
                 if (this[getterName]) continue;
                 this[getterName] = () => this[property];
             }
+        }
+    }
+
+    constructor() {
+        // @ts-ignore
+        if (!this.constructor?.strategyId) {
+            throw new Error('StrategyId must to be implement.')
         }
     }
 }
@@ -128,6 +147,12 @@ export function GetterPrefix(prefix: string) {
     return function (target: any, propertyKey: string) {
         loadPropertiesConfig(target, propertyKey);
         target.constructor.propertiesConfigs[propertyKey].prefix = prefix;
+    };
+}
+
+export function Id() {
+    return function (target: any, propertyKey: string) {
+        target.constructor.strategyId = propertyKey;
     };
 }
 
