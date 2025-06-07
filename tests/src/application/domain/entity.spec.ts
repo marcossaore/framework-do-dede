@@ -80,7 +80,7 @@ describe('Entity', () => {
 
     private constructor({ name, email, complex, secret, firstAccess, testId }: { name: string, email: string, complex?: { id: number, value: string }, secret: string, firstAccess?: boolean, testId: EntityIdentifier<string> }) {
       super();
-      this.testId = new SimpleStringEntityIdentifier();
+      this.testId = testId;
       this.name = name;
       this.email = new Email(email);
       this.secret = secret;
