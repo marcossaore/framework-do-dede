@@ -9,11 +9,11 @@ class ComponentRegistry {
         return this.instance;
     }
 
-    load (name: string, dependency: any): void {
+    load(name: string, dependency: any): void {
         this.dependencies.set(name, dependency);
     }
 
-     inject (name: string) {
+    inject(name: string) {
         if (!this.dependencies.get(name)) throw new Error(`Dependency not found ${name}`);
         return this.dependencies.get(name);
     }
