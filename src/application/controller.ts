@@ -3,7 +3,12 @@ import { FrameworkError } from "@/http/FrameworkError";
 import { Registry } from "@/infra/di/registry";
 
 export interface MiddlewareHandler {
-    execute(input: any): Promise<any>
+    execute(input: Input<any>): Promise<any>
+}
+
+export interface Input<T, K = any> {
+    data: T
+    context?: K
 }
   
 export function Controller(basePath: string = '/') {

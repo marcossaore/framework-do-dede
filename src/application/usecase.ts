@@ -1,25 +1,33 @@
-import { UseCase } from "@/protocols";
+import { Input } from "./controller";
 
-export const USE_CASE_DECORATORS = Symbol('useCaseDecorators');
+export abstract class UseCase<UseCaseInput, UseCaseOutput, UseCaseContext = any> {
+  private readonly data: any;
+  private readonly context?: UseCaseContext;
 
-export interface UseCase<Input, Output>  {
-  execute(input: Input): Promise<Output>
+  constructor(input: Input<UseCaseInput>) {
+    this.data = input.data;
+    if (input.context) {
+      this.context = input.context;
+    }
+  }
+
+  protected getData(): UseCaseInput {
+    return this.data;
+  }
+
+  protected getContext(): UseCaseContext {
+    return this?.context as UseCaseContext;
+  }
+
+  abstract execute(): Promise<UseCaseOutput>
 }
 
-export function UseCaseContext(middlewareKey: string) {
-  return function (target: any, propertyKey: string) {
-    const metadata = Reflect.getMetadata('context', target.constructor) || [];
-    metadata.push({ propertyKey, middlewareKey });
-    Reflect.defineMetadata('context', metadata, target.constructor);
-  };
-}
-
-export function UseCaseDecorate(
-   useCases: UseCase<any, any> | (new (...args: any[]) => UseCase<any, any>) | Array<UseCase<any, any> | (new (...args: any[]) => UseCase<any, any>)>
-): ClassDecorator {
-  return function (target: any) {
-    const decorators = Array.isArray(useCases) ? useCases : [useCases];
-    Reflect.defineMetadata(USE_CASE_DECORATORS, decorators, target);
-    return target;
-  };
-}
+// export function UseCaseDecorate(
+//   useCases: UseCase<any, any> | (new (...args: any[]) => UseCase<any, any>) | Array<UseCase<any, any> | (new (...args: any[]) => UseCase<any, any>)>
+// ): ClassDecorator {
+//   return function (target: any) {
+//     const decorators = Array.isArray(useCases) ? useCases : [useCases];
+//     Reflect.defineMetadata(USE_CASE_DECORATORS, decorators, target);
+//     return target;
+//   };
+// }

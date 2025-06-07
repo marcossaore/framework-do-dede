@@ -1,7 +1,7 @@
 import { Controller, Delete, Get, Middleware, Post, Put } from '@/application';
 import { MiddlewareHandler, Middlewares } from '@/application/controller';
 
-describe('Controller Decorators', () => {
+describe('Controller', () => {
   describe('@Controller', () => {
 
     @Controller('/users')
