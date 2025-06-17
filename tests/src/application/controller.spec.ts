@@ -1,5 +1,4 @@
-import { Controller, Delete, Get, Middleware, Post, Put } from '@/application';
-import { MiddlewareHandler, Middlewares } from '@/application/controller';
+import { Controller, Delete, Get, UseMiddleware, UseMiddlewares, Post, Put, Middleware } from '@/application';
 
 describe('Controller', () => {
   describe('@Controller', () => {
@@ -23,7 +22,7 @@ describe('Controller', () => {
     });
 
     describe('HTTP Method Decorators', () => {
-      const testCases = [
+      const testCases: { decorator: any, method: string, config: any }[] = [
         {
           decorator: Post,
           method: 'post',
@@ -31,7 +30,7 @@ describe('Controller', () => {
             path: '/custom',
             statusCode: 201,
             params: ['id'],
-            query: ['filter']
+            query: ['filter'],
           }
         },
         {
@@ -69,7 +68,9 @@ describe('Controller', () => {
           path: config.path || '',
           statusCode: config.statusCode || 200,
           params: config.params || undefined,
-          query: config.query || undefined
+          query: config.query || undefined,
+          headers: config.headers || undefined,
+          responseType: config.responseType || 'json'
         });
       });
 
@@ -116,7 +117,9 @@ describe('Controller', () => {
           path: '',
           statusCode: 200,
           params: undefined,
-          query: undefined
+          query: undefined,
+          headers: undefined,
+          responseType: 'json'
         });
       });
     });
@@ -140,14 +143,14 @@ describe('Controller', () => {
         }
       }
 
-      class AuthMiddleware implements MiddlewareHandler {
+      class AuthMiddleware implements Middleware {
         execute(input: any): Promise<{ auth: User }> {
           const user = new User('John Doe');
           return Promise.resolve({ auth: user });
         }
       }
 
-      class AuthMiddleware2 implements MiddlewareHandler {
+      class AuthMiddleware2 implements Middleware {
         execute(input: any): Promise<{ auth: User }> {
           const user = new User('John Doe');
           return Promise.resolve({ auth: user });
@@ -156,7 +159,7 @@ describe('Controller', () => {
 
       @Controller('/users')
       class UserController {
-        @Middleware(AuthMiddleware)
+        @UseMiddleware(AuthMiddleware)
         testMethod(input: any) {
           console.log('testMethod called with input', input);
         }
@@ -172,7 +175,7 @@ describe('Controller', () => {
       it('should register multiple middlewares', () => {
         @Controller('/users')
         class UserController {
-          @Middlewares([AuthMiddleware, AuthMiddleware2])
+          @UseMiddlewares([AuthMiddleware, AuthMiddleware2])
           testMethod(input: any) {
             console.log('testMethod called with input', input);
           }
@@ -196,7 +199,7 @@ describe('Controller', () => {
         expect(() => {
           @Controller('/users')
           class UserController {
-            @Middleware(NotMiddleware as any)
+            @UseMiddleware(NotMiddleware as any)
             testMethod() {}
           }
         }).toThrow('Middleware must implement execute()');
