@@ -1,4 +1,5 @@
 import { Controller, Delete, Get, UseMiddleware, UseMiddlewares, Post, Put, Middleware } from '@/application';
+import { Tracer, TracerData, Tracing } from '@/application/controller';
 
 describe('Controller', () => {
   describe('@Controller', () => {
@@ -203,6 +204,55 @@ describe('Controller', () => {
             testMethod() {}
           }
         }).toThrow('Middleware must implement execute()');
+      });
+    });
+
+    describe('@Tracing', () => {
+      class TracerMock implements Tracer {
+        trace(data: TracerData): Promise<any> {
+          return Promise.resolve(data);
+        }
+      }
+
+      it('should register tracer and set metadata on all class', () => {
+        @Controller('/users')
+        @Tracing(new TracerMock())
+        class UserController {
+          @Post({ statusCode: 200 })
+          test1 () {
+
+          }
+
+          @Put({ statusCode: 200})
+          test2() {
+
+          }
+        }
+
+        expect(Reflect.getMetadata('tracer', UserController)).toBeInstanceOf(TracerMock)
+        expect(Reflect.getMetadata('tracer', UserController.prototype, 'test1')).toBeUndefined()
+        expect(Reflect.getMetadata('tracer', UserController.prototype, 'test2')).toBeUndefined()
+      });
+
+      it('should register tracer and set metadata on method', () => {
+        @Controller('/users')
+        class UserController {
+
+          @Tracing(new TracerMock())
+          @Post({ statusCode: 200 })
+          test1 () {
+
+          }
+
+          @Put({ statusCode: 200})
+          test2() {
+
+          }
+        }
+
+        expect(Reflect.getMetadata('tracer', UserController.prototype, 'test1')).toBeInstanceOf(TracerMock)
+        expect(Reflect.getMetadata('tracer', UserController)).toBeUndefined()
+        expect(Reflect.getMetadata('tracer', UserController.prototype, 'test2')).toBeUndefined()
       });
     });
   });
