@@ -1,5 +1,4 @@
 import { Registry } from "@/infra/di/registry";
-import { StorageGateway } from "@/protocols";
 import 'reflect-metadata';
 
 export interface StorageGateway {
