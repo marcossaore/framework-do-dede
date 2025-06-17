@@ -13,14 +13,17 @@ class ComponentRegistry {
         this.dependencies.set(name, dependency);
     }
 
-    inject(name: string) {
+    inject(name: string): any {
         if (!this.dependencies.get(name)) throw new Error(`Dependency not found ${name}`);
         return this.dependencies.get(name);
+    }
+
+    remove(name: string): void {
+        this.dependencies.delete(name);
     }
 }
 
 export const Registry = ComponentRegistry.getInstance();
-
 
 export function Inject(name: string) {
     return function (target: any, propertyKey: string): void {

@@ -49,5 +49,11 @@ describe('Registry', () => {
       expect(instance.dep1.execute()).toBe('value 1');
       expect(instance.dep2.execute()).toBe(42);
     });
+
+    it('should remove dependency', () => {
+      Registry.load('dep1', { execute: () => 'value 1' });
+      Registry.remove('dep1');
+      expect(() => Registry.inject('dep1')).toThrow("Dependency not found dep1")
+    });
   });
 });
