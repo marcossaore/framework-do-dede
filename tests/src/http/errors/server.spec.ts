@@ -1,4 +1,4 @@
-import { BadRequest, Conflict, Forbidden, NotFound, ServerError, Unauthorized, UnprocessableEntity } from '@/http/ServerError';
+import { BadRequest, Conflict, Forbidden, NotFound, ServerError, Unauthorized, UnprocessableEntity } from '@/http/errors/server';
 
   // Test subclass to validate abstract class behavior
   class TestServerError extends ServerError {
