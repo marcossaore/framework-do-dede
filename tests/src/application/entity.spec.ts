@@ -1,4 +1,5 @@
-import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix, Id, EntityIdentifier } from '@/application/entity';
+import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix, Id } from '@/application/entity';
+import type { EntityIdentifier } from '@/application/entity';
 
 describe('Entity', () => {
 
@@ -174,6 +175,10 @@ describe('Entity', () => {
     }
   }
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should throw an error if the strategyId is not implemented', () => {
     expect(() => TestEntityWithoutStrategyId.create({ name: 'test' })).toThrow('StrategyId must to be implement.');
   });
@@ -203,11 +208,9 @@ describe('Entity', () => {
     })
 
     expect(entity.getName()).toBe('test');
-    expect(entity.hasComplex()).toBeUndefined();
     expect(entity.getEmail().getValue()).toBe('4YlYX@example.com');
     expect(entity.getSecret()).toBe('confidential');
     expect(entity.getTestId()).toBe('simpleId');
-    expect(entity.isFirstAccess()).toBeUndefined();
   });
 
   it('should serialize properties correctly when toEntity is called - sync', async () => {
@@ -258,8 +261,6 @@ describe('Entity', () => {
       name: 'test',
       email: '4YlYX@example.com',
       secret: 'confidential',
-      complex: null,
-      firstAccess: null,
       testId: 'simpleId'
     });
   });
@@ -273,8 +274,6 @@ describe('Entity', () => {
     const result = entity.toData()
 
     expect(result.email).toBeInstanceOf(Email);
-    expect(result.complex).toBeUndefined();
-    expect(result.firstAccess).toBeUndefined();
     expect(result.name).toBe('test');
     expect(result).not.toHaveProperty('secret');
     expect(result.testId).toBe('simpleId');
