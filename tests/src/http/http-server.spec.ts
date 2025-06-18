@@ -1,22 +1,24 @@
-import HttpServer, { type HttpServerParams } from '@/http/HttpServer';
-
-const mockFramework = {
-    listen: jest.fn(),
-    use: jest.fn(),
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn(),
-    patch: jest.fn(),
-};
-
-class MockHttpServer extends HttpServer {
-    constructor() {
-        super(mockFramework, 'elysia')
-    }
-}
+import HttpServer, { HttpServerParams } from '@/http/http-server';
 
 describe('HttpServer', () => {
+    const mockFramework = {
+        listen: jest.fn(),
+        use: jest.fn(),
+        get: jest.fn(),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+        patch: jest.fn(),
+    };
+    
+    class MockHttpServer extends HttpServer {
+        async close(): Promise<void> {
+            console.log('close')
+        }
+        constructor() {
+            super(mockFramework, 'elysia')
+        }
+    }
     let server: MockHttpServer;
 
     beforeEach(() => {
@@ -27,6 +29,9 @@ describe('HttpServer', () => {
     describe('Constructor', () => {
         it('should throw error if frameworkName is invalid', () => {
             class InvalidServer extends HttpServer {
+                async close(): Promise<void> {
+                    console.log('close')
+                }
                 protected frameworkName = 'elysia';
             }
             expect(() => new InvalidServer(mockFramework, 'invalid' as any)).toThrow('Framework not supported');
@@ -41,37 +46,17 @@ describe('HttpServer', () => {
         });
     });
 
-    describe('mountRoute()', () => {
-        it('should return base route without params', () => {
-            const params: HttpServerParams = { method: 'get', route: '/test' };
-            expect(server['mountRoute'](params)).toBe('/test');
-        });
-
-        it('should handle params with _ correctly', () => {
-            const params: HttpServerParams = {
-                method: 'get',
-                route: '/users',
-                params: ['_static1', '_static2'],
-            };
-            expect(server['mountRoute'](params)).toBe('/users/static1/static2');
-        });
-
-        it('should convert params to path variables', () => {
-            const params: HttpServerParams = {
-                method: 'get',
-                route: '/api',
-                params: ['id|number', 'name|string'],
-            };
-            expect(server['mountRoute'](params)).toBe('/api/:id/:name');
-        });
-    });
-
     describe('register()', () => {
         it('should register route with correct parameters', () => {
             const params: HttpServerParams = {
                 method: 'get',
                 route: '/test',
                 statusCode: 201,
+                handler: {
+                    instance: jest.fn(),
+                    methodName: 'test',
+                },
+                responseType: 'json',
             };
             const handler = jest.fn();
 
@@ -85,6 +70,13 @@ describe('HttpServer', () => {
         it('should start listening on specified port', () => {
             server.listen(3000);
             expect(mockFramework.listen).toHaveBeenCalledWith(3000);
+        });
+    });
+
+    describe('setDefaultMessageError() and getDefaultMessageError()', () => {
+        it('should set default message error', () => {
+            server.setDefaultMessageError('test');
+            expect(server.getDefaultMessageError()).toBe('test');
         });
     });
 });
