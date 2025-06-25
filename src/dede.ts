@@ -1,13 +1,12 @@
-import { Registry } from "./di/registry";
-import { ControllerHandler } from "./handlers";
 import { HttpServer } from "./http";
-import { ElysiaHttpServer } from "./http/ElysiaHttpServer";
-import { ExpressHttpServer } from "./http/ExpressHttpServer";
+import ControllerHandler from "./http/controller.handler";
+import { ElysiaServerAdapter } from "./http/elysia-server.adapter";
+import { ExpressServerAdapter } from "./http/express-server.adapter";
+import { Registry } from "./infra/di/registry";
 
 export type Register = {
     name: string,
     classLoader: any,
-    autoLoad?: boolean
 }
 
 export type Options = {
@@ -20,41 +19,41 @@ export type Options = {
     defaultServerError?: string
 }
 
-
 export class Dede {
 
-    private static httpServer: HttpServer;
+    private readonly httpServer!: HttpServer;
+
+    private constructor(
+        private readonly framework: {
+            use: 'elysia' | 'express',
+            port?: number,
+            middlewares?: CallableFunction[]
+        },
+        private readonly defaultServerError?: string
+    ) {
+        if (framework.use === 'elysia') {
+            this.httpServer = new ElysiaServerAdapter(framework.middlewares || [])
+        }
+        if (framework.use === 'express') {
+            this.httpServer = new ExpressServerAdapter(framework.middlewares || [])
+        }
+        if (defaultServerError) this.httpServer.setDefaultMessageError(defaultServerError)
+        new ControllerHandler(this.httpServer, framework.port || 80);
+    }
 
     static async start ({ framework, registries, defaultServerError }: Options): Promise<Dede> {
         await this.loadRegistries(registries);
-        if (framework.use === 'elysia') {
-            Dede.httpServer = new ElysiaHttpServer(framework.middlewares || [])
-        }
-        if (framework.use === 'express') {
-            Dede.httpServer = new ExpressHttpServer(framework.middlewares || [])
-        }
-        if (defaultServerError) Dede.httpServer.setDefaultMessageError(defaultServerError)
-        if(!Registry.has('controllers')){
-            throw new Error("No controllers registered");
-        }
-        new ControllerHandler(Dede.httpServer, framework.port || 80)
-        this.clearControllers()
-        return Dede
+        return new Dede(framework, defaultServerError)
     }
 
-    static async stop() {
-        await Dede.httpServer.close()
-    }
-
-    private static clearControllers() {
-        Registry.clear('controllers');
+    async stop() {
+        await this.httpServer.close()
     }
 
     private static async loadRegistries(registries: Register []) {
-        registries.forEach(({ classLoader, name, autoLoad = true}) => {
-            if (autoLoad) Registry.register(name, Registry.classLoader(classLoader));
-            else Registry.register(name, classLoader);
+        registries.forEach(({ classLoader, name }) => {
+            Registry.load(name, classLoader);
         })
-        Registry.loaded()
+        return new Promise(resolve => setTimeout(resolve, 500))
     }
 }

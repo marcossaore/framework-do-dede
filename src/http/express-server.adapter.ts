@@ -6,10 +6,17 @@ const app = express()
 
 export class ExpressServerAdapter extends HttpServer {
     async close(): Promise<void> {
-        await (this.framework as any).close()
-        console.log('server closed')
+
+        const shutDown = () => {
+            (this.framework as any).close(() => {
+                console.log("Server closed. Cleanup complete.");
+                process.exit(0);
+            });
+        }
+        process.on("SIGINT", shutDown);
+        process.on("SIGTERM", shutDown);
     }
-    
+
     constructor(uses?: CallableFunction[]) {
         super(app, 'express')
         this.framework.use(express.json());

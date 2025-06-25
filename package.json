@@ -1,6 +1,6 @@
 {
   "name": "framework-do-dede",
-  "version": "2.0.21",
+  "version": "3.0.0",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -12,7 +12,7 @@
     "require": "./dist/index.cjs"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest && jest ./example/test",
     "test:watch": "jest --watch",
     "clean": "rimraf dist",
     "build": "npm run clean && tsc -p tsconfig.build.json && tsc-alias",
