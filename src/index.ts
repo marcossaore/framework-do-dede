@@ -22,6 +22,8 @@ import {
 
 import { Inject } from './infra/di/registry'
 
+import { Dede, type Options, Register } from './dede'
+
 
 export {
     Controller, Post, Get, Put, Delete, Patch, Input,
@@ -36,5 +38,7 @@ export {
 
     Storage, StorageGateway,
 
-    Inject
+    Inject,
+
+    Dede, Options, Register
 }
