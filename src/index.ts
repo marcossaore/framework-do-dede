@@ -20,6 +20,8 @@ import {
     // storage
 } from "./application";
 
+import { Inject } from './infra/di/registry'
+
 
 export {
     Controller, Post, Get, Put, Delete, Patch, Input,
@@ -32,5 +34,7 @@ export {
 
     UseCase, DecorateUseCase,
 
-    Storage
+    Storage,
+
+    Inject
 }
