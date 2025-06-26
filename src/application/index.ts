@@ -6,7 +6,7 @@ import {
     type EntityIdentifier, Entity, Restrict, VirtualProperty, Serialize, GetterPrefix, Id
 } from './entity'
 import { DecorateUseCase, type UseCase } from './usecase'
-import { Storage } from './services'
+import { Storage, type StorageGateway } from './services'
 
 export {
     Controller, UseMiddleware, UseMiddlewares,
@@ -18,7 +18,7 @@ export {
 }
 
 export type {
-    Middleware, Input,
+    Middleware, Input, StorageGateway,
     UseCase,
     Tracer, TracerData,
     EntityIdentifier

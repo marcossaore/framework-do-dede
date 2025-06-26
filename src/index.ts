@@ -16,7 +16,7 @@ import {
     // usecase
 
     // storage
-    Storage
+    Storage, StorageGateway
     // storage
 } from "./application";
 
@@ -34,7 +34,7 @@ export {
 
     UseCase, DecorateUseCase,
 
-    Storage,
+    Storage, StorageGateway,
 
     Inject
 }
