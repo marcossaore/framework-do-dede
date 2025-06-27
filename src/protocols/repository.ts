@@ -12,6 +12,10 @@ export interface RepositoryRemove {
     remove(id: string | number): Promise<void>
 }
 
+export interface RepositoryRestore<T extends Entity> {
+    restore(id: string | number): Promise<T>
+}
+
 export type RepositoryRemoveBy<T> = {
     [K in keyof T & string as `removeBy${Capitalize<K>}`]: (value: T[K]) => Promise<void>;
 };
