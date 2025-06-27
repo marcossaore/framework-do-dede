@@ -26,7 +26,7 @@ import { Dede, type Options, Register } from './dede'
 
 import { ServerError, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, BadRequest, InternalServerError } from './http/errors/server'
 
-import type { RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryExistsBy, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination } from './protocols/repository'
+import type { RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryExistsBy, RepositoryRestore, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination } from './protocols/repository'
 
 export {
     Controller, Post, Get, Put, Delete, Patch, Input,
@@ -47,5 +47,5 @@ export {
 
     ServerError, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, BadRequest, InternalServerError,
 
-    RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryExistsBy, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination
+    RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryRestore, RepositoryExistsBy, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination
 }
