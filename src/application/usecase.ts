@@ -3,22 +3,14 @@ import { Input } from "./controller";
 export const USE_CASE_DECORATORS = Symbol('USE_CASE_DECORATORS');
 
 export abstract class UseCase<UseCaseInput, UseCaseOutput, UseCaseContext = any> {
-  private readonly data: any;
-  private readonly context?: UseCaseContext;
+  protected readonly data: UseCaseInput;
+  protected readonly context?: UseCaseContext;
 
   constructor(input: Input<UseCaseInput>) {
     this.data = input.data;
     if (input.context) {
       this.context = input.context;
     }
-  }
-
-  protected getData(): UseCaseInput {
-    return this.data;
-  }
-
-  protected getContext(): UseCaseContext {
-    return this?.context as UseCaseContext;
   }
 
   abstract execute(): Promise<UseCaseOutput>
