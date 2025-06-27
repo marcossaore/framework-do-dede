@@ -24,6 +24,8 @@ import { Inject } from './infra/di/registry'
 
 import { Dede, type Options, Register } from './dede'
 
+import { ServerError, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, BadRequest, InternalServerError } from './http/errors/server'
+
 
 export {
     Controller, Post, Get, Put, Delete, Patch, Input,
@@ -40,5 +42,7 @@ export {
 
     Inject,
 
-    Dede, Options, Register
+    Dede, Options, Register,
+
+    ServerError, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, BadRequest, InternalServerError
 }
