@@ -3,11 +3,11 @@ import { Input } from "./controller";
 export const USE_CASE_DECORATORS = Symbol('USE_CASE_DECORATORS');
 
 export abstract class UseCase<UseCaseInput, UseCaseOutput, UseCaseContext = any> {
-  protected readonly data?: UseCaseInput | Record<string, any>;
+  protected readonly data?: UseCaseInput;
   protected readonly context?: UseCaseContext;
 
   protected constructor(input?: Input<UseCaseInput>) {
-    this.data = input?.data || {};
+    this.data = input?.data || undefined;
     if (input?.context) {
       this.context = input.context;
     }
