@@ -6,7 +6,7 @@ export abstract class UseCase<UseCaseInput, UseCaseOutput, UseCaseContext = any>
   protected readonly data?: UseCaseInput;
   protected readonly context?: UseCaseContext;
 
-  protected constructor(input?: Input<UseCaseInput>) {
+  constructor(input?: Input<UseCaseInput>) {
     this.data = input?.data || undefined;
     if (input?.context) {
       this.context = input.context;
