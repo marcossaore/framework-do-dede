@@ -16,7 +16,7 @@ export type HttpServerParams = {
     handler: {
         instance: any,
         methodName: string,
-        tracer?: Tracer
+        tracer?: Tracer<any>
     },
     responseType: 'json' | 'text' | 'html'
     middlewares?: Middleware[],
