@@ -97,19 +97,13 @@ export abstract class Entity {
                 this[`get${property[0].toUpperCase()}${property.slice(1)}`] = () => this[property];
                 continue;
             }
-            if (!this[property]) {
-                // @ts-ignore
-                const prefixName = this.constructor.propertiesConfigs[property].prefix;
-                const getterName = `${prefixName}${property[0].toUpperCase()}${property.slice(1)}`;
-                if (this[getterName]) continue;
-                this[getterName] = () => this[property];
-            } else {
-                // @ts-ignore
-                const prefixName = this.constructor.propertiesConfigs[property]?.prefix || (typeof this[property] === 'boolean' ? 'is' : 'get');
-                const getterName = `${prefixName}${property[0].toUpperCase()}${property.slice(1)}`;
-                if (this[getterName]) continue;
-                this[getterName] = () => this[property];
-            }
+
+            // @ts-ignore
+            const prefixName = this.constructor.propertiesConfigs[property]?.prefix || (typeof this[property] === 'boolean' ? 'is' : 'get');
+            const getterName = `${prefixName}${property[0].toUpperCase()}${property.slice(1)}`;
+            if (this[getterName]) continue;
+            this[getterName] = () => this[property];
+
         }
     }
 
