@@ -115,7 +115,7 @@ export default class ControllerHandler {
                 const routeConfig = Reflect.getMetadata('route', controller.prototype, methodName);
                 const middlewares: Array<new (...args: any[]) => Middleware> = Reflect.getMetadata('middlewares', controller.prototype, methodName);
                 const responseType = Reflect.getMetadata('responseType', controller.prototype, methodName) || 'json';
-                tracer = Reflect.getMetadata('tracer', controller.prototype, methodName) || tracer as Tracer;
+                tracer = Reflect.getMetadata('tracer', controller.prototype, methodName) || tracer as Tracer<void>;
                 controllers.push({
                     method: routeConfig.method,
                     route: basePath + routeConfig.path,

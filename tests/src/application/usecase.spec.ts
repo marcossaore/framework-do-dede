@@ -5,7 +5,7 @@ describe('UseCase', () => {
   it('should be able to get data passed to use case', async () => {
     class CreateUser extends UseCase<any, any> {
       execute(): Promise<any> {
-        const data = this.getData();
+        const data = this.data;
         return Promise.resolve({
           token: data.token
         });
@@ -23,10 +23,10 @@ describe('UseCase', () => {
     class CreateUser extends UseCase<any, any> {
 
       execute(): Promise<any> {
-        const data = this.getData();
+        const data = this.data;
         return Promise.resolve({
           token: data.token,
-          id: this.getContext().auth.getId()
+          id: this.context.auth.getId()
         });
       }
     }

@@ -58,12 +58,13 @@ describe("express app", () => {
     it("should call putExample - PUT", async () => {
         const { data, status } = await axios.put(`${expressEndpoint}/example/5?test=ok`, {
         },
-        {
-            headers: {
-                'x-type': 'any-type'
+            {
+                headers: {
+                    'x-type': 'any-type'
+                }
             }
-        }
         )
+        console.log(data)
         expect(data.same['x-type']).toBe("any-type")
         expect(data.same.id).toBe("5")
         expect(data.same.test).toBe("ok")
@@ -124,11 +125,11 @@ describe("elysia app", () => {
     it("should call putExample - PUT", async () => {
         const { data, status } = await axios.put(`${expressEndpoint}/example/5?test=ok`, {
         },
-        {
-            headers: {
-                'x-type': 'any-type'
+            {
+                headers: {
+                    'x-type': 'any-type'
+                }
             }
-        }
         )
         expect(data.same['x-type']).toBe("any-type")
         expect(data.same.id).toBe("5")

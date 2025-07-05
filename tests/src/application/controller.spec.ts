@@ -208,9 +208,11 @@ describe('Controller', () => {
     });
 
     describe('@Tracing', () => {
-      class TracerMock implements Tracer {
-        trace(data: TracerData): Promise<any> {
-          return Promise.resolve(data);
+
+      type MyType = void;
+      class TracerMock implements Tracer<MyType> {
+        trace(data: TracerData): MyType {
+          console.log(data);
         }
       }
 

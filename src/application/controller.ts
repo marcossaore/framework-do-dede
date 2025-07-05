@@ -16,8 +16,8 @@ export interface TracerData {
     headers: Record<string, string>
 }
 
-export interface Tracer {
-   trace(data: TracerData): Promise<any>
+export interface Tracer<R> {
+   trace(data: TracerData): R
 }
 
 export interface Input<T, K = any> {
@@ -36,7 +36,7 @@ export function Controller(basePath: string = '/') {
     };
 }
 
-export function Tracing(tracer: Tracer) {
+export function Tracing<R>(tracer: Tracer<R>) {
     return function (target: any, propertyKey?: string) {
         if (!propertyKey) {
             Reflect.defineMetadata('tracer', tracer, target);
