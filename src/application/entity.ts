@@ -62,7 +62,7 @@ export abstract class Entity {
         return result;
     }
 
-    async toAsyncData({ serialize = false }: { serialize?: boolean } = {}): Promise<Record<string, any>> {
+    async toAsyncData({ serialize = true }: { serialize?: boolean } = {}): Promise<Record<string, any>> {
         // @ts-ignore
         const propertiesConfigs = this.constructor.propertiesConfigs as Record<string, any>;
         // @ts-ignore
@@ -99,7 +99,7 @@ export abstract class Entity {
             }
 
             // @ts-ignore
-            const prefixName = this.constructor.propertiesConfigs[property]?.prefix || (typeof this[property] === 'boolean' ? 'is' : 'get');
+            const prefixName = this.constructor?.propertiesConfigs[property]?.prefix || (typeof this[property] === 'boolean' ? 'is' : 'get');
             const getterName = `${prefixName}${property[0].toUpperCase()}${property.slice(1)}`;
             if (this[getterName]) continue;
             this[getterName] = () => this[property];

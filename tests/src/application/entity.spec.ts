@@ -299,7 +299,7 @@ describe('Entity', () => {
       name: 'test',
       file: 'file.jpg'
     })
-    const result = await entity.toAsyncData()
+    const result = await entity.toAsyncData({ serialize: false})
 
     expect(result.photo).toBeInstanceOf(Photo);
     expect(result.name).toBe('test');
@@ -310,7 +310,7 @@ describe('Entity', () => {
       name: 'test',
       file: 'file.jpg'
     })
-    const result = await entity.toAsyncData({ serialize: true })
+    const result = await entity.toAsyncData()
 
     expect(result.photo).toBe('https://blobstorage.com/file/1234567890');
     expect(result.name).toBe('test');
