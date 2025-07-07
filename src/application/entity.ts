@@ -12,7 +12,7 @@ export abstract class Entity {
         for (const [propName] of Object.entries(this)) {
             let value = (this as any)[propName];
             if (typeof value === 'function') continue;
-            if (propertiesConfigs[propName]?.serialize && value) {
+            if (propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
                 value = propertiesConfigs[propName].serialize(value);
             }
             if (!value) value = null;
@@ -28,7 +28,7 @@ export abstract class Entity {
         for (const [propName] of Object.entries(this)) {
             let value = (this as any)[propName];
             if (typeof value === 'function') continue;
-            if (propertiesConfigs[propName]?.serialize && value) {
+            if (propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
                 value = await propertiesConfigs[propName].serialize(value);
             }
             if (!value) value = null;
@@ -44,10 +44,10 @@ export abstract class Entity {
         const virtualProperties = this.constructor.virtualProperties as Record<string, any>;
         const result: Record<string, any> = {};
         for (const [propName] of Object.entries(this)) {
-            if (propertiesConfigs[propName]?.restrict) continue;
+            if (propertiesConfigs && propertiesConfigs[propName]?.restrict) continue;
             if (typeof (this as any)[propName] === 'function') continue;
             let value = (this as any)[propName];
-            if (serialize && propertiesConfigs[propName]?.serialize && value) {
+            if (serialize && propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
                 value = propertiesConfigs[propName].serialize(value);
             }
             result[propName] = value;
@@ -70,9 +70,9 @@ export abstract class Entity {
         const result: Record<string, any> = {};
         for (const [propName] of Object.entries(this)) {
             if (typeof (this as any)[propName] === 'function') continue;
-            if (propertiesConfigs[propName]?.restrict) continue;
+            if (propertiesConfigs && propertiesConfigs[propName]?.restrict) continue;
             let value = (this as any)[propName];
-            if (serialize && propertiesConfigs[propName]?.serialize && value) {
+            if (serialize && propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
                 value = await propertiesConfigs[propName].serialize(value);
             }
             result[propName] = value;
