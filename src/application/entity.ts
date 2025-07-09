@@ -12,6 +12,11 @@ export abstract class Entity {
         for (const [propName] of Object.entries(this)) {
             let value = (this as any)[propName];
             if (typeof value === 'function') continue;
+            // @ts-ignore
+            if (this.constructor.strategyId === propName) {
+                result[propName] = (this as any)[propName].getValue();
+                continue;
+            }
             if (propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
                 value = propertiesConfigs[propName].serialize(value);
             }
@@ -28,6 +33,11 @@ export abstract class Entity {
         for (const [propName] of Object.entries(this)) {
             let value = (this as any)[propName];
             if (typeof value === 'function') continue;
+            // @ts-ignore
+            if (this.constructor.strategyId === propName) {
+                result[propName] = (this as any)[propName].getValue();
+                continue;
+            }
             if (propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
                 value = await propertiesConfigs[propName].serialize(value);
             }
@@ -46,6 +56,11 @@ export abstract class Entity {
         for (const [propName] of Object.entries(this)) {
             if (propertiesConfigs && propertiesConfigs[propName]?.restrict) continue;
             if (typeof (this as any)[propName] === 'function') continue;
+            // @ts-ignore
+            if (this.constructor.strategyId === propName) {
+                result[propName] = (this as any)[propName].getValue();
+                continue;
+            }
             let value = (this as any)[propName];
             if (serialize && propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
                 value = propertiesConfigs[propName].serialize(value);
@@ -71,6 +86,11 @@ export abstract class Entity {
         for (const [propName] of Object.entries(this)) {
             if (typeof (this as any)[propName] === 'function') continue;
             if (propertiesConfigs && propertiesConfigs[propName]?.restrict) continue;
+            // @ts-ignore
+            if (this.constructor.strategyId === propName) {
+                result[propName] = (this as any)[propName].getValue();
+                continue;
+            }
             let value = (this as any)[propName];
             if (serialize && propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
                 value = await propertiesConfigs[propName].serialize(value);
@@ -89,15 +109,15 @@ export abstract class Entity {
 
     protected generateGetters() {
         // @ts-ignore
+        if (this.constructor.strategyId) {
+            // @ts-ignore
+            this[`get${this.constructor.strategyId[0].toUpperCase()}${this.constructor.strategyId.slice(1)}`] = () => this[this.constructor.strategyId].getValue();
+        }
+
         for (const property of Object.keys(this)) {
             if (typeof property === 'function') continue;
             // @ts-ignore
-            if (this.constructor.strategyId === property) {
-                this[property] = this[property].getValue();
-                this[`get${property[0].toUpperCase()}${property.slice(1)}`] = () => this[property];
-                continue;
-            }
-
+            if (this.constructor.strategyId === property) continue;
             let prefixName = null;
 
             // @ts-ignore
