@@ -111,7 +111,10 @@ export abstract class Entity {
         // @ts-ignore
         if (this.constructor.strategyId) {
             // @ts-ignore
-            this[`get${this.constructor.strategyId[0].toUpperCase()}${this.constructor.strategyId.slice(1)}`] = () => this[this.constructor.strategyId].getValue();
+            if (!this[`get${this.constructor.strategyId[0].toUpperCase()}${this.constructor.strategyId.slice(1)}`]) {
+                // @ts-ignore
+                this[`get${this.constructor.strategyId[0].toUpperCase()}${this.constructor.strategyId.slice(1)}`] = () => this[this.constructor.strategyId].getValue();
+            }
         }
 
         for (const property of Object.keys(this)) {
