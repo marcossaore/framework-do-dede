@@ -125,7 +125,7 @@ describe('Entity', () => {
 
     private readonly name: string;
 
-    @Serialize(async (photo: Photo) => await photo.getSavedObjectUrl() )
+    @Serialize(async (photo: Photo) => await photo.getSavedObjectUrl())
     private readonly photo: Photo;
 
     @Restrict()
@@ -192,12 +192,12 @@ describe('Entity', () => {
       firstAccess: true
     })
 
-    // expect(entity.getName()).toBe('test');
-    // expect(entity.hasComplex()).toBeInstanceOf(Complex);
-    // expect(entity.getEmail()).toBeInstanceOf(Email);
-    // expect(entity.getSecret()).toBe('confidential');
-    // expect(entity.isFirstAccess()).toBeTruthy();
-    // expect(entity.getTestId()).toBe('simpleId');
+    expect(entity.getName()).toBe('test');
+    expect(entity.hasComplex()).toBeInstanceOf(Complex);
+    expect(entity.getEmail()).toBeInstanceOf(Email);
+    expect(entity.getSecret()).toBe('confidential');
+    expect(entity.isFirstAccess()).toBeTruthy();
+    expect(entity.getTestId()).toBe('simpleId');
   });
 
   it('should generate getters for all properties with undefined for properties that are not defined', async () => {
@@ -299,7 +299,7 @@ describe('Entity', () => {
       name: 'test',
       file: 'file.jpg'
     })
-    const result = await entity.toAsyncData({ serialize: false})
+    const result = await entity.toAsyncData({ serialize: false })
 
     expect(result.photo).toBeInstanceOf(Photo);
     expect(result.name).toBe('test');

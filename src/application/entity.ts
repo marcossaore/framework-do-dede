@@ -118,7 +118,7 @@ export abstract class Entity {
         }
 
         for (const property of Object.keys(this)) {
-            if (typeof property === 'function') continue;
+            if (typeof this[property] === 'function') continue;
             // @ts-ignore
             if (this.constructor.strategyId === property) continue;
             let prefixName = null;
