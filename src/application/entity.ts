@@ -121,7 +121,6 @@ export abstract class Entity {
             if (typeof property === 'function') continue;
             // @ts-ignore
             if (this.constructor.strategyId === property) continue;
-            if (this[property]?.generateGetters) continue;
             let prefixName = null;
 
             // @ts-ignore
