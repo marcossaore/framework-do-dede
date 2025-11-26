@@ -1,81 +1,197 @@
-import { DecorateUseCase, USE_CASE_DECORATORS, UseCase } from '@/application/usecase';
-import 'reflect-metadata';
+import { DecorateUseCase, UseCase } from "@/application";
 
-describe('UseCase', () => {
-  it('should be able to get data passed to use case', async () => {
-    class CreateUser extends UseCase<any, any> {
-      execute(): Promise<any> {
-        const data = this.data;
-        return Promise.resolve({
-          token: data.token
+// Mock UseCases para teste
+class MockUseCaseA extends UseCase<{ value: string }, string> {
+  async execute(): Promise<string> {
+    console.log('MockUseCaseA executed with data:', this.data);
+    return `A: ${this.data?.value || 'no-data'}`;
+  }
+}
+
+class MockUseCaseB extends UseCase<{ value: string }, string> {
+  async execute(): Promise<string> {
+    console.log('MockUseCaseB executed with data:', this.data);
+    return `B: ${this.data?.value || 'no-data'}`;
+  }
+}
+
+class MockUseCaseWithContext extends UseCase<{ value: string }, string, { userId: string }> {
+  async execute(): Promise<string> {
+    console.log('MockUseCaseWithContext executed with context:', this.context);
+    return `Context: ${this.context?.userId || 'no-user'}`;
+  }
+}
+
+// UseCase base para ser decorado
+class OriginalUseCase extends UseCase<{ value: string }, string> {
+  async execute(): Promise<string> {
+    console.log('OriginalUseCase executed with data:', this.data);
+    return `Original: ${this.data?.value || 'no-data'}`;
+  }
+}
+
+describe('DecorateUseCase', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(console, 'log').mockImplementation();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('should execute single use case before original method', async () => {
+    @DecorateUseCase({
+      useCase: MockUseCaseA
+    })
+    class DecoratedUseCase extends OriginalUseCase {}
+
+    const useCase = new DecoratedUseCase({
+      data: { value: 'test-value' }
+    });
+
+    const result = await useCase.execute();
+
+    expect(result).toBe('Original: test-value');
+    // Verifica se o MockUseCaseA foi executado através dos logs
+    expect(console.log).toHaveBeenCalledWith(
+      'MockUseCaseA executed with data:',
+      { value: 'test-value' }
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      'OriginalUseCase executed with data:',
+      { value: 'test-value' }
+    );
+  });
+
+  it('should execute multiple use cases in order before original method', async () => {
+    @DecorateUseCase({
+      useCase: [MockUseCaseA, MockUseCaseB]
+    })
+    class DecoratedUseCase extends OriginalUseCase {}
+
+    const useCase = new DecoratedUseCase({
+      data: { value: 'test-value' }
+    });
+
+    const result = await useCase.execute();
+
+    expect(result).toBe('Original: test-value');
+    
+    // Verifica a ordem de execução
+    const calls = (console.log as jest.Mock).mock.calls;
+    expect(calls[0][0]).toBe('MockUseCaseA executed with data:');
+    expect(calls[1][0]).toBe('MockUseCaseB executed with data:');
+    expect(calls[2][0]).toBe('OriginalUseCase executed with data:');
+  });
+
+  it('should pass context to decorated use cases', async () => {
+    @DecorateUseCase({
+      useCase: MockUseCaseWithContext,
+      params: { userId: 'test-user-123' }
+    })
+    class DecoratedUseCase extends OriginalUseCase {}
+
+    const useCase = new DecoratedUseCase({
+      data: { value: 'test-value' },
+      context: { userId: 'original-user' }
+    });
+
+    const result = await useCase.execute();
+
+    expect(result).toBe('Original: test-value');
+    expect(console.log).toHaveBeenCalledWith(
+      'MockUseCaseWithContext executed with context:',
+      { 
+        userId: 'original-user',
+        options: { userId: 'test-user-123' }
+      }
+    );
+  });
+
+  it('should work with use case that has no input data', async () => {
+    class NoInputUseCase extends UseCase<void, string> {
+      async execute(): Promise<string> {
+        console.log('NoInputUseCase executed');
+        return 'no-input-result';
+      }
+    }
+
+    @DecorateUseCase({
+      useCase: NoInputUseCase
+    })
+    class DecoratedUseCase extends OriginalUseCase {}
+
+    const useCase = new DecoratedUseCase({
+      data: { value: 'test-value' }
+    });
+
+    const result = await useCase.execute();
+
+    expect(result).toBe('Original: test-value');
+    expect(console.log).toHaveBeenCalledWith('NoInputUseCase executed');
+  });
+
+  it('should preserve the original method context', async () => {
+    class ContextSensitiveUseCase extends UseCase<{ value: string }, string> {
+      private internalState = 'internal-state';
+
+      async execute(): Promise<string> {
+        return `Result with ${this.internalState} and ${this.data?.value}`;
+      }
+    }
+
+    @DecorateUseCase({
+      useCase: MockUseCaseA
+    })
+    class DecoratedUseCase extends ContextSensitiveUseCase {}
+
+    const useCase = new DecoratedUseCase({
+      data: { value: 'test-value' }
+    });
+
+    const result = await useCase.execute();
+
+    expect(result).toBe('Result with internal-state and test-value');
+  });
+
+  it('should handle empty use case array', async () => {
+    @DecorateUseCase({
+      useCase: []
+    })
+    class DecoratedUseCase extends OriginalUseCase {}
+
+    const useCase = new DecoratedUseCase({
+      data: { value: 'test-value' }
+    });
+
+    const result = await useCase.execute();
+
+    expect(result).toBe('Original: test-value');
+  });
+
+  it('should work with async use cases', async () => {
+    class AsyncUseCase extends UseCase<{ value: string }, string> {
+      async execute(): Promise<string> {
+        return new Promise(resolve => {
+          setTimeout(() => {
+            resolve(`Async: ${this.data?.value}`);
+          }, 10);
         });
       }
     }
-    const useCase = new CreateUser({ data: { token: '123' } });
+
+    @DecorateUseCase({
+      useCase: AsyncUseCase
+    })
+    class DecoratedUseCase extends OriginalUseCase {}
+
+    const useCase = new DecoratedUseCase({
+      data: { value: 'test-value' }
+    });
+
     const result = await useCase.execute();
 
-    expect(result).toEqual({
-      token: '123'
-    });
-  });
-
-  it('should be able to get context passed to use case', async () => {
-    class CreateUser extends UseCase<any, any> {
-
-      execute(): Promise<any> {
-        const data = this.data;
-        return Promise.resolve({
-          token: data.token,
-          id: this.context.auth.getId()
-        });
-      }
-    }
-    const useCase = new CreateUser({ data: { token: '123' }, context: { auth: { getId: () => 1 } } });
-    const result = await useCase.execute();
-    expect(result).toEqual({
-      token: '123',
-      id: 1
-    });
-  });
-
-  it('should be able to decorate use case', async () => {
-    class DecorateSample extends UseCase<any, any> {
-      execute(): Promise<any> {
-        return Promise.resolve({});
-      }
-    }
-    @DecorateUseCase(DecorateSample)
-    class CreateUser extends UseCase<any, any> {
-      execute(): Promise<any> {
-        return Promise.resolve({});
-      }
-    }
-
-    const metadata = Reflect.getMetadata(USE_CASE_DECORATORS, CreateUser);
-    expect(metadata).toEqual([DecorateSample]);
-  });
-
-  it('should be able to decorate multiple use cases', async () => {
-    class DecorateSample1 extends UseCase<any, any> {
-      execute(): Promise<any> {
-        return Promise.resolve({});
-      }
-    }
-
-    class DecorateSample2 extends UseCase<any, any> {
-      execute(): Promise<any> {
-        return Promise.resolve({});
-      }
-    }
-
-    @DecorateUseCase([DecorateSample1, DecorateSample2])
-    class CreateUser extends UseCase<any, any> {
-      execute(): Promise<any> {
-        return Promise.resolve({});
-      }
-    }
-
-    const metadata = Reflect.getMetadata(USE_CASE_DECORATORS, CreateUser);
-    expect(metadata).toEqual([DecorateSample1, DecorateSample2]);
+    expect(result).toBe('Original: test-value');
   });
 });
