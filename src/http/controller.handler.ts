@@ -161,11 +161,17 @@ export default class ControllerHandler {
                 statusCode: error.getStatusCode()
             }
         }
+        const debugError = {
+            sourceUrl: error.sourceURL,
+            line: error.line,
+            column: error.column,
+        }
         error = new InternalServerError(error.message, httpServer.getDefaultMessageError())
         return {
             message: error.message,
             statusCode: error.getStatusCode(),
             unexpectedError: error instanceof InternalServerError ? error.getUnexpectedError() : undefined,
+            ...debugError
         }
     }
 }
