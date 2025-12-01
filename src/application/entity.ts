@@ -14,7 +14,7 @@ export abstract class Entity {
             if (typeof value === 'function') continue;
             // @ts-ignore
             if (this.constructor.strategyId === propName) {
-                result[propName] = (this as any)[propName].getValue();
+                result[propName] = (this as any)[propName].getValue() || this[propName];
                 continue;
             }
             if (propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
