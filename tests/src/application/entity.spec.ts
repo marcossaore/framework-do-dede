@@ -1,5 +1,4 @@
-import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix, Id } from '@/application/entity';
-import type { EntityIdentifier } from '@/application/entity';
+import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix } from '@/application/entity';
 
 describe('Entity', () => {
 
@@ -48,16 +47,8 @@ describe('Entity', () => {
     firstAccess?: boolean
   };
 
-  class SimpleStringEntityIdentifier implements EntityIdentifier<string> {
-    getValue(): string {
-      return 'simpleId';
-    }
-  }
-
   class TestEntitySync extends Entity {
-
-    @Id()
-    private readonly testId: EntityIdentifier<string>;
+    private readonly testId: string;
 
     private readonly name: string;
 
@@ -79,7 +70,7 @@ describe('Entity', () => {
       return this.name.toUpperCase();
     }
 
-    private constructor({ name, email, complex, secret, firstAccess, testId }: { name: string, email: string, complex?: { id: number, value: string }, secret: string, firstAccess?: boolean, testId: EntityIdentifier<string> }) {
+    private constructor({ name, email, complex, secret, firstAccess, testId }: { name: string, email: string, complex?: { id: number, value: string }, secret: string, firstAccess?: boolean, testId: string }) {
       super();
       this.testId = testId;
       this.name = name;
@@ -97,7 +88,7 @@ describe('Entity', () => {
     static create(input: TestingEntityInput) {
       return new TestEntitySync({
         ...input,
-        testId: new SimpleStringEntityIdentifier()
+        testId: 'simpleId'
       });
     }
   }
@@ -120,8 +111,7 @@ describe('Entity', () => {
 
   class TestEntityAsync extends Entity {
 
-    @Id()
-    private readonly testId: EntityIdentifier<string>;
+    private readonly testId: string;
 
     private readonly name: string;
 
@@ -131,7 +121,7 @@ describe('Entity', () => {
     @Restrict()
     private readonly secret: string;
 
-    private constructor({ name, file, testId }: { name: string, file: any, testId: EntityIdentifier<string> }) {
+    private constructor({ name, file, testId }: { name: string, file: any, testId: string }) {
       super();
       this.testId = testId;
       this.name = name;
@@ -152,16 +142,16 @@ describe('Entity', () => {
     static create(input: { name: string, file: any }) {
       return new TestEntityAsync({
         ...input,
-        testId: new SimpleStringEntityIdentifier()
+        testId: 'simpleId'
       });
     }
   }
 
   class TestEntityWithoutStrategyId extends Entity {
     private readonly name: string;
-    private readonly testId: EntityIdentifier<string>;
+    private readonly testId: string;
 
-    private constructor({ name, testId }: { name: string, testId: EntityIdentifier<string> }) {
+    private constructor({ name, testId }: { name: string, testId: string }) {
       super();
       this.name = name;
       this.testId = testId;
@@ -170,17 +160,13 @@ describe('Entity', () => {
     static create({ name }: { name: string }) {
       return new TestEntityWithoutStrategyId({
         name,
-        testId: new SimpleStringEntityIdentifier()
+        testId: 'simpleId'
       });
     }
   }
 
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('should throw an error if the strategyId is not implemented', () => {
-    expect(() => TestEntityWithoutStrategyId.create({ name: 'test' })).toThrow('StrategyId must to be implement.');
   });
 
   it('should generate getters for all properties', async () => {

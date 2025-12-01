@@ -1,7 +1,3 @@
-export interface EntityIdentifier<T> {
-    getValue(): T;
-}
-
 export abstract class Entity {
     [x: string]: any;
 
@@ -13,10 +9,6 @@ export abstract class Entity {
             let value = (this as any)[propName];
             if (typeof value === 'function') continue;
             // @ts-ignore
-            if (this.constructor.strategyId === propName) {
-                result[propName] = (this as any)[propName].getValue() || this[propName];
-                continue;
-            }
             if (propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
                 value = propertiesConfigs[propName].serialize(value);
             }
@@ -34,10 +26,6 @@ export abstract class Entity {
             let value = (this as any)[propName];
             if (typeof value === 'function') continue;
             // @ts-ignore
-            if (this.constructor.strategyId === propName) {
-                result[propName] = (this as any)[propName].getValue();
-                continue;
-            }
             if (propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
                 value = await propertiesConfigs[propName].serialize(value);
             }
@@ -57,10 +45,6 @@ export abstract class Entity {
             if (propertiesConfigs && propertiesConfigs[propName]?.restrict) continue;
             if (typeof (this as any)[propName] === 'function') continue;
             // @ts-ignore
-            if (this.constructor.strategyId === propName) {
-                result[propName] = (this as any)[propName].getValue();
-                continue;
-            }
             let value = (this as any)[propName];
             if (serialize && propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
                 value = propertiesConfigs[propName].serialize(value);
@@ -87,10 +71,6 @@ export abstract class Entity {
             if (typeof (this as any)[propName] === 'function') continue;
             if (propertiesConfigs && propertiesConfigs[propName]?.restrict) continue;
             // @ts-ignore
-            if (this.constructor.strategyId === propName) {
-                result[propName] = (this as any)[propName].getValue();
-                continue;
-            }
             let value = (this as any)[propName];
             if (serialize && propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
                 value = await propertiesConfigs[propName].serialize(value);
@@ -108,19 +88,8 @@ export abstract class Entity {
     }
 
     protected generateGetters() {
-        // @ts-ignore
-        if (this.constructor.strategyId) {
-            // @ts-ignore
-            if (!this[`get${this.constructor.strategyId[0].toUpperCase()}${this.constructor.strategyId.slice(1)}`]) {
-                // @ts-ignore
-                this[`get${this.constructor.strategyId[0].toUpperCase()}${this.constructor.strategyId.slice(1)}`] = () => this[this.constructor.strategyId].getValue();
-            }
-        }
-
         for (const property of Object.keys(this)) {
             if (typeof this[property] === 'function') continue;
-            // @ts-ignore
-            if (this.constructor.strategyId === property) continue;
             let prefixName = null;
 
             // @ts-ignore
@@ -137,13 +106,6 @@ export abstract class Entity {
                 if (this[getterName]) continue;
                 this[getterName] = () => this[property];
             }
-        }
-    }
-
-    constructor() {
-        // @ts-ignore
-        if (!this.constructor?.strategyId) {
-            throw new Error('StrategyId must to be implement.')
         }
     }
 }
@@ -174,12 +136,6 @@ export function GetterPrefix(prefix: string) {
     return function (target: any, propertyKey: string) {
         loadPropertiesConfig(target, propertyKey);
         target.constructor.propertiesConfigs[propertyKey].prefix = prefix;
-    };
-}
-
-export function Id() {
-    return function (target: any, propertyKey: string) {
-        target.constructor.strategyId = propertyKey;
     };
 }
 
