@@ -8,7 +8,6 @@ import {
     // entity
     Entity, Restrict, 
     VirtualProperty, GetterPrefix, Serialize,
-    Id,
     // entity
 
     // usecase
