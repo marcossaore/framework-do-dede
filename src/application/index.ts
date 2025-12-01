@@ -3,7 +3,7 @@ import {
     type Middleware, type Input, type Tracer, type TracerData
 } from './controller';
 import { 
-    type EntityIdentifier, Entity, Restrict, VirtualProperty, Serialize, GetterPrefix, Id
+    type Entity, Restrict, VirtualProperty, Serialize, GetterPrefix, Id
 } from './entity'
 import { DecorateUseCase, UseCase } from './usecase'
 import { Storage, type StorageGateway } from './services'
@@ -14,11 +14,10 @@ export {
     Tracing,
     DecorateUseCase, UseCase,
     Storage,
-    Entity, Restrict, VirtualProperty, Serialize, GetterPrefix, Id,
+    Entity, Restrict, VirtualProperty, Serialize, GetterPrefix,
 }
 
 export type {
     Middleware, Input, StorageGateway,
-    Tracer, TracerData,
-    EntityIdentifier
+    Tracer, TracerData
 }
