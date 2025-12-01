@@ -6,7 +6,7 @@ import {
     // controller
 
     // entity
-    EntityIdentifier, Entity, Restrict, 
+    Entity, Restrict, 
     VirtualProperty, GetterPrefix, Serialize,
     Id,
     // entity
@@ -33,9 +33,8 @@ export {
     Middleware, UseMiddleware, UseMiddlewares,
     Tracer, Tracing, TracerData,
 
-    EntityIdentifier, Entity, Restrict, 
+    Entity, Restrict, 
     VirtualProperty, GetterPrefix, Serialize,
-    Id, 
 
     UseCase, DecorateUseCase,
 
