@@ -6,14 +6,26 @@ export abstract class Entity {
         const propertiesConfigs = this.constructor.propertiesConfigs as Record<string, any>;
         const result: Record<string, any> = {};
         for (const [propName] of Object.entries(this)) {
+            let propertyName = propName;
             let value = (this as any)[propName];
             if (typeof value === 'function') continue;
+            if (value === undefined) continue;
             // @ts-ignore
             if (propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
-                value = propertiesConfigs[propName].serialize(value);
+                const serializedValue = propertiesConfigs[propName].serialize(value);
+                if (serializedValue && typeof serializedValue === 'object' && !Array.isArray(serializedValue)) {
+                    const entries = Object.entries(serializedValue);
+                    if (entries.length === 1) {
+                        [propertyName, value] = entries[0];
+                    } else {
+                        value = serializedValue;
+                    }
+                } else {
+                    value = serializedValue;
+                }
             }
             if (!value) value = null;
-            result[propName] = value;
+            result[propertyName] = value;
         }
         return result;
     }
@@ -23,14 +35,26 @@ export abstract class Entity {
         const propertiesConfigs = this.constructor.propertiesConfigs as Record<string, any>;
         const result: Record<string, any> = {};
         for (const [propName] of Object.entries(this)) {
+            let propertyName = propName;
             let value = (this as any)[propName];
             if (typeof value === 'function') continue;
+            if (value === undefined) continue;
             // @ts-ignore
             if (propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
-                value = await propertiesConfigs[propName].serialize(value);
+                const serializedValue = await propertiesConfigs[propName].serialize(value);
+                if (serializedValue && typeof serializedValue === 'object' && !Array.isArray(serializedValue)) {
+                    const entries = Object.entries(serializedValue);
+                    if (entries.length === 1) {
+                        [propertyName, value] = entries[0];
+                    } else {
+                        value = serializedValue;
+                    }
+                } else {
+                    value = serializedValue;
+                }
             }
             if (!value) value = null;
-            result[propName] = value;
+            result[propertyName] = value;
         }
         return result;
     }

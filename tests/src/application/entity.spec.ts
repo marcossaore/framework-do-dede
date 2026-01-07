@@ -109,6 +109,32 @@ describe('Entity', () => {
     }
   }
 
+  class DocumentRef {
+    private readonly documentId: string;
+
+    constructor(documentId: string) {
+      this.documentId = documentId;
+    }
+
+    getUrl(): string {
+      return `https://documents.com/${this.documentId}`;
+    }
+  }
+
+  class AsyncDocumentRef {
+    private readonly documentId: string;
+
+    constructor(documentId: string) {
+      this.documentId = documentId;
+    }
+
+    async getUrl(): Promise<string> {
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(`https://documents.com/${this.documentId}`), 1000);
+      });
+    }
+  }
+
   class TestEntityAsync extends Entity {
 
     private readonly testId: string;
@@ -144,6 +170,40 @@ describe('Entity', () => {
         ...input,
         testId: 'simpleId'
       });
+    }
+  }
+
+  class TestEntitySerializedObjectSync extends Entity {
+    private readonly name: string;
+
+    @Serialize((document: DocumentRef) => ({ documentUrl: document.getUrl() }))
+    private readonly document: DocumentRef;
+
+    private constructor({ name, document }: { name: string, document: string }) {
+      super();
+      this.name = name;
+      this.document = new DocumentRef(document);
+    }
+
+    static create(input: { name: string, document: string }) {
+      return new TestEntitySerializedObjectSync(input);
+    }
+  }
+
+  class TestEntitySerializedObjectAsync extends Entity {
+    private readonly name: string;
+
+    @Serialize(async (document: AsyncDocumentRef) => ({ asyncDocumentUrl: await document.getUrl() }))
+    private readonly document: AsyncDocumentRef;
+
+    private constructor({ name, document }: { name: string, document: string }) {
+      super();
+      this.name = name;
+      this.document = new AsyncDocumentRef(document);
+    }
+
+    static create(input: { name: string, document: string }) {
+      return new TestEntitySerializedObjectAsync(input);
     }
   }
 
@@ -219,6 +279,20 @@ describe('Entity', () => {
     });
   });
 
+  it('should serialize object properties by using returned key when toEntity is called', async () => {
+    const entity = TestEntitySerializedObjectSync.create({
+      name: 'test',
+      document: '12345'
+    });
+
+    const result = entity.toEntity();
+
+    expect(result).toEqual({
+      name: 'test',
+      documentUrl: 'https://documents.com/12345'
+    });
+  });
+
   it('should serialize properties correctly when toAsyncEntity is called - async', async () => {
     const entity = TestEntityAsync.create({
       name: 'test',
@@ -232,6 +306,20 @@ describe('Entity', () => {
       photo: 'https://blobstorage.com/file/1234567890',
       secret: 'confidential',
       testId: 'simpleId'
+    });
+  });
+
+  it('should serialize object properties by using returned key when toAsyncEntity is called', async () => {
+    const entity = TestEntitySerializedObjectAsync.create({
+      name: 'test',
+      document: '12345'
+    });
+
+    const result = await entity.toAsyncEntity();
+
+    expect(result).toEqual({
+      name: 'test',
+      asyncDocumentUrl: 'https://documents.com/12345'
     });
   });
 
