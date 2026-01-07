@@ -225,6 +225,44 @@ describe('Entity', () => {
     }
   }
 
+  class AsyncComplex {
+    private readonly complexId: number;
+    private readonly complexValue: string;
+
+    constructor({ complexId, complexValue }: { complexId: number, complexValue: string }) {
+      this.complexId = complexId;
+      this.complexValue = complexValue;
+    }
+
+    getComplexId(): number {
+      return this.complexId;
+    }
+
+    async getComplexValue(): Promise<string> {
+      return this.complexValue.toUpperCase();
+    }
+  }
+
+  class TestEntitySerializedMultiObjectAsync extends Entity {
+    private readonly name: string;
+
+    @Serialize(async (complex: AsyncComplex) => ({
+      asyncComplexId: complex.getComplexId(),
+      asyncComplexValue: await complex.getComplexValue(),
+    }))
+    private readonly complex: AsyncComplex;
+
+    private constructor({ name, complex }: { name: string, complex: { id: number, value: string } }) {
+      super();
+      this.name = name;
+      this.complex = new AsyncComplex({ complexId: complex.id, complexValue: complex.value });
+    }
+
+    static create(input: { name: string, complex: { id: number, value: string } }) {
+      return new TestEntitySerializedMultiObjectAsync(input);
+    }
+  }
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -273,10 +311,12 @@ describe('Entity', () => {
       name: 'test',
       email: '4YlYX@example.com',
       secret: 'confidential',
-      complex: { id: 1, value: 'ABC' },
+      id: 1,
+      value: 'ABC',
       firstAccess: true,
       testId: 'simpleId'
     });
+    expect(result).not.toHaveProperty('complex');
   });
 
   it('should serialize object properties by using returned key when toEntity is called', async () => {
@@ -307,6 +347,22 @@ describe('Entity', () => {
       secret: 'confidential',
       testId: 'simpleId'
     });
+  });
+
+  it('should serialize object properties by using returned keys when serializer returns multiple properties - async', async () => {
+    const entity = TestEntitySerializedMultiObjectAsync.create({
+      name: 'test',
+      complex: { id: 2, value: 'xyz' }
+    });
+
+    const result = await entity.toAsyncEntity();
+
+    expect(result).toEqual({
+      name: 'test',
+      asyncComplexId: 2,
+      asyncComplexValue: 'XYZ'
+    });
+    expect(result).not.toHaveProperty('complex');
   });
 
   it('should serialize object properties by using returned key when toAsyncEntity is called', async () => {

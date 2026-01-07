@@ -15,11 +15,12 @@ export abstract class Entity {
                 const serializedValue = propertiesConfigs[propName].serialize(value);
                 if (serializedValue && typeof serializedValue === 'object' && !Array.isArray(serializedValue)) {
                     const entries = Object.entries(serializedValue);
-                    if (entries.length === 1) {
-                        [propertyName, value] = entries[0];
-                    } else {
-                        value = serializedValue;
+                    for (const [serializedKey, serializedPropValue] of entries) {
+                        let currentValue = serializedPropValue;
+                        if (!currentValue) currentValue = null;
+                        result[serializedKey] = currentValue;
                     }
+                    continue;
                 } else {
                     value = serializedValue;
                 }
@@ -44,11 +45,12 @@ export abstract class Entity {
                 const serializedValue = await propertiesConfigs[propName].serialize(value);
                 if (serializedValue && typeof serializedValue === 'object' && !Array.isArray(serializedValue)) {
                     const entries = Object.entries(serializedValue);
-                    if (entries.length === 1) {
-                        [propertyName, value] = entries[0];
-                    } else {
-                        value = serializedValue;
+                    for (const [serializedKey, serializedPropValue] of entries) {
+                        let currentValue = serializedPropValue;
+                        if (!currentValue) currentValue = null;
+                        result[serializedKey] = currentValue;
                     }
+                    continue;
                 } else {
                     value = serializedValue;
                 }
