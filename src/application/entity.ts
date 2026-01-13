@@ -10,8 +10,9 @@ export abstract class Entity {
             let value = (this as any)[propName];
             if (typeof value === 'function') continue;
             if (value === undefined) continue;
+             const valueIsZero = !isNaN(value) ? Number(value) === 0: false;
             // @ts-ignore
-            if (propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
+            if (propertiesConfigs && propertiesConfigs[propName]?.serialize && (value || valueIsZero)) {
                 const serializedValue = propertiesConfigs[propName].serialize(value);
                 if (serializedValue && typeof serializedValue === 'object' && !Array.isArray(serializedValue)) {
                     const entries = Object.entries(serializedValue);
@@ -25,7 +26,7 @@ export abstract class Entity {
                     value = serializedValue;
                 }
             }
-            if (!value) value = null;
+            if (!value && !valueIsZero) value = null;
             result[propertyName] = value;
         }
         return result;
@@ -41,7 +42,8 @@ export abstract class Entity {
             if (typeof value === 'function') continue;
             if (value === undefined) continue;
             // @ts-ignore
-            if (propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
+            const valueIsZero = !isNaN(value) ? Number(value) === 0: false;
+            if (propertiesConfigs && propertiesConfigs[propName]?.serialize && (value || valueIsZero)) {
                 const serializedValue = await propertiesConfigs[propName].serialize(value);
                 if (serializedValue && typeof serializedValue === 'object' && !Array.isArray(serializedValue)) {
                     const entries = Object.entries(serializedValue);
@@ -55,7 +57,7 @@ export abstract class Entity {
                     value = serializedValue;
                 }
             }
-            if (!value) value = null;
+            if (!value && !valueIsZero) value = null;
             result[propertyName] = value;
         }
         return result;
