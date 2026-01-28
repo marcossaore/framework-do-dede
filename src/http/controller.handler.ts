@@ -54,7 +54,7 @@ export default class ControllerHandler {
                             return removingCustom
                         }
                         return {
-                            message: capturedError.message,
+                            error: capturedError.message,
                             statusCode: capturedError.statusCode
                         };
                     } finally {
