@@ -1,6 +1,7 @@
 import HttpServer, { HttpServerParams, Request } from "@/http/http-server"
 import { InternalServerError, ServerError } from "@/http"
 import { flushControllers, getControllers, Middleware, Tracer } from "../application/controller"
+import { CustomServerError } from "./errors/server"
 
 type Input = {
     headers: any
@@ -38,7 +39,7 @@ export default class ControllerHandler {
                         const filterParams = this.filter(input.params, params)
                         const filterQueryParams = this.filter(input.query, query)
                         const filterHeaders = this.filter(input.headers, headers)
-                        mergedParams = {...filterHeaders, ...filterParams, ...filterQueryParams, ...(input.body || {}) }
+                        mergedParams = { ...filterHeaders, ...filterParams, ...filterQueryParams, ...(input.body || {}) }
                         request = { data: mergedParams, context: {} }
                         middlewaresExecuted = await this.executeMiddlewares(middlewares, request)
                         const response = await handler.instance[handler.methodName](request)
@@ -105,7 +106,7 @@ export default class ControllerHandler {
     }
 
     private registryControllers(): HttpServerParams[] {
-        const controllers: HttpServerParams[] = [] ;
+        const controllers: HttpServerParams[] = [];
         for (const controller of getControllers()) {
             const basePath = Reflect.getMetadata('basePath', controller);
             const methodNames = Object.getOwnPropertyNames(controller.prototype).filter(method => method !== 'constructor')
@@ -158,6 +159,12 @@ export default class ControllerHandler {
         if (error instanceof ServerError) {
             return {
                 message: error.message,
+                statusCode: error.getStatusCode()
+            }
+        }
+        if (error instanceof CustomServerError) {
+            return {
+                ...error.getCustom(),
                 statusCode: error.getStatusCode()
             }
         }

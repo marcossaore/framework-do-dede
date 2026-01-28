@@ -1,4 +1,4 @@
-import { BadRequest, Conflict, Forbidden, NotFound, ServerError, Unauthorized, UnprocessableEntity } from '@/http/errors/server';
+import { BadRequest, Conflict, CustomServerError, Forbidden, NotFound, ServerError, Unauthorized, UnprocessableEntity } from '@/http/errors/server';
 
   // Test subclass to validate abstract class behavior
   class TestServerError extends ServerError {
@@ -91,16 +91,50 @@ import { BadRequest, Conflict, Forbidden, NotFound, ServerError, Unauthorized, U
       });
     });
   
-    describe('Error Messages', () => {
-      it('should handle empty messages', () => {
-        const error = new NotFound('');
-        expect(error.message).toBe('');
-      });
+  describe('Error Messages', () => {
+    it('should handle empty messages', () => {
+      const error = new NotFound('');
+      expect(error.message).toBe('');
+    });
   
       it('should handle complex messages', () => {
         const complexMessage = 'Error with ID: 12345\nContact support';
-        const error = new Forbidden(complexMessage);
-        expect(error.message).toBe(complexMessage);
-      });
+      const error = new Forbidden(complexMessage);
+      expect(error.message).toBe(complexMessage);
     });
   });
+
+  describe('CustomServerError', () => {
+    it('should store status code and custom payload', () => {
+      const custom = { message: 'Custom error', reason: 'validation', code: 'E_CUSTOM' };
+      const error = new CustomServerError(custom, 422, 'UnprocessableEntity');
+      expect(error).toBeInstanceOf(Error);
+      expect(error).toBeInstanceOf(CustomServerError);
+      expect(error.name).toBe('UnprocessableEntity');
+      expect(error.getStatusCode()).toBe(422);
+      expect(error.getCustom()).toBe(custom);
+    });
+
+    it('should allow non-object payloads', () => {
+      const custom = 'Custom error string';
+      const error = new CustomServerError(custom, 400);
+      expect(error).toBeInstanceOf(Error);
+      expect(error).toBeInstanceOf(CustomServerError);
+      expect(error.name).toBe('CustomServerError');
+      expect(error.getCustom()).toBe(custom);
+      expect(error.getStatusCode()).toBe(400);
+    });
+
+    it('should allow overriding error name', () => {
+      const custom = { message: 'Custom error' };
+      const error = new CustomServerError(custom, 400, 'ValidationError');
+      expect(error.name).toBe('ValidationError');
+    });
+
+    it('should fallback to class name when name is empty', () => {
+      const custom = { message: 'Custom error' };
+      const error = new CustomServerError(custom, 400, '');
+      expect(error.name).toBe('CustomServerError');
+    });
+  });
+});
