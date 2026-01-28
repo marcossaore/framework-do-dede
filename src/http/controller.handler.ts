@@ -50,7 +50,8 @@ export default class ControllerHandler {
                         input.setStatus(capturedError.statusCode)
                         endTime = performance.now()
                         if (capturedError?.custom) {
-                            return capturedError;
+                            const removingCustom = { ...capturedError, custom: undefined }
+                            return removingCustom
                         }
                         return {
                             message: capturedError.message,
