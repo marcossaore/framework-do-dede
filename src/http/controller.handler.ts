@@ -1,6 +1,7 @@
 import HttpServer, { HttpServerParams, Request } from "@/http/http-server"
 import { InternalServerError, ServerError } from "@/http"
-import { flushControllers, getControllers, Middleware, Tracer } from "../application/controller"
+import { flushControllers, getControllers, Middleware, MiddlewareDefinition, Tracer } from "../application/controller"
+import { FrameworkError } from "@/http/errors/framework"
 import { CustomServerError } from "./errors/server"
 
 type Input = {
@@ -118,7 +119,7 @@ export default class ControllerHandler {
             const instance = new controller();
             for (const methodName of methodNames) {
                 const routeConfig = Reflect.getMetadata('route', controller.prototype, methodName);
-                const middlewares: Array<new (...args: any[]) => Middleware> = Reflect.getMetadata('middlewares', controller.prototype, methodName);
+                const middlewares: MiddlewareDefinition[] = Reflect.getMetadata('middlewares', controller.prototype, methodName);
                 const responseType = Reflect.getMetadata('responseType', controller.prototype, methodName) || 'json';
                 tracer = Reflect.getMetadata('tracer', controller.prototype, methodName) || tracer as Tracer<void>;
                 controllers.push({
@@ -134,12 +135,33 @@ export default class ControllerHandler {
                         tracer
                     },
                     responseType,
-                    middlewares: middlewares ? middlewares.map(middleware => new middleware()) : [],
+                    middlewares: middlewares ? middlewares.map(middleware => this.resolveMiddleware(middleware)) : [],
                 });
             }
         }
         flushControllers()
         return controllers
+    }
+
+    private resolveMiddleware(middleware: MiddlewareDefinition): Middleware {
+        if (typeof middleware === 'function') {
+            if (middleware.prototype?.execute) {
+                return new (middleware as new (...args: any[]) => Middleware)();
+            }
+            try {
+                const instance = (middleware as () => Middleware)();
+                if (!instance?.execute) {
+                    throw new FrameworkError('Middleware must implement execute()');
+                }
+                return instance;
+            } catch (error) {
+                throw new FrameworkError('Middleware must implement execute()');
+            }
+        }
+        if (!middleware?.execute) {
+            throw new FrameworkError('Middleware must implement execute()');
+        }
+        return middleware;
     }
 
     private filter(params: any, filterParams?: string[]): any {

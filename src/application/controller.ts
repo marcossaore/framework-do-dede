@@ -6,6 +6,10 @@ export interface Middleware {
     execute(input: Input<any>): Promise<any>
 }
 
+export type MiddlewareClass = new (...args: any[]) => Middleware
+export type MiddlewareFactory = () => Middleware
+export type MiddlewareDefinition = Middleware | MiddlewareClass | MiddlewareFactory
+
 export interface TracerData {
     requestedAt: Date
     elapsedTime: string
@@ -57,25 +61,31 @@ export function flushControllers() {
     controllers = [];
 }
 
-export function UseMiddleware(middlewareClass: new (...args: any[]) => Middleware) {
+export function UseMiddleware(middlewareClass: MiddlewareDefinition) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        if (!middlewareClass.prototype.execute) {
+        if (typeof middlewareClass !== 'function' && !middlewareClass?.execute) {
             throw new FrameworkError('Middleware must implement execute()');
         }
-        const middlewares: Array<new (...args: any[]) => Middleware> = Reflect.getMetadata('middlewares', target, propertyKey) || [];
-        middlewares.push(middlewareClass);
+        if (typeof middlewareClass === 'function' && middlewareClass.prototype?.execute) {
+            const middlewares: MiddlewareDefinition[] = Reflect.getMetadata('middlewares', target, propertyKey) || [];
+            middlewares.push(middlewareClass);
+            Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
+            return;
+        }
+        const middlewares: MiddlewareDefinition[] = Reflect.getMetadata('middlewares', target, propertyKey) || [];
+        middlewares.push(middlewareClass as MiddlewareDefinition);
         Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
     };
 }
 
-export function UseMiddlewares(middlewareClasses: (new (...args: any[]) => Middleware)[]) {
+export function UseMiddlewares(middlewareClasses: MiddlewareDefinition[]) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         for (const middlewareClass of middlewareClasses) {
-            if (!middlewareClass.prototype.execute) {
+            if (typeof middlewareClass !== 'function' && !middlewareClass?.execute) {
                 throw new FrameworkError('Middleware must implement execute()');
             }
         }
-        const existingMiddlewares: Array<new (...args: any[]) => Middleware> = 
+        const existingMiddlewares: MiddlewareDefinition[] = 
             Reflect.getMetadata('middlewares', target, propertyKey) || [];
         existingMiddlewares.push(...middlewareClasses);
         Reflect.defineMetadata('middlewares', existingMiddlewares, target, propertyKey);
