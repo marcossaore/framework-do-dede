@@ -49,6 +49,9 @@ export default class ControllerHandler {
                         capturedError = this.extractError(error, httpServer);
                         input.setStatus(capturedError.statusCode)
                         endTime = performance.now()
+                        if (capturedError?.custom) {
+                            return capturedError;
+                        }
                         return {
                             message: capturedError.message,
                             statusCode: capturedError.statusCode
@@ -155,7 +158,7 @@ export default class ControllerHandler {
         return filter
     }
 
-    private extractError(error: any, httpServer: HttpServer): { unexpectedError?: string, message: string, statusCode: number } {
+    private extractError(error: any, httpServer: HttpServer): { unexpectedError?: string, message: string, statusCode: number, custom?: boolean } {
         if (error instanceof ServerError) {
             return {
                 message: error.message,
@@ -165,7 +168,8 @@ export default class ControllerHandler {
         if (error instanceof CustomServerError) {
             return {
                 ...error.getCustom(),
-                statusCode: error.getStatusCode()
+                statusCode: error.getStatusCode(),
+                custom: true
             }
         }
         const debugError = {
