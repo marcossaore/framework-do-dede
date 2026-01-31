@@ -40,9 +40,9 @@ export default class ControllerHandler {
                         const filterParams = this.filter(input.params, params)
                         const filterQueryParams = this.filter(input.query, query)
                         const filterHeaders = this.filter(input.headers, headers)
-                        const normalizeBody = this.normalizeBracketNotation(body)
+                        const normalizeBody = this.normalizeBracketNotation(input.body)
                         let filterBody = this.filter(normalizeBody, body)
-                        if (bodyFilter === 'none') {
+                        if (bodyFilter !== 'restrict') {
                             filterBody = { ...normalizeBody, ...filterBody }
                         }
                         mergedParams = { ...filterHeaders, ...filterParams, ...filterQueryParams, ...filterBody }

@@ -63,9 +63,16 @@ export function flushControllers() {
     controllers = [];
 }
 
+function isClass(fn: Function): boolean {
+    return /^\s*class\s/.test(Function.prototype.toString.call(fn));
+}
+
 export function UseMiddleware(middlewareClass: MiddlewareDefinition) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         if (typeof middlewareClass !== 'function' && !middlewareClass?.execute) {
+            throw new FrameworkError('Middleware must implement execute()');
+        }
+        if (typeof middlewareClass === 'function' && isClass(middlewareClass) && !middlewareClass.prototype?.execute) {
             throw new FrameworkError('Middleware must implement execute()');
         }
         if (typeof middlewareClass === 'function' && middlewareClass.prototype?.execute) {
@@ -84,6 +91,9 @@ export function UseMiddlewares(middlewareClasses: MiddlewareDefinition[]) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         for (const middlewareClass of middlewareClasses) {
             if (typeof middlewareClass !== 'function' && !middlewareClass?.execute) {
+                throw new FrameworkError('Middleware must implement execute()');
+            }
+            if (typeof middlewareClass === 'function' && isClass(middlewareClass) && !middlewareClass.prototype?.execute) {
                 throw new FrameworkError('Middleware must implement execute()');
             }
         }

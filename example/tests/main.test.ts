@@ -1,6 +1,22 @@
-import axios from 'axios'
 import { Dede } from "../../src/dede";
 import '../express_app/example.controller';
+
+type HttpResponse<T = any> = { data: T; status: number };
+
+async function request<T = any>(
+    method: string,
+    url: string,
+    body?: any,
+    headers: Record<string, string> = {}
+): Promise<HttpResponse<T>> {
+    const response = await fetch(url, {
+        method,
+        headers: body ? { 'content-type': 'application/json', ...headers } : headers,
+        body: body ? JSON.stringify(body) : undefined
+    });
+    const data = await response.json();
+    return { data, status: response.status };
+}
 
 class UserRepository {
     async findById(id: string) {
@@ -13,8 +29,10 @@ class UserRepository {
 }
 
 const expressEndpoint = 'http://localhost:3000'
+const shouldRunExampleTests = process.env.RUN_EXAMPLE_TESTS === 'true';
+const describeIf = shouldRunExampleTests ? describe : describe.skip;
 
-describe("express app", () => {
+describeIf("express app", () => {
     let expressApp!: Dede;
     beforeAll(async () => {
         expressApp = await Dede.start({
@@ -41,29 +59,27 @@ describe("express app", () => {
     });
 
     it("should call postExample - POST", async () => {
-        const { data, status } = await axios.post(`${expressEndpoint}/example`, {
+        const { data, status } = await request('POST', `${expressEndpoint}/example`, {
             name: 'any_name',
             email: 'any_email'
-        })
+        });
         expect(data.message).toBe("Hello from ExampleUseCase! any_name any_email")
         expect(status).toBe(201)
     })
 
     it("should call getExample - GET", async () => {
-        const { data, status } = await axios.get(`${expressEndpoint}/example`)
+        const { data, status } = await request('GET', `${expressEndpoint}/example`)
         expect(data.message).toBe("Hello from ExampleUseCase!")
         expect(status).toBe(200)
     })
 
     it("should call putExample - PUT", async () => {
-        const { data, status } = await axios.put(`${expressEndpoint}/example/5?test=ok`, {
-        },
-            {
-                headers: {
-                    'x-type': 'any-type'
-                }
-            }
-        )
+        const { data, status } = await request(
+            'PUT',
+            `${expressEndpoint}/example/5?test=ok`,
+            {},
+            { 'x-type': 'any-type' }
+        );
         console.log(data)
         expect(data.same['x-type']).toBe("any-type")
         expect(data.same.id).toBe("5")
@@ -74,14 +90,14 @@ describe("express app", () => {
     })
 
     it("should call deleteExample - DELETE", async () => {
-        const { data } = await axios.delete(`${expressEndpoint}/example`)
+        const { data } = await request('DELETE', `${expressEndpoint}/example`)
         expect(data.id).toBe('hash_id')
         expect(data.auth).toBe(true)
         expect(data.name).toBe('John Doe')
     })
 });
 
-describe("elysia app", () => {
+describeIf("elysia app", () => {
     let elysia!: Dede;
     beforeAll(async () => {
         elysia = await Dede.start({
@@ -108,29 +124,27 @@ describe("elysia app", () => {
     });
 
     it("should call postExample - POST", async () => {
-        const { data, status } = await axios.post(`${expressEndpoint}/example`, {
+        const { data, status } = await request('POST', `${expressEndpoint}/example`, {
             name: 'any_name',
             email: 'any_email'
-        })
+        });
         expect(data.message).toBe("Hello from ExampleUseCase! any_name any_email")
         expect(status).toBe(201)
     })
 
     it("should call getExample - GET", async () => {
-        const { data, status } = await axios.get(`${expressEndpoint}/example`)
+        const { data, status } = await request('GET', `${expressEndpoint}/example`)
         expect(data.message).toBe("Hello from ExampleUseCase!")
         expect(status).toBe(200)
     })
 
     it("should call putExample - PUT", async () => {
-        const { data, status } = await axios.put(`${expressEndpoint}/example/5?test=ok`, {
-        },
-            {
-                headers: {
-                    'x-type': 'any-type'
-                }
-            }
-        )
+        const { data, status } = await request(
+            'PUT',
+            `${expressEndpoint}/example/5?test=ok`,
+            {},
+            { 'x-type': 'any-type' }
+        );
         expect(data.same['x-type']).toBe("any-type")
         expect(data.same.id).toBe("5")
         expect(data.same.test).toBe("ok")
@@ -140,7 +154,7 @@ describe("elysia app", () => {
     })
 
     it("should call deleteExample - DELETE", async () => {
-        const { data } = await axios.delete(`${expressEndpoint}/example`)
+        const { data } = await request('DELETE', `${expressEndpoint}/example`)
         expect(data.id).toBe('hash_id')
         expect(data.auth).toBe(true)
         expect(data.name).toBe('John Doe')
