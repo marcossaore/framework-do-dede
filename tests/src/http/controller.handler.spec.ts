@@ -3,6 +3,33 @@ import { Controller, Get, Middleware, Post, UseMiddleware, UseMiddlewares } from
 import HttpServer, { HttpServerParams } from '@/http/http-server';
 import { flushControllers } from '@/application/controller';
 
+class FakeHttpServer extends HttpServer {
+  public registrations: { params: HttpServerParams; handler: CallableFunction }[] = [];
+
+  constructor() {
+    super(
+      {
+        listen: () => undefined,
+        use: () => undefined,
+        get: () => undefined,
+        post: () => undefined,
+        put: () => undefined,
+        delete: () => undefined,
+        patch: () => undefined
+      },
+      'express'
+    );
+  }
+
+  register(httpServerParams: HttpServerParams, handler: CallableFunction): void {
+    this.registrations.push({ params: httpServerParams, handler });
+  }
+
+  async close(): Promise<void> {
+    return;
+  }
+}
+
 describe('ControllerHandler middleware resolution', () => {
   beforeEach(() => {
     flushControllers();
@@ -95,33 +122,6 @@ describe('ControllerHandler multipart form-data normalization', () => {
     flushControllers();
   });
 
-  class FakeHttpServer extends HttpServer {
-    public registrations: { params: HttpServerParams; handler: CallableFunction }[] = [];
-
-    constructor() {
-      super(
-        {
-          listen: () => undefined,
-          use: () => undefined,
-          get: () => undefined,
-          post: () => undefined,
-          put: () => undefined,
-          delete: () => undefined,
-          patch: () => undefined
-        },
-        'express'
-      );
-    }
-
-    register(httpServerParams: HttpServerParams, handler: CallableFunction): void {
-      this.registrations.push({ params: httpServerParams, handler });
-    }
-
-    async close(): Promise<void> {
-      return;
-    }
-  }
-
   it('normalizes bracket notation from multipart/form-data into an object', async () => {
     @Controller('/users')
     class UserController {
@@ -153,6 +153,71 @@ describe('ControllerHandler multipart form-data normalization', () => {
         age: '30'
       },
       flat: 'value'
+    });
+  });
+});
+
+describe('ControllerHandler body filtering', () => {
+  beforeEach(() => {
+    flushControllers();
+  });
+
+  it('merges the original body with filtered/typed fields when bodyFilter is none', async () => {
+    @Controller('/users')
+    class UserController {
+      @Post({ path: '/create', body: ['age|integer'] })
+      create(request: { data: any }) {
+        return request.data;
+      }
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, 3000);
+
+    const handler = server.registrations[0].handler;
+    const response = await handler({
+      headers: {},
+      body: {
+        age: '20',
+        name: 'Ana'
+      },
+      params: {},
+      query: {},
+      setStatus: jest.fn()
+    });
+
+    expect(response).toEqual({
+      age: 20,
+      name: 'Ana'
+    });
+  });
+
+  it('keeps only filtered/typed fields when bodyFilter is restrict', async () => {
+    @Controller('/users')
+    class UserController {
+      @Post({ path: '/create', body: ['age|integer'], bodyFilter: 'restrict' })
+      create(request: { data: any }) {
+        return request.data;
+      }
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, 3000);
+
+    const handler = server.registrations[0].handler;
+    const response = await handler({
+      headers: {},
+      body: {
+        age: '20',
+        name: 'Ana'
+      },
+      params: {},
+      query: {},
+      setStatus: jest.fn()
+    });
+
+    expect(response).toEqual({
+      age: 20
     });
   });
 });

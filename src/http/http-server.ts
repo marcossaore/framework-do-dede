@@ -23,6 +23,8 @@ export type HttpServerParams = {
     statusCode?: number,
     params?: string[],
     query?: string[],
+    body?: string[],
+    bodyFilter?: 'none' | 'restrict',
     headers?: string[]
 }
 

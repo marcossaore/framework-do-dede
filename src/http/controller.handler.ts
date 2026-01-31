@@ -14,7 +14,7 @@ type Input = {
 
 export default class ControllerHandler {
     constructor(httpServer: HttpServer, port: number) {
-        for (const { handler, middlewares, method, route, statusCode, params, query, headers, responseType } of this.registryControllers()) {
+        for (const { handler, middlewares, method, route, statusCode, params, query, headers, body, bodyFilter, responseType } of this.registryControllers()) {
             httpServer.register(
                 {
                     method,
@@ -40,11 +40,12 @@ export default class ControllerHandler {
                         const filterParams = this.filter(input.params, params)
                         const filterQueryParams = this.filter(input.query, query)
                         const filterHeaders = this.filter(input.headers, headers)
-                        let body = input.body || {}
-                        if (Object.keys(body).length > 0) {
-                            body = this.normalizeBracketNotation(body)
+                        const normalizeBody = this.normalizeBracketNotation(body)
+                        let filterBody = this.filter(normalizeBody, body)
+                        if (bodyFilter === 'none') {
+                            filterBody = { ...normalizeBody, ...filterBody }
                         }
-                        mergedParams = { ...filterHeaders, ...filterParams, ...filterQueryParams, ...body }
+                        mergedParams = { ...filterHeaders, ...filterParams, ...filterQueryParams, ...filterBody }
                         request = { data: mergedParams, context: {} }
                         middlewaresExecuted = await this.executeMiddlewares(middlewares, request)
                         const response = await handler.instance[handler.methodName](request)
@@ -132,6 +133,8 @@ export default class ControllerHandler {
                     params: routeConfig.params,
                     query: routeConfig.query,
                     headers: routeConfig.headers,
+                    body: routeConfig.body,
+                    bodyFilter: routeConfig.bodyFilter,
                     statusCode: routeConfig.statusCode,
                     handler: {
                         instance,

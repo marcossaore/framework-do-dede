@@ -29,6 +29,8 @@ export interface Input<T, K = any> {
     context?: K
 }
 
+type BodyFilter = "restrict" | "none"
+
 let controllers: string[] = [];
   
 export function Controller(basePath: string = '/') {
@@ -92,7 +94,7 @@ export function UseMiddlewares(middlewareClasses: MiddlewareDefinition[]) {
     };
 }
 
-export function Post(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], responseType?: 'json' | 'text' | 'html' } = {}) {
+export function Post(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter,  responseType?: 'json' | 'text' | 'html' } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'post',
@@ -100,6 +102,8 @@ export function Post(config: { path?: string, statusCode?: number, params?: stri
             params: config.params,
             query: config.query,
             headers: config.headers,
+            body: config.body,
+            bodyFilter: config.bodyFilter || 'none',
             statusCode: config.statusCode || 200,
             responseType: config.responseType || 'json'
         }, target, propertyKey);
@@ -120,7 +124,7 @@ export function Get(config: { path?: string, statusCode?: number, params?: strin
     };
 }
 
-export function Put(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], responseType?: 'json' | 'text' | 'html' } = {}) {
+export function Put(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter,  responseType?: 'json' | 'text' | 'html' } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'put',
@@ -128,13 +132,15 @@ export function Put(config: { path?: string, statusCode?: number, params?: strin
             params: config.params,
             query: config.query,
             headers: config.headers,
+            body: config.body,
+            bodyFilter: config.bodyFilter || 'none',
             statusCode: config.statusCode || 200,
             responseType: config.responseType || 'json'
         }, target, propertyKey);
     };
 }
 
-export function Patch(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], responseType?: 'json' | 'text' | 'html' } = {}) {
+export function Patch(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html' } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'patch',
@@ -142,13 +148,15 @@ export function Patch(config: { path?: string, statusCode?: number, params?: str
             params: config.params,
             query: config.query,
             headers: config.headers,
+            body: config.body,
+            bodyFilter: config.bodyFilter || 'none',
             statusCode: config.statusCode || 200,
             responseType: config.responseType || 'json'
         }, target, propertyKey);
     };
 }
 
-export function Delete(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], responseType?: 'json' | 'text' | 'html' } = {}) {
+export function Delete(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html' } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'delete',
@@ -156,6 +164,8 @@ export function Delete(config: { path?: string, statusCode?: number, params?: st
             params: config.params,
             query: config.query,
             headers: config.headers,
+            body: config.body,
+            bodyFilter: config.bodyFilter || 'none',
             statusCode: config.statusCode || 200,
             responseType: config.responseType || 'json'
         }, target, propertyKey);
