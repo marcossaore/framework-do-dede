@@ -40,7 +40,11 @@ export default class ControllerHandler {
                         const filterParams = this.filter(input.params, params)
                         const filterQueryParams = this.filter(input.query, query)
                         const filterHeaders = this.filter(input.headers, headers)
-                        mergedParams = { ...filterHeaders, ...filterParams, ...filterQueryParams, ...(input.body || {}) }
+                        let body = input.body || {}
+                        if (Object.keys(body).length > 0) {
+                            body = this.normalizeBracketNotation(body)
+                        }
+                        mergedParams = { ...filterHeaders, ...filterParams, ...filterQueryParams, ...body }
                         request = { data: mergedParams, context: {} }
                         middlewaresExecuted = await this.executeMiddlewares(middlewares, request)
                         const response = await handler.instance[handler.methodName](request)
@@ -207,5 +211,25 @@ export default class ControllerHandler {
             unexpectedError: error instanceof InternalServerError ? error.getUnexpectedError() : undefined,
             ...debugError
         }
+    }
+
+    private normalizeBracketNotation(data: any): any {
+        if (!data || typeof data !== "object") return data;
+        const normalized: Record<string, any> = {};
+        for (const [rawKey, value] of Object.entries(data)) {
+            const key = String(rawKey);
+            const match = key.match(/^([^\[\]]+)\[([^\[\]]+)\]$/);
+            if (match) {
+                const parent = match[1];
+                const child = match[2];
+                if (!normalized[parent] || typeof normalized[parent] !== "object") {
+                    normalized[parent] = {};
+                }
+                normalized[parent][child] = value;
+                continue;
+            }
+            normalized[key] = value;
+        }
+        return normalized;
     }
 }

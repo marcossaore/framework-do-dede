@@ -1,5 +1,6 @@
 import ControllerHandler from '@/http/controller.handler';
-import { Controller, Get, Middleware, UseMiddleware, UseMiddlewares } from '@/application';
+import { Controller, Get, Middleware, Post, UseMiddleware, UseMiddlewares } from '@/application';
+import HttpServer, { HttpServerParams } from '@/http/http-server';
 import { flushControllers } from '@/application/controller';
 
 describe('ControllerHandler middleware resolution', () => {
@@ -86,5 +87,72 @@ describe('ControllerHandler middleware resolution', () => {
     expect(middlewares[0]).toBeInstanceOf(LoggerMiddleware);
     expect(middlewares[1]).toBe(instance);
     expect(middlewares[2]).toBeInstanceOf(AuthMiddleware);
+  });
+});
+
+describe('ControllerHandler multipart form-data normalization', () => {
+  beforeEach(() => {
+    flushControllers();
+  });
+
+  class FakeHttpServer extends HttpServer {
+    public registrations: { params: HttpServerParams; handler: CallableFunction }[] = [];
+
+    constructor() {
+      super(
+        {
+          listen: () => undefined,
+          use: () => undefined,
+          get: () => undefined,
+          post: () => undefined,
+          put: () => undefined,
+          delete: () => undefined,
+          patch: () => undefined
+        },
+        'express'
+      );
+    }
+
+    register(httpServerParams: HttpServerParams, handler: CallableFunction): void {
+      this.registrations.push({ params: httpServerParams, handler });
+    }
+
+    async close(): Promise<void> {
+      return;
+    }
+  }
+
+  it('normalizes bracket notation from multipart/form-data into an object', async () => {
+    @Controller('/users')
+    class UserController {
+      @Post({ path: '/upload' })
+      upload(request: { data: any }) {
+        return request.data;
+      }
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, 3000);
+
+    const handler = server.registrations[0].handler;
+    const response = await handler({
+      headers: { 'content-type': 'multipart/form-data; boundary=----test' },
+      body: {
+        'user[name]': 'Ana',
+        'user[age]': '30',
+        flat: 'value'
+      },
+      params: {},
+      query: {},
+      setStatus: jest.fn()
+    });
+
+    expect(response).toEqual({
+      user: {
+        name: 'Ana',
+        age: '30'
+      },
+      flat: 'value'
+    });
   });
 });
