@@ -1,4 +1,4 @@
-import { Entity } from "@/application";
+import { Entity } from "@/domain";
 
 export interface RepositoryCreate<T extends Entity> {
     create(input: T): Promise<void>
@@ -35,5 +35,4 @@ export type RepositoryNotExistsBy<T> = {
 export interface RepositoryPagination<T> {
     restoreMany({ filter, pagination }: { filter?: Record<string, any>, pagination?: { offset: number, limit: number }}): Promise<T>
 }
-
 

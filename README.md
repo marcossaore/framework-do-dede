@@ -15,7 +15,7 @@ Um framework TypeScript simples para construir APIs HTTP com controllers, use ca
   - Entity e Serialização
   - Hooks Before/After ToEntity
   - Storage Gateway
-  - DI (Registry/Inject)
+  - DI (Container/Inject)
   - Errors
   - Protocolos de Repositório
 - Exemplos
@@ -23,6 +23,7 @@ Um framework TypeScript simples para construir APIs HTTP com controllers, use ca
   - Elysia
   - Fila com AfterToEntity
 - Testes
+- Benchmark
 
 ## Instalação
 
@@ -62,17 +63,19 @@ class HelloUseCase extends UseCase<{ name?: string }, { message: string }> {
   }
 }
 
-await Dede.start({
+const app = await Dede.create({
   framework: { use: 'express', port: 3000 },
   registries: []
 });
+app.registerControllers([HelloController]);
+app.listen();
 ```
 
 ## Conceitos
 
 ### Controllers e Rotas
 
-Use decorators para expor métodos como rotas HTTP. O Controller registra o class loader no Registry e o ControllerHandler monta as rotas em runtime.
+Use decorators para expor métodos como rotas HTTP. O Controller define metadados, e o ControllerHandler monta as rotas em runtime a partir da lista de controllers passada ao `app.registerControllers(...)`.
 
 ```ts
 import { Controller, Get, Post, Put, Delete, Patch } from './src';
@@ -105,6 +108,7 @@ Opções de rota (comuns):
 - `params`, `query`, `headers`, `body`: array de strings no formato `campo|tipo`
 - `bodyFilter`: `"restrict" | "none"`
 - `responseType`: `"json" | "text" | "html"`
+- `validator`: pode ser uma classe com decorators do `class-validator` **ou** um objeto com `validate(data)` (sync/async)
 
 ### Input, params e filtros
 
@@ -121,7 +125,7 @@ Tipos suportados no filtro:
 
 - `boolean`, `integer`, `string`, `number`
 
-Exemplo:
+Exemplos:
 
 ```ts
 @Put({
@@ -129,12 +133,37 @@ Exemplo:
   query: ['active|boolean'],
   headers: ['x-type|string'],
   body: ['name|string'],
-  bodyFilter: 'restrict'
+  bodyFilter: 'restrict',
+  validator: CreateUserDto
 })
 async update(request: { data: any }) {
   // request.data: { id, active, 'x-type', name }
 }
 ```
+
+```ts
+import 'reflect-metadata'
+import { IsEmail, IsNotEmpty } from 'class-validator'
+
+class CreateUserDto {
+  @IsNotEmpty({ message: 'O nome é obrigatório.' })
+  name!: string
+
+  @IsEmail({}, { message: 'Email inválido.' })
+  email?: string
+}
+```
+
+```ts
+@Put({
+  body: ['name|string', 'email|string'],
+  bodyFilter: 'restrict',
+  validator: CreateUserDto
+})
+async update(request: { data: any }) {}
+```
+
+Obs: o framework usa `class-validator` como `peerDependency`, então o projeto que consome deve ter a mesma versão instalada.
 
 Suporte a notacao com colchetes:
 
@@ -229,6 +258,8 @@ Entities suportam:
 - `toData()` e `toAsyncData()`
 - `@Serialize`, `@Restrict`, `@VirtualProperty`, `@GetterPrefix`
 
+Obs: a serializacao fica na camada de infraestrutura, mas a API continua sendo exposta pelo framework (importe direto de `./src`).
+
 ```ts
 import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix } from './src';
 
@@ -319,21 +350,22 @@ class FileService {
 }
 ```
 
-### DI (Registry/Inject)
+### DI (Container/Inject)
 
-Registre dependencias ao iniciar o server:
+Registre dependencias ao iniciar o server (usando o container padrão):
 
 ```ts
 import { Dede } from './src';
 
 class UserRepository { /* ... */ }
 
-await Dede.start({
+const app = await Dede.create({
   framework: { use: 'express', port: 3000 },
   registries: [
     { name: 'UserRepository', classLoader: UserRepository }
   ]
 });
+app.listen();
 ```
 
 Use `@Inject('Name')` para injetar dependencias:
@@ -363,7 +395,7 @@ Erros de dominio disponiveis:
 - `UnprocessableEntity` (422)
 - `InternalServerError` (500)
 
-Quando um erro e lancado, o handler padroniza a resposta. Se o erro for `CustomServerError`, o payload customizado sera retornado diretamente.
+Quando um erro e lancado, o handler padroniza a resposta. Erros de dominio (`AppError`) sao mapeados para HTTP. Se o erro for `CustomServerError`, o payload customizado sera retornado diretamente.
 
 ### Protocolos de Repositorio
 
@@ -385,7 +417,7 @@ Interfaces tipadas para padrao de repositorio:
 
 ```ts
 import { Dede } from './src/dede';
-import './example/express_app/example.controller';
+import { ExampleController } from './example/express_app/example.controller';
 
 class UserRepository {
   async findById(id: string) {
@@ -393,28 +425,32 @@ class UserRepository {
   }
 }
 
-await Dede.start({
+const app = await Dede.create({
   framework: { use: 'express', port: 3000 },
   registries: [{ name: 'UserRepository', classLoader: UserRepository }]
 });
+app.registerControllers([ExampleController]);
+app.listen();
 ```
 
 ### Elysia
 
 ```ts
 import { Dede } from './src/dede';
-import './example/express_app/example.controller';
+import { ExampleController } from './example/express_app/example.controller';
 
-await Dede.start({
+const app = await Dede.create({
   framework: { use: 'elysia', port: 3001 },
   registries: []
 });
+app.registerControllers([ExampleController]);
+app.listen();
 ```
 
 ### Fila com AfterToEntity
 
 ```ts
-import { Entity, AfterToEntity } from './src/application/entity';
+import { Entity, AfterToEntity } from './src';
 
 type QueueJob = { type: string; payload: Record<string, any> };
 
@@ -461,3 +497,30 @@ const serialized = entity.toEntity();
 ```bash
 npm test -- tests/src/application/entity.spec.ts --runInBand
 ```
+
+Testes de integração (exemplos):
+
+```bash
+RUN_EXAMPLE_TESTS=true npm test -- example/tests/main.test.ts
+```
+
+Obs: os testes de Elysia só rodam no runtime do Bun (em Node eles são ignorados).
+
+## Benchmark
+
+Resultados locais ficam em `bench/results.md`. Para rodar:
+
+```bash
+npm run bench:compare
+```
+
+Parâmetros (opcional):
+
+```bash
+BENCH_REQUESTS=5000 BENCH_CONCURRENCY=50 BENCH_WARMUP=200 npm run bench:compare
+```
+
+Resumo (média de 3 rodadas locais, 5000 req / conc 50 / warmup 200):
+
+- Express: avg 3.34 ms, p50 2.45 ms, p95 8.54 ms, 8298.61 req/s
+- Elysia: avg 3.16 ms, p50 2.63 ms, p95 6.98 ms, 8765.78 req/s

@@ -1,5 +1,5 @@
 import { Dede } from "../../src/dede";
-import '../express_app/example.controller';
+import { ExampleController } from "../express_app/example.controller";
 
 type HttpResponse<T = any> = { data: T; status: number };
 
@@ -29,13 +29,16 @@ class UserRepository {
 }
 
 const expressEndpoint = 'http://localhost:3000'
+const elysiaEndpoint = 'http://localhost:3001'
 const shouldRunExampleTests = process.env.RUN_EXAMPLE_TESTS === 'true';
 const describeIf = shouldRunExampleTests ? describe : describe.skip;
+const isBun = typeof (globalThis as any).Bun !== 'undefined';
+const describeElysia = shouldRunExampleTests && isBun ? describe : describe.skip;
 
 describeIf("express app", () => {
     let expressApp!: Dede;
     beforeAll(async () => {
-        expressApp = await Dede.start({
+        expressApp = await Dede.create({
             framework: {
                 use: 'express',
                 port: 3000,
@@ -46,7 +49,9 @@ describeIf("express app", () => {
                     classLoader: new UserRepository(),
                 }
             ],
-        })
+        });
+        expressApp.registerControllers([ExampleController]);
+        expressApp.listen();
         console.log('Express server running on port 3000');
     })
 
@@ -97,10 +102,10 @@ describeIf("express app", () => {
     })
 });
 
-describeIf("elysia app", () => {
+describeElysia("elysia app", () => {
     let elysia!: Dede;
     beforeAll(async () => {
-        elysia = await Dede.start({
+        elysia = await Dede.create({
             framework: {
                 use: 'elysia',
                 port: 3001,
@@ -111,8 +116,10 @@ describeIf("elysia app", () => {
                     classLoader: new UserRepository(),
                 }
             ],
-        })
-        console.log('Elysia server running on port 3000');
+        });
+        elysia.registerControllers([ExampleController]);
+        elysia.listen();
+        console.log('Elysia server running on port 3001');
     })
 
     afterAll(async () => {
@@ -124,7 +131,7 @@ describeIf("elysia app", () => {
     });
 
     it("should call postExample - POST", async () => {
-        const { data, status } = await request('POST', `${expressEndpoint}/example`, {
+        const { data, status } = await request('POST', `${elysiaEndpoint}/example`, {
             name: 'any_name',
             email: 'any_email'
         });
@@ -133,7 +140,7 @@ describeIf("elysia app", () => {
     })
 
     it("should call getExample - GET", async () => {
-        const { data, status } = await request('GET', `${expressEndpoint}/example`)
+        const { data, status } = await request('GET', `${elysiaEndpoint}/example`)
         expect(data.message).toBe("Hello from ExampleUseCase!")
         expect(status).toBe(200)
     })
@@ -141,7 +148,7 @@ describeIf("elysia app", () => {
     it("should call putExample - PUT", async () => {
         const { data, status } = await request(
             'PUT',
-            `${expressEndpoint}/example/5?test=ok`,
+            `${elysiaEndpoint}/example/5?test=ok`,
             {},
             { 'x-type': 'any-type' }
         );
@@ -154,7 +161,7 @@ describeIf("elysia app", () => {
     })
 
     it("should call deleteExample - DELETE", async () => {
-        const { data } = await request('DELETE', `${expressEndpoint}/example`)
+        const { data } = await request('DELETE', `${elysiaEndpoint}/example`)
         expect(data.id).toBe('hash_id')
         expect(data.auth).toBe(true)
         expect(data.name).toBe('John Doe')

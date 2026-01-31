@@ -19,11 +19,12 @@ import {
     // storage
 } from "./application";
 
-import { Inject } from './infra/di/registry'
+import { Container, DefaultContainer, Inject, setDefaultContainer } from './infra/di/registry'
 
 import { Dede, type Options, Register } from './dede'
 
-import { ServerError, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, BadRequest, InternalServerError } from './http/errors/server'
+import { ServerError, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, BadRequest, InternalServerError, CustomServerError } from './http/errors/server'
+import { AppError } from './domain/errors/app-error'
 
 import type { RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryExistsBy, RepositoryRestore, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination } from './protocols/repository'
 
@@ -40,10 +41,14 @@ export {
     Storage, StorageGateway,
 
     Inject,
+    Container,
+    DefaultContainer,
+    setDefaultContainer,
 
     Dede, Options, Register,
 
-    ServerError, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, BadRequest, InternalServerError,
+    ServerError, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, BadRequest, InternalServerError, CustomServerError,
+    AppError,
 
     RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryRestore, RepositoryExistsBy, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination
 }

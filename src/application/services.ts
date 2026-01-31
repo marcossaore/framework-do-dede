@@ -1,4 +1,4 @@
-import { Registry } from "@/infra/di/registry";
+import { Container, DefaultContainer } from "@/infra/di/registry";
 import 'reflect-metadata';
 
 export interface StorageGateway {
@@ -7,13 +7,13 @@ export interface StorageGateway {
   delete(key: string): Promise<boolean>
 }
 
-export function Storage(gatewayName: string) {
+export function Storage(gatewayName: string, container: Container = DefaultContainer) {
   return function (target: any, propertyKey: string): void {
     let dependency: any;
     Object.defineProperty(target, propertyKey, {
       get: function () {
         if (!dependency) {
-          dependency = Registry.inject(gatewayName);
+          dependency = container.inject(gatewayName);
         }
         if (!dependency.save || !dependency.get || !dependency.delete) {
           throw new Error(`${gatewayName} is not a valid StorageGateway`);

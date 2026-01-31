@@ -1,13 +1,5 @@
-class ComponentRegistry {
-    private static instance: ComponentRegistry;
+export class Container {
     private dependencies: Map<string, any> = new Map();
-
-    static getInstance(): ComponentRegistry {
-        if (!this.instance) {
-            this.instance = new ComponentRegistry();
-        }
-        return this.instance;
-    }
 
     load(name: string, dependency: any): void {
         this.dependencies.set(name, dependency);
@@ -23,13 +15,17 @@ class ComponentRegistry {
     }
 }
 
-export const Registry = ComponentRegistry.getInstance();
+export let DefaultContainer = new Container();
 
-export function Inject(name: string) {
+export function setDefaultContainer(container: Container) {
+    DefaultContainer = container;
+}
+
+export function Inject(name: string, container: Container = DefaultContainer) {
     return function (target: any, propertyKey: string): void {
         target[propertyKey] = new Proxy({}, {
             get(_: any, propertyKey: string) {
-                const dependency = Registry.inject(name);
+                const dependency = container.inject(name);
                 return dependency[propertyKey];
             }
         })

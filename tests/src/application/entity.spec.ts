@@ -1,4 +1,4 @@
-import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix, BeforeToEntity, AfterToEntity } from '@/application/entity';
+import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix, BeforeToEntity, AfterToEntity } from '@/application';
 
 describe('Entity', () => {
 

@@ -1,4 +1,6 @@
-export abstract class Entity {
+import { Entity as DomainEntity } from "@/domain/entity";
+
+export abstract class SerializableEntity extends DomainEntity {
     [x: string]: any;
 
     private buildRawEntityObject(): Record<string, any> {
@@ -15,7 +17,7 @@ export abstract class Entity {
     private getEntityHooks(hookKey: symbol): Array<string | symbol> {
         const hooks: Array<string | symbol> = [];
         let current = this.constructor as any;
-        while (current && current !== Entity) {
+        while (current && current !== SerializableEntity) {
             const currentHooks = current[hookKey] as Array<string | symbol> | undefined;
             if (currentHooks && currentHooks.length) {
                 hooks.unshift(...currentHooks);
@@ -96,7 +98,7 @@ export abstract class Entity {
             if (typeof value === 'function') continue;
             if (value === undefined) continue;
             // @ts-ignore
-            if (propertiesConfigs && propertiesConfigs[propName]?.serialize && (value || valueIsZero)) {
+            if (propertiesConfigs && propertiesConfigs[propName]?.serialize && (value || value === 0)) {
                 const serializedValue = await propertiesConfigs[propName].serialize(value);
                 if (serializedValue && typeof serializedValue === 'object' && !Array.isArray(serializedValue)) {
                     const entries = Object.entries(serializedValue);
@@ -170,25 +172,7 @@ export abstract class Entity {
     }
 
     protected generateGetters() {
-        for (const property of Object.keys(this)) {
-            if (typeof this[property] === 'function') continue;
-            let prefixName = null;
-
-            // @ts-ignore
-            if (this.constructor.propertiesConfigs && this.constructor.propertiesConfigs[property] && this.constructor.propertiesConfigs[property].prefix) {
-                // @ts-ignore
-                prefixName = this.constructor.propertiesConfigs[property].prefix;
-            } else {
-                const isBoolean = this[property] ? typeof this[property] === 'boolean' : false;
-                prefixName = isBoolean ? 'is' : 'get';
-            }
-            let getterName = null
-            if (property[0]) {
-                getterName = `${prefixName}${property[0].toUpperCase()}${property.slice(1)}`
-                if (this[getterName]) continue;
-                this[getterName] = () => this[property];
-            }
-        }
+        super.generateGetters();
     }
 }
 
@@ -234,10 +218,12 @@ const BEFORE_TO_ENTITY = Symbol('beforeToEntity');
 const AFTER_TO_ENTITY = Symbol('afterToEntity');
 
 const assertEntityDecoratorTarget = (target: any, decoratorName: string) => {
-    if (!Entity.prototype.isPrototypeOf(target)) {
+    if (!SerializableEntity.prototype.isPrototypeOf(target)) {
         throw new Error(`${decoratorName} can only be used on Entity classes`);
     }
 }
+
+export { SerializableEntity as Entity };
 
 export function BeforeToEntity(): MethodDecorator {
     return function (target: any, propertyKey: string | symbol) {

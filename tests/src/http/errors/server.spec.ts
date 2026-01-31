@@ -1,9 +1,9 @@
-import { BadRequest, Conflict, CustomServerError, Forbidden, NotFound, ServerError, Unauthorized, UnprocessableEntity } from '@/http/errors/server';
+import { BadRequest, Conflict, CustomServerError, Forbidden, NotFound, ServerError, Unauthorized, UnprocessableEntity, InternalServerError } from '@/http/errors/server';
 
   // Test subclass to validate abstract class behavior
   class TestServerError extends ServerError {
     constructor(message: string, statusCode: number) {
-      super(message, statusCode);
+      super(message, statusCode, { message });
     }
   }
   
@@ -135,6 +135,15 @@ import { BadRequest, Conflict, CustomServerError, Forbidden, NotFound, ServerErr
       const custom = { message: 'Custom error' };
       const error = new CustomServerError(custom, 400, '');
       expect(error.name).toBe('CustomServerError');
+    });
+  });
+
+  describe('InternalServerError', () => {
+    it('should store unexpected error message', () => {
+      const error = new InternalServerError('debug message', 'default message');
+      expect(error.getUnexpectedError()).toBe('debug message');
+      expect(error.getStatusCode()).toBe(500);
+      expect(error.message).toBe('default message');
     });
   });
 });

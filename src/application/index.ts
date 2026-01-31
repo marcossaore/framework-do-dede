@@ -4,7 +4,7 @@ import {
 } from './controller';
 import {
     Entity, Restrict, VirtualProperty, Serialize, GetterPrefix, BeforeToEntity, AfterToEntity
-} from './entity'
+} from '../infra/serialization/entity'
 import { DecorateUseCase, UseCase } from './usecase'
 import { Storage, type StorageGateway } from './services'
 

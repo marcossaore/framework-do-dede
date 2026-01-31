@@ -1,8 +1,11 @@
 import HttpServer, { HttpServerParams, Request } from "@/http/http-server"
-import { InternalServerError, ServerError } from "@/http"
-import { flushControllers, getControllers, Middleware, MiddlewareDefinition, Tracer } from "../application/controller"
+import { Middleware, MiddlewareDefinition, Tracer } from "../application/controller"
+import type { ValidatorLike } from "@/interface/validation/validator"
 import { FrameworkError } from "@/http/errors/framework"
-import { CustomServerError } from "./errors/server"
+import { HttpRequestMapper } from "@/interface/http/request-mapper"
+import { MiddlewareExecutor } from "@/interface/http/middleware-executor"
+import { HttpErrorMapper } from "@/interface/errors/http-error-mapper"
+import { validateWithClassValidator } from "@/interface/validation/class-validator"
 
 type Input = {
     headers: any
@@ -13,8 +16,12 @@ type Input = {
 }
 
 export default class ControllerHandler {
-    constructor(httpServer: HttpServer, port: number) {
-        for (const { handler, middlewares, method, route, statusCode, params, query, headers, body, bodyFilter, responseType } of this.registryControllers()) {
+    private readonly requestMapper = new HttpRequestMapper();
+    private readonly middlewareExecutor = new MiddlewareExecutor();
+    private readonly errorMapper = new HttpErrorMapper();
+
+    constructor(httpServer: HttpServer, controllers: any[] = []) {
+        for (const { handler, middlewares, validator, method, route, statusCode, params, query, headers, body, bodyFilter, responseType } of this.registryControllers(controllers)) {
             httpServer.register(
                 {
                     method,
@@ -25,6 +32,7 @@ export default class ControllerHandler {
                     query,
                     headers,
                     middlewares,
+                    validator,
                     responseType
                 },
                 async (input: Input) => {
@@ -37,22 +45,23 @@ export default class ControllerHandler {
                     let middlewaresExecuted: { elapsedTime: string, middleware: string, error?: any }[] = [];
                     try {
                         startTime = performance.now()
-                        const filterParams = this.filter(input.params, params)
-                        const filterQueryParams = this.filter(input.query, query)
-                        const filterHeaders = this.filter(input.headers, headers)
-                        const normalizeBody = this.normalizeBracketNotation(input.body)
-                        let filterBody = this.filter(normalizeBody, body)
-                        if (bodyFilter !== 'restrict') {
-                            filterBody = { ...normalizeBody, ...filterBody }
+                        request = this.requestMapper.map(input, { params, query, headers, body, bodyFilter })
+                        if (validator) {
+                            if (typeof validator === 'function') {
+                                await validateWithClassValidator(validator, request.data)
+                            } else if (typeof validator.validate === 'function') {
+                                await validator.validate(request.data)
+                            } else {
+                                throw new FrameworkError('Validator must be a class or implement validate()')
+                            }
                         }
-                        mergedParams = { ...filterHeaders, ...filterParams, ...filterQueryParams, ...filterBody }
-                        request = { data: mergedParams, context: {} }
-                        middlewaresExecuted = await this.executeMiddlewares(middlewares, request)
+                        mergedParams = request.data
+                        middlewaresExecuted = await this.middlewareExecutor.execute(middlewares, request)
                         const response = await handler.instance[handler.methodName](request)
                         endTime = performance.now()
                         return response
                     } catch (error: any) {
-                        capturedError = this.extractError(error, httpServer);
+                        capturedError = this.errorMapper.map(error, httpServer);
                         input.setStatus(capturedError.statusCode)
                         endTime = performance.now()
                         if (capturedError?.custom) {
@@ -81,43 +90,11 @@ export default class ControllerHandler {
                 }
             )
         }
-        httpServer.listen(port)
     }
 
-    private async executeMiddlewares(middlewares: Middleware[] = [], request: Request): Promise<{ elapsedTime: string, middleware: string, error?: any }[]> {
-        const executed: { elapsedTime: string, middleware: string, error?: any }[] = [];
-        if (middlewares && middlewares.length > 0) {
-            for (const middleware of middlewares) {
-                let startTime = 0;
-                let endTime = 0;
-                let elapsedTime;
-                try {
-                    startTime = performance.now()
-                    const middlewareResult = await middleware.execute(request)
-                    request.context = Object.assign(request.context, middlewareResult)
-                    endTime = performance.now()
-                    elapsedTime = `${(endTime - startTime).toFixed(2)} ms`;
-                    executed.push({
-                        elapsedTime,
-                        middleware: middleware.constructor.name
-                    })
-                } catch (error) {
-                    elapsedTime = `${(endTime - startTime).toFixed(2)} ms`;
-                    executed.push({
-                        elapsedTime,
-                        middleware: middleware.constructor.name,
-                        error
-                    })
-                    throw error;
-                }
-            }
-        }
-        return executed;
-    }
-
-    private registryControllers(): HttpServerParams[] {
+    private registryControllers(controllersList: any[]): HttpServerParams[] {
         const controllers: HttpServerParams[] = [];
-        for (const controller of getControllers()) {
+        for (const controller of controllersList) {
             const basePath = Reflect.getMetadata('basePath', controller);
             const methodNames = Object.getOwnPropertyNames(controller.prototype).filter(method => method !== 'constructor')
             let tracer = Reflect.getMetadata('tracer', controller) || null;
@@ -136,6 +113,7 @@ export default class ControllerHandler {
                     body: routeConfig.body,
                     bodyFilter: routeConfig.bodyFilter,
                     statusCode: routeConfig.statusCode,
+                    validator: routeConfig.validator as ValidatorLike | undefined,
                     handler: {
                         instance,
                         methodName,
@@ -146,7 +124,6 @@ export default class ControllerHandler {
                 });
             }
         }
-        flushControllers()
         return controllers
     }
 
@@ -171,69 +148,4 @@ export default class ControllerHandler {
         return middleware;
     }
 
-    private filter(params: any, filterParams?: string[]): any {
-        const filter: any = {}
-        for (const paramName of filterParams || []) {
-            const [paramNameFiltered, type] = paramName.split('|')
-            let value = params[paramName] || params[paramNameFiltered]
-            if (!value) continue
-            if (type === 'boolean') value = value === 'true'
-            if (type === 'integer') {
-                value = value.replace(/[^0-9]/g, '')
-                value = value ? parseInt(value) : 0
-            }
-            if (type === 'string') value = value.toString()
-            if (type === 'number') value = parseFloat(value)
-            filter[paramNameFiltered] = value
-        }
-        return filter
-    }
-
-    private extractError(error: any, httpServer: HttpServer): { unexpectedError?: string, message: string, statusCode: number, custom?: boolean } {
-        if (error instanceof ServerError) {
-            return {
-                message: error.message,
-                statusCode: error.getStatusCode()
-            }
-        }
-        if (error instanceof CustomServerError) {
-            return {
-                ...error.getCustom(),
-                statusCode: error.getStatusCode(),
-                custom: true
-            }
-        }
-        const debugError = {
-            sourceUrl: error.sourceURL,
-            line: error.line,
-            column: error.column,
-        }
-        error = new InternalServerError(error.message, httpServer.getDefaultMessageError())
-        return {
-            message: error.message,
-            statusCode: error.getStatusCode(),
-            unexpectedError: error instanceof InternalServerError ? error.getUnexpectedError() : undefined,
-            ...debugError
-        }
-    }
-
-    private normalizeBracketNotation(data: any): any {
-        if (!data || typeof data !== "object") return data;
-        const normalized: Record<string, any> = {};
-        for (const [rawKey, value] of Object.entries(data)) {
-            const key = String(rawKey);
-            const match = key.match(/^([^\[\]]+)\[([^\[\]]+)\]$/);
-            if (match) {
-                const parent = match[1];
-                const child = match[2];
-                if (!normalized[parent] || typeof normalized[parent] !== "object") {
-                    normalized[parent] = {};
-                }
-                normalized[parent][child] = value;
-                continue;
-            }
-            normalized[key] = value;
-        }
-        return normalized;
-    }
 }

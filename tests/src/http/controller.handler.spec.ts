@@ -1,7 +1,6 @@
 import ControllerHandler from '@/http/controller.handler';
 import { Controller, Get, Middleware, Post, UseMiddleware, UseMiddlewares } from '@/application';
 import HttpServer, { HttpServerParams } from '@/http/http-server';
-import { flushControllers } from '@/application/controller';
 
 class FakeHttpServer extends HttpServer {
   public registrations: { params: HttpServerParams; handler: CallableFunction }[] = [];
@@ -31,10 +30,6 @@ class FakeHttpServer extends HttpServer {
 }
 
 describe('ControllerHandler middleware resolution', () => {
-  beforeEach(() => {
-    flushControllers();
-  });
-
   class AuthMiddleware implements Middleware {
     async execute(): Promise<{ auth: boolean }> {
       return { auth: true };
@@ -56,7 +51,7 @@ describe('ControllerHandler middleware resolution', () => {
     }
 
     const handler = Object.create(ControllerHandler.prototype) as ControllerHandler;
-    const routes = (handler as any).registryControllers();
+    const routes = (handler as any).registryControllers([UserController]);
 
     const resolved = routes[0].middlewares?.[0];
     expect(resolved).toBeInstanceOf(AuthMiddleware);
@@ -73,7 +68,7 @@ describe('ControllerHandler middleware resolution', () => {
     }
 
     const handler = Object.create(ControllerHandler.prototype) as ControllerHandler;
-    const routes = (handler as any).registryControllers();
+    const routes = (handler as any).registryControllers([UserController]);
 
     const resolved = routes[0].middlewares?.[0];
     expect(resolved).toBe(instance);
@@ -90,7 +85,7 @@ describe('ControllerHandler middleware resolution', () => {
     }
 
     const handler = Object.create(ControllerHandler.prototype) as ControllerHandler;
-    const routes = (handler as any).registryControllers();
+    const routes = (handler as any).registryControllers([UserController]);
 
     const resolved = routes[0].middlewares?.[0];
     expect(resolved).toBeInstanceOf(AuthMiddleware);
@@ -108,7 +103,7 @@ describe('ControllerHandler middleware resolution', () => {
     }
 
     const handler = Object.create(ControllerHandler.prototype) as ControllerHandler;
-    const routes = (handler as any).registryControllers();
+    const routes = (handler as any).registryControllers([UserController]);
 
     const middlewares = routes[0].middlewares || [];
     expect(middlewares[0]).toBeInstanceOf(LoggerMiddleware);
@@ -118,10 +113,6 @@ describe('ControllerHandler middleware resolution', () => {
 });
 
 describe('ControllerHandler multipart form-data normalization', () => {
-  beforeEach(() => {
-    flushControllers();
-  });
-
   it('normalizes bracket notation from multipart/form-data into an object', async () => {
     @Controller('/users')
     class UserController {
@@ -132,7 +123,7 @@ describe('ControllerHandler multipart form-data normalization', () => {
     }
 
     const server = new FakeHttpServer();
-    new ControllerHandler(server, 3000);
+    new ControllerHandler(server, [UserController]);
 
     const handler = server.registrations[0].handler;
     const response = await handler({
@@ -158,10 +149,6 @@ describe('ControllerHandler multipart form-data normalization', () => {
 });
 
 describe('ControllerHandler body filtering', () => {
-  beforeEach(() => {
-    flushControllers();
-  });
-
   it('merges the original body with filtered/typed fields when bodyFilter is none', async () => {
     @Controller('/users')
     class UserController {
@@ -172,7 +159,7 @@ describe('ControllerHandler body filtering', () => {
     }
 
     const server = new FakeHttpServer();
-    new ControllerHandler(server, 3000);
+    new ControllerHandler(server, [UserController]);
 
     const handler = server.registrations[0].handler;
     const response = await handler({
@@ -202,7 +189,7 @@ describe('ControllerHandler body filtering', () => {
     }
 
     const server = new FakeHttpServer();
-    new ControllerHandler(server, 3000);
+    new ControllerHandler(server, [UserController]);
 
     const handler = server.registrations[0].handler;
     const response = await handler({
@@ -231,7 +218,7 @@ describe('ControllerHandler body filtering', () => {
     }
 
     const server = new FakeHttpServer();
-    new ControllerHandler(server, 3000);
+    new ControllerHandler(server, [ProductController]);
 
     const handler = server.registrations[0].handler;
     const response = await handler({

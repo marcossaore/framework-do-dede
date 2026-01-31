@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { FrameworkError } from "@/http/errors/framework";
-import { Registry } from "@/infra/di/registry";
+import type { ValidatorLike } from "@/interface/validation/validator";
 
 export interface Middleware {
     execute(input: Input<any>): Promise<any>
@@ -31,14 +31,10 @@ export interface Input<T, K = any> {
 
 type BodyFilter = "restrict" | "none"
 
-let controllers: string[] = [];
-  
 export function Controller(basePath: string = '/') {
     return function (target: any) {
         if (!basePath) throw new FrameworkError('basePath cannot be empty');
         Reflect.defineMetadata('basePath', basePath, target);
-        controllers.push(target.name);
-        Registry.load(target.name, target);
     };
 }
 
@@ -50,17 +46,6 @@ export function Tracing<R>(tracer: Tracer<R>) {
             Reflect.defineMetadata('tracer', tracer, target, propertyKey);
         }
     };
-}
-
-export function getControllers(): any[] {
-    return controllers.map((controller) => Registry.inject(controller));
-}
-
-export function flushControllers() {
-    controllers.map((controller) => {
-        Registry.remove(controller) 
-    });
-    controllers = [];
 }
 
 function isClass(fn: Function): boolean {
@@ -104,7 +89,7 @@ export function UseMiddlewares(middlewareClasses: MiddlewareDefinition[]) {
     };
 }
 
-export function Post(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter,  responseType?: 'json' | 'text' | 'html' } = {}) {
+export function Post(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorLike } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'post',
@@ -115,12 +100,13 @@ export function Post(config: { path?: string, statusCode?: number, params?: stri
             body: config.body,
             bodyFilter: config.bodyFilter || 'none',
             statusCode: config.statusCode || 200,
-            responseType: config.responseType || 'json'
+            responseType: config.responseType || 'json',
+            validator: config.validator
         }, target, propertyKey);
     };
 }
 
-export function Get(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], responseType?: 'json' | 'text' | 'html' } = {}) {
+export function Get(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], responseType?: 'json' | 'text' | 'html', validator?: ValidatorLike } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'get',
@@ -129,12 +115,13 @@ export function Get(config: { path?: string, statusCode?: number, params?: strin
             query: config.query,
             headers: config.headers,
             statusCode: config.statusCode || 200,
-            responseType: config.responseType || 'json'
+            responseType: config.responseType || 'json',
+            validator: config.validator
         }, target, propertyKey);
     };
 }
 
-export function Put(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter,  responseType?: 'json' | 'text' | 'html' } = {}) {
+export function Put(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorLike } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'put',
@@ -145,12 +132,13 @@ export function Put(config: { path?: string, statusCode?: number, params?: strin
             body: config.body,
             bodyFilter: config.bodyFilter || 'none',
             statusCode: config.statusCode || 200,
-            responseType: config.responseType || 'json'
+            responseType: config.responseType || 'json',
+            validator: config.validator
         }, target, propertyKey);
     };
 }
 
-export function Patch(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html' } = {}) {
+export function Patch(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorLike } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'patch',
@@ -161,12 +149,13 @@ export function Patch(config: { path?: string, statusCode?: number, params?: str
             body: config.body,
             bodyFilter: config.bodyFilter || 'none',
             statusCode: config.statusCode || 200,
-            responseType: config.responseType || 'json'
+            responseType: config.responseType || 'json',
+            validator: config.validator
         }, target, propertyKey);
     };
 }
 
-export function Delete(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html' } = {}) {
+export function Delete(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorLike } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'delete',
@@ -177,7 +166,8 @@ export function Delete(config: { path?: string, statusCode?: number, params?: st
             body: config.body,
             bodyFilter: config.bodyFilter || 'none',
             statusCode: config.statusCode || 200,
-            responseType: config.responseType || 'json'
+            responseType: config.responseType || 'json',
+            validator: config.validator
         }, target, propertyKey);
     };
 }

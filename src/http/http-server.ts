@@ -1,4 +1,5 @@
 import { Middleware, Tracer } from "@/application/controller"
+import type { ValidatorLike } from "@/interface/validation/validator"
 import { FrameworkError } from "./errors/framework"
 
 export type Request = {
@@ -20,6 +21,7 @@ export type HttpServerParams = {
     },
     responseType: 'json' | 'text' | 'html'
     middlewares?: Middleware[],
+    validator?: ValidatorLike,
     statusCode?: number,
     params?: string[],
     query?: string[],
@@ -104,7 +106,7 @@ export default abstract class HttpServer {
     private express(httpServerParams: HttpServerParams, route: string, handler: CallableFunction) {
         const method = httpServerParams.method as AllowedMethods
         this.framework[method](route, async (request: any, res: any) => {
-            request.headers['ip'] = request.ipç
+            request.headers['ip'] = request.ip
             res.status(httpServerParams.statusCode ?? 200)
             const output = await handler({
                 setStatus: (statusCode: HttpStatusCode) => res.status(statusCode),

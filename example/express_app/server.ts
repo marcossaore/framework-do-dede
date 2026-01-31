@@ -1,5 +1,5 @@
 import { Dede } from "../../src/dede";
-import '../express_app/example.controller';
+import { ExampleController } from '../express_app/example.controller';
 
 class UserRepository {
     async findById(id: string) {
@@ -14,7 +14,7 @@ let expressApp: any = null;
 let elysiaApp: any = null;
 
 async function bootstrap() {
-    expressApp = await Dede.start({
+    expressApp = await Dede.create({
         framework: {
             use: 'express',
             port: 3000,
@@ -26,9 +26,11 @@ async function bootstrap() {
             }
         ],
     });
+    expressApp.registerControllers([ExampleController]);
+    expressApp.listen();
     console.log('Express server running on port 3000');
 
-    elysiaApp = await Dede.start({
+    elysiaApp = await Dede.create({
         framework: {
             use: 'elysia',
             port: 3001,
@@ -40,6 +42,8 @@ async function bootstrap() {
             }
         ],
     });
+    elysiaApp.registerControllers([ExampleController]);
+    elysiaApp.listen();
     console.log('Elysia server running on port 3001');
 }
 

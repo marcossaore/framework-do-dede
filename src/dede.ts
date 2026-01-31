@@ -2,7 +2,7 @@ import { HttpServer } from "./http";
 import ControllerHandler from "./http/controller.handler";
 import { ElysiaServerAdapter } from "./http/elysia-server.adapter";
 import { ExpressServerAdapter } from "./http/express-server.adapter";
-import { Registry } from "./infra/di/registry";
+import { Container, DefaultContainer, setDefaultContainer } from "./infra/di/registry";
 
 export type Register = {
     name: string,
@@ -15,13 +15,17 @@ export type Options = {
         port?: number,
         middlewares?: CallableFunction[]
     },
+    controllers?: any[],
     registries: Register[],
-    defaultServerError?: string
+    defaultServerError?: string,
+    container?: Container
 }
 
 export class Dede {
 
     private readonly httpServer!: HttpServer;
+    private readonly port?: number;
+    private controllersRegistered = false;
 
     private constructor(
         private readonly framework: {
@@ -29,8 +33,10 @@ export class Dede {
             port?: number,
             middlewares?: CallableFunction[]
         },
-        private readonly defaultServerError?: string
+        private readonly defaultServerError?: string,
+        private readonly container: Container = DefaultContainer
     ) {
+        this.port = framework.port;
         if (framework.use === 'elysia') {
             this.httpServer = new ElysiaServerAdapter(framework.middlewares || [])
         }
@@ -38,22 +44,42 @@ export class Dede {
             this.httpServer = new ExpressServerAdapter(framework.middlewares || [])
         }
         if (defaultServerError) this.httpServer.setDefaultMessageError(defaultServerError)
-        new ControllerHandler(this.httpServer, framework.port || 80);
     }
 
-    static async start ({ framework, registries, defaultServerError }: Options): Promise<Dede> {
-        await this.loadRegistries(registries);
-        return new Dede(framework, defaultServerError)
+    static async create ({ framework, registries, defaultServerError, container }: Options): Promise<Dede> {
+        const appContainer = container ?? new Container();
+        setDefaultContainer(appContainer);
+        await this.loadRegistries(appContainer, registries);
+        return new Dede(framework, defaultServerError, appContainer)
+    }
+
+    static async start ({ framework, registries, defaultServerError, container, controllers }: Options): Promise<Dede> {
+        const app = await Dede.create({ framework, registries, defaultServerError, container, controllers });
+        if (controllers && controllers.length > 0) {
+            app.registerControllers(controllers);
+        }
+        app.listen();
+        return app;
     }
 
     async stop() {
         await this.httpServer.close()
     }
 
-    private static async loadRegistries(registries: Register []) {
+    registerControllers(controllers: any[]) {
+        if (this.controllersRegistered) return;
+        new ControllerHandler(this.httpServer, controllers);
+        this.controllersRegistered = true;
+    }
+
+    listen(port?: number) {
+        const resolvedPort = port ?? this.port ?? 80;
+        this.httpServer.listen(resolvedPort);
+    }
+
+    private static async loadRegistries(container: Container, registries: Register []) {
         registries.forEach(({ classLoader, name }) => {
-            Registry.load(name, classLoader);
+            container.load(name, classLoader);
         })
-        return new Promise(resolve => setTimeout(resolve, 500))
     }
 }
