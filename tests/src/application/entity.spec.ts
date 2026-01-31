@@ -1,4 +1,4 @@
-import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix } from '@/application/entity';
+import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix, BeforeToEntity, AfterToEntity } from '@/application/entity';
 
 describe('Entity', () => {
 
@@ -263,6 +263,54 @@ describe('Entity', () => {
     }
   }
 
+  class TestEntityWithEntityHooks extends Entity {
+    private readonly name: string;
+
+    private constructor({ name }: { name: string }) {
+      super();
+      this.name = name;
+    }
+
+    @BeforeToEntity()
+    private beforeToEntity(payload: Record<string, any>) {
+      payload.beforeHookTouched = true;
+    }
+
+    @AfterToEntity()
+    private afterToEntity(payload: Record<string, any>) {
+      payload.afterHookTouched = true;
+    }
+
+    static create(input: { name: string }) {
+      return new TestEntityWithEntityHooks(input);
+    }
+  }
+
+  class TestEntityWithAsyncHooks extends Entity {
+    private readonly name: string;
+
+    private constructor({ name }: { name: string }) {
+      super();
+      this.name = name;
+    }
+
+    @BeforeToEntity()
+    private async beforeToEntity(payload: Record<string, any>) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      payload.beforeHookTouched = true;
+    }
+
+    @AfterToEntity()
+    private async afterToEntity(payload: Record<string, any>) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      payload.afterHookTouched = true;
+    }
+
+    static create(input: { name: string }) {
+      return new TestEntityWithAsyncHooks(input);
+    }
+  }
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -467,5 +515,28 @@ describe('Entity', () => {
     const result = await entity.toAsyncData()
 
     expect(result.computed).toBe('TEST ASYNC');
+  });
+
+  it('should run before/after hooks for toEntity and mutate the payloads', async () => {
+    const entity = TestEntityWithEntityHooks.create({ name: 'test' });
+
+    const result = entity.toEntity();
+
+    expect(result).toEqual({
+      name: 'test',
+      afterHookTouched: true
+    });
+    expect(result).not.toHaveProperty('beforeHookTouched');
+  });
+
+  it('should await before/after hooks for toAsyncEntity', async () => {
+    const entity = TestEntityWithAsyncHooks.create({ name: 'test' });
+
+    const result = await entity.toAsyncEntity();
+
+    expect(result).toEqual({
+      name: 'test',
+      afterHookTouched: true
+    });
   });
 });

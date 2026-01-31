@@ -2,8 +2,8 @@ import {
     Controller, Post, Get, Put, Delete, Patch, UseMiddleware, UseMiddlewares, Tracing,
     type Middleware, type Input, type Tracer, type TracerData
 } from './controller';
-import { 
-    Entity, Restrict, VirtualProperty, Serialize, GetterPrefix
+import {
+    Entity, Restrict, VirtualProperty, Serialize, GetterPrefix, BeforeToEntity, AfterToEntity
 } from './entity'
 import { DecorateUseCase, UseCase } from './usecase'
 import { Storage, type StorageGateway } from './services'
@@ -14,7 +14,7 @@ export {
     Tracing,
     DecorateUseCase, UseCase,
     Storage,
-    Entity, Restrict, VirtualProperty, Serialize, GetterPrefix,
+    Entity, Restrict, VirtualProperty, Serialize, GetterPrefix, BeforeToEntity, AfterToEntity,
 }
 
 export type {
