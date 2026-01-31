@@ -220,4 +220,33 @@ describe('ControllerHandler body filtering', () => {
       age: 20
     });
   });
+
+  it('casts number fields when body filter uses number type', async () => {
+    @Controller('/products')
+    class ProductController {
+      @Post({ path: '/create', body: ['price|number'], bodyFilter: 'restrict' })
+      create(request: { data: any }) {
+        return request.data;
+      }
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, 3000);
+
+    const handler = server.registrations[0].handler;
+    const response = await handler({
+      headers: {},
+      body: {
+        price: '10.50',
+        name: 'Book'
+      },
+      params: {},
+      query: {},
+      setStatus: jest.fn()
+    });
+
+    expect(response).toEqual({
+      price: 10.5
+    });
+  });
 });

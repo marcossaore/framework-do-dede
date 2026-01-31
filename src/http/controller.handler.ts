@@ -183,6 +183,7 @@ export default class ControllerHandler {
                 value = value ? parseInt(value) : 0
             }
             if (type === 'string') value = value.toString()
+            if (type === 'number') value = parseFloat(value)
             filter[paramNameFiltered] = value
         }
         return filter
