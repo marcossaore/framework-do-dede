@@ -1,5 +1,5 @@
 import { Middleware, Tracer } from "@/application/controller"
-import type { ValidatorLike } from "@/interface/validation/validator"
+import type { ValidatorDefinition } from "@/interface/validation/validator"
 import { FrameworkError } from "./errors/framework"
 
 export type Request = {
@@ -21,7 +21,7 @@ export type HttpServerParams = {
     },
     responseType: 'json' | 'text' | 'html'
     middlewares?: Middleware[],
-    validator?: ValidatorLike,
+    validator?: ValidatorDefinition,
     statusCode?: number,
     params?: string[],
     query?: string[],

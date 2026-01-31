@@ -1,6 +1,6 @@
 import HttpServer, { HttpServerParams, Request } from "@/http/http-server"
 import { Middleware, MiddlewareDefinition, Tracer } from "../application/controller"
-import type { ValidatorLike } from "@/interface/validation/validator"
+import type { ValidatorDefinition, ValidatorLike } from "@/interface/validation/validator"
 import { FrameworkError } from "@/http/errors/framework"
 import { HttpRequestMapper } from "@/interface/http/request-mapper"
 import { MiddlewareExecutor } from "@/interface/http/middleware-executor"
@@ -47,10 +47,19 @@ export default class ControllerHandler {
                         startTime = performance.now()
                         request = this.requestMapper.map(input, { params, query, headers, body, bodyFilter })
                         if (validator) {
-                            if (typeof validator === 'function') {
-                                await validateWithClassValidator(validator, request.data)
-                            } else if (typeof validator.validate === 'function') {
-                                await validator.validate(request.data)
+                            let validatorLike: ValidatorLike
+                            let options
+                            if (isValidatorDefinition(validator)) {
+                                validatorLike = validator.validator
+                                options = validator.error
+                            } else {
+                                validatorLike = validator as ValidatorLike
+                            }
+
+                            if (typeof validatorLike === 'function') {
+                                await validateWithClassValidator(validatorLike, request.data, options)
+                            } else if (typeof validatorLike.validate === 'function') {
+                                await validatorLike.validate(request.data)
                             } else {
                                 throw new FrameworkError('Validator must be a class or implement validate()')
                             }
@@ -113,7 +122,7 @@ export default class ControllerHandler {
                     body: routeConfig.body,
                     bodyFilter: routeConfig.bodyFilter,
                     statusCode: routeConfig.statusCode,
-                    validator: routeConfig.validator as ValidatorLike | undefined,
+                    validator: routeConfig.validator as ValidatorDefinition | undefined,
                     handler: {
                         instance,
                         methodName,
@@ -148,4 +157,8 @@ export default class ControllerHandler {
         return middleware;
     }
 
+}
+
+function isValidatorDefinition(value: unknown): value is Exclude<ValidatorDefinition, ValidatorLike> {
+    return !!value && typeof value === 'object' && 'validator' in value
 }

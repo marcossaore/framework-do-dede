@@ -25,6 +25,7 @@ import { Dede, type Options, Register } from './dede'
 
 import { ServerError, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, BadRequest, InternalServerError, CustomServerError } from './http/errors/server'
 import { AppError } from './domain/errors/app-error'
+import type { ValidatorDefinition } from './interface/validation/validator'
 
 import type { RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryExistsBy, RepositoryRestore, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination } from './protocols/repository'
 
@@ -52,3 +53,5 @@ export {
 
     RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryRestore, RepositoryExistsBy, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination
 }
+
+export type { ValidatorDefinition }

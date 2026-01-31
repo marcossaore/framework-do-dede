@@ -19,7 +19,6 @@ import { BadRequest, Conflict, CustomServerError, Forbidden, NotFound, ServerErr
   
       it('should have proper error name', () => {
         const error = new TestServerError('Test', 400);
-        console.log('error.name = ', error.name);
         expect(error.name).toBe('TestServerError');
       });
     });

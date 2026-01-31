@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { FrameworkError } from "@/http/errors/framework";
-import type { ValidatorLike } from "@/interface/validation/validator";
+import type { ValidatorDefinition } from "@/interface/validation/validator";
 
 export interface Middleware {
     execute(input: Input<any>): Promise<any>
@@ -89,7 +89,7 @@ export function UseMiddlewares(middlewareClasses: MiddlewareDefinition[]) {
     };
 }
 
-export function Post(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorLike } = {}) {
+export function Post(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorDefinition } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'post',
@@ -106,7 +106,7 @@ export function Post(config: { path?: string, statusCode?: number, params?: stri
     };
 }
 
-export function Get(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], responseType?: 'json' | 'text' | 'html', validator?: ValidatorLike } = {}) {
+export function Get(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], responseType?: 'json' | 'text' | 'html', validator?: ValidatorDefinition } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'get',
@@ -121,7 +121,7 @@ export function Get(config: { path?: string, statusCode?: number, params?: strin
     };
 }
 
-export function Put(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorLike } = {}) {
+export function Put(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorDefinition } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'put',
@@ -138,7 +138,7 @@ export function Put(config: { path?: string, statusCode?: number, params?: strin
     };
 }
 
-export function Patch(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorLike } = {}) {
+export function Patch(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorDefinition } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'patch',
@@ -155,7 +155,7 @@ export function Patch(config: { path?: string, statusCode?: number, params?: str
     };
 }
 
-export function Delete(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorLike } = {}) {
+export function Delete(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorDefinition } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'delete',
