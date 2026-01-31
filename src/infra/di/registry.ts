@@ -21,11 +21,12 @@ export function setDefaultContainer(container: Container) {
     DefaultContainer = container;
 }
 
-export function Inject(name: string, container: Container = DefaultContainer) {
+export function Inject(name: string, container?: Container) {
     return function (target: any, propertyKey: string): void {
         target[propertyKey] = new Proxy({}, {
             get(_: any, propertyKey: string) {
-                const dependency = container.inject(name);
+                const resolvedContainer = container ?? DefaultContainer;
+                const dependency = resolvedContainer.inject(name);
                 return dependency[propertyKey];
             }
         })
