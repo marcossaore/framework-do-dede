@@ -37,13 +37,13 @@ export class HttpRequestMapper {
       const [paramNameFiltered, type] = paramName.split('|')
       let value = params[paramName] ?? params[paramNameFiltered]
       if (value === undefined || value === null) continue
-      if (type === 'boolean') value = value === 'true'
-      if (type === 'integer') {
+      if (type === 'boolean' && typeof value !== 'boolean') value = value === 'true'
+      if (type === 'integer' && typeof value === 'string' && [/^0-9$/.test(value)]) {
         value = value.replace(/[^0-9]/g, '')
         value = value ? parseInt(value) : 0
       }
+      if (type === 'number' && typeof value === 'string' && [/^0-9$/.test(value)]) value = parseFloat(value)
       if (type === 'string') value = value.toString()
-      if (type === 'number') value = parseFloat(value)
       filter[paramNameFiltered] = value
     }
     return filter
