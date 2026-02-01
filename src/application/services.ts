@@ -7,23 +7,62 @@ export interface StorageGateway {
   delete(key: string): Promise<boolean>
 }
 
+export interface CacheGateway {
+  get<T = unknown>(key: string): Promise<T | null> | T | null
+  set<T = unknown>(key: string, value: T, ttl?: number): Promise<void> | void
+  delete(key: string): Promise<boolean> | boolean
+}
+
+function defineGatewayProperty(
+  target: any,
+  propertyKey: string,
+  gatewayName: string,
+  container?: Container,
+  validator?: (dependency: any) => boolean,
+  errorMessage?: string
+): void {
+  Object.defineProperty(target, propertyKey, {
+    get: function () {
+      return new Proxy({}, {
+        get(_: any, prop: string) {
+          const resolvedContainer = container ?? DefaultContainer;
+          const dependency = resolvedContainer.inject(gatewayName);
+          if (validator && !validator(dependency)) {
+            throw new Error(errorMessage ?? `${gatewayName} is not a valid dependency`);
+          }
+          return dependency[prop];
+        }
+      });
+    },
+    enumerable: true,
+    configurable: true
+  });
+}
+
 export function Storage(gatewayName: string, container?: Container) {
   return function (target: any, propertyKey: string): void {
-    Object.defineProperty(target, propertyKey, {
-      get: function () {
-        return new Proxy({}, {
-          get(_: any, prop: string) {
-            const resolvedContainer = container ?? DefaultContainer;
-            const dependency = resolvedContainer.inject(gatewayName);
-            if (!dependency?.save || !dependency?.get || !dependency?.delete) {
-              throw new Error(`${gatewayName} is not a valid StorageGateway`);
-            }
-            return dependency[prop];
-          }
-        });
-      },
-      enumerable: true,
-      configurable: true
-    });
+    defineGatewayProperty(
+      target,
+      propertyKey,
+      gatewayName,
+      container,
+      (dependency) => !!dependency?.save && !!dependency?.get && !!dependency?.delete,
+      `${gatewayName} is not a valid StorageGateway`
+    );
+  };
+}
+
+export function CacheGateway(gatewayName: string, container?: Container) {
+  return function (target: any, propertyKey?: string): void {
+    const resolvedProperty = propertyKey ?? 'cache';
+    const resolvedTarget = propertyKey ? target : target.prototype;
+    defineGatewayProperty(
+      resolvedTarget,
+      resolvedProperty,
+      gatewayName,
+      container,
+      (dependency) => !!dependency?.get && !!dependency?.set && !!dependency?.delete,
+      `${gatewayName} is not a valid CacheGateway`
+    );
   };
 }

@@ -15,7 +15,7 @@ import {
     // usecase
 
     // storage
-    Storage, StorageGateway
+    Storage, CacheGateway
     // storage
 } from "./application";
 
@@ -26,6 +26,7 @@ import { Dede, type Options, Register } from './dede'
 import { ServerError, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, BadRequest, InternalServerError, CustomServerError } from './http/errors/server'
 import { AppError } from './domain/errors/app-error'
 import type { ValidatorDefinition } from './interface/validation/validator'
+import type { StorageGateway } from './application'
 
 import type { RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryExistsBy, RepositoryRestore, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination } from './protocols/repository'
 
@@ -39,7 +40,7 @@ export {
 
     UseCase, DecorateUseCase,
 
-    Storage, StorageGateway,
+    Storage, CacheGateway,
 
     Inject,
     Container,
@@ -54,4 +55,4 @@ export {
     RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryRestore, RepositoryExistsBy, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination
 }
 
-export type { ValidatorDefinition }
+export type { ValidatorDefinition, StorageGateway }

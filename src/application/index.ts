@@ -6,18 +6,20 @@ import {
     Entity, Restrict, VirtualProperty, Serialize, GetterPrefix, BeforeToEntity, AfterToEntity
 } from '../infra/serialization/entity'
 import { DecorateUseCase, UseCase } from './usecase'
-import { Storage, type StorageGateway } from './services'
 
 export {
     Controller, UseMiddleware, UseMiddlewares,
     Post, Get, Put, Delete, Patch,
     Tracing,
     DecorateUseCase, UseCase,
-    Storage,
     Entity, Restrict, VirtualProperty, Serialize, GetterPrefix, BeforeToEntity, AfterToEntity,
 }
 
+export { Storage, CacheGateway } from './services'
+
 export type {
-    Middleware, Input, StorageGateway,
+    Middleware, Input,
     Tracer, TracerData
 }
+
+export type { StorageGateway } from './services'
