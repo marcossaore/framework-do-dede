@@ -9,16 +9,17 @@ export interface StorageGateway {
 
 export function Storage(gatewayName: string, container: Container = DefaultContainer) {
   return function (target: any, propertyKey: string): void {
-    let dependency: any;
     Object.defineProperty(target, propertyKey, {
       get: function () {
-        if (!dependency) {
-          dependency = container.inject(gatewayName);
-        }
-        if (!dependency.save || !dependency.get || !dependency.delete) {
-          throw new Error(`${gatewayName} is not a valid StorageGateway`);
-        }
-        return dependency;
+        return new Proxy({}, {
+          get(_: any, prop: string) {
+            const dependency = container.inject(gatewayName);
+            if (!dependency?.save || !dependency?.get || !dependency?.delete) {
+              throw new Error(`${gatewayName} is not a valid StorageGateway`);
+            }
+            return dependency[prop];
+          }
+        });
       },
       enumerable: true,
       configurable: true
