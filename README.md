@@ -1,6 +1,6 @@
 # Framework do Dedé
 
-Um framework TypeScript simples para construir APIs HTTP com controllers, use cases e entities, com suporte a Express ou Elysia, DI leve e serialização de entidades.
+Um framework TypeScript simples para construir APIs HTTP com controllers, use cases e entities, com suporte a Express ou Elysia, DI leve e camada de Model.
 
 ## Índice
 
@@ -12,8 +12,8 @@ Um framework TypeScript simples para construir APIs HTTP com controllers, use ca
   - Middlewares
   - Tracing
   - UseCase e Decorators
-  - Entity e Serialização
-  - Hooks Before/After ToEntity
+  - Entity e Model
+  - Event Dispatcher
   - Storage Gateway
   - DI (Container/Inject)
   - Errors
@@ -21,7 +21,7 @@ Um framework TypeScript simples para construir APIs HTTP com controllers, use ca
 - Exemplos
   - Express
   - Elysia
-  - Fila com AfterToEntity
+  - Background com EventDispatcher
 - Testes
 - Benchmark
 
@@ -250,86 +250,43 @@ class CreateUserUseCase extends UseCase<{ name: string }, { id: string }> {
 }
 ```
 
-### Entity e Serializacao
+### Entity e Model
 
-Entities suportam:
-
-- `toEntity()` e `toAsyncEntity()`
-- `toData()` e `toAsyncData()`
-- `@Serialize`, `@Restrict`, `@VirtualProperty`, `@GetterPrefix`
-
-Obs: a serializacao fica na camada de infraestrutura, mas a API continua sendo exposta pelo framework (importe direto de `./src`).
+Entities sao dominio puro. Use `Model` para converter entre Entity e o objeto do banco.
 
 ```ts
-import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix } from './src';
+import { Entity, Model } from './src';
 
 class User extends Entity {
-  @Serialize((value: Email) => value.getValue())
-  private readonly email: Email;
+  private readonly id: string;
+  private readonly email: string;
 
-  @Restrict()
-  private readonly passwordHash: string;
-
-  @GetterPrefix('has')
-  private readonly profile?: Profile;
-
-  @VirtualProperty('displayName')
-  private display() {
-    return 'User ' + this.email.getValue();
-  }
-
-  constructor(email: string, passwordHash: string) {
+  constructor(id: string, email: string) {
     super();
-    this.email = new Email(email);
-    this.passwordHash = passwordHash;
+    this.id = id;
+    this.email = email;
     this.generateGetters();
   }
 }
 
-const user = new User('a@b.com', 'hash');
-const serialized = user.toEntity();
+type UserRow = { id: string; email: string };
+
+class UserModel extends Model<User, UserRow> {
+  toModel(entity: User): UserRow {
+    return { id: entity.getId(), email: entity.getEmail() };
+  }
+
+  toEntity(model: UserRow): User {
+    return new User(model.id, model.email);
+  }
+}
 ```
 
 Regras principais:
 
-- `@Serialize` pode retornar objeto: cada chave vira uma propriedade do resultado
-- `@Restrict` remove campo em `toData`
-- `@VirtualProperty` mapeia metodos para campos virtuais
+- `Model` centraliza conversoes entre dominio e persistencia
+- use `toModel` e `toEntity`
 - `generateGetters()` cria getters para campos (ex.: `getName`, `isActive`, `hasProfile`)
-
-### Hooks Before/After ToEntity
-
-Use `@BeforeToEntity()` e `@AfterToEntity()` em metodos de Entities.
-
-- Before recebe objeto bruto (antes de serializacao)
-- After recebe objeto tratado (resultado final)
-- `toEntity()` executa hooks sem aguardar promessas
-- `toAsyncEntity()` aguarda hooks async
-
-```ts
-import { Entity, AfterToEntity, BeforeToEntity } from './src';
-
-class FileEntity extends Entity {
-  private readonly name: string;
-  private readonly s3Key: string;
-
-  constructor(name: string, s3Key: string) {
-    super();
-    this.name = name;
-    this.s3Key = s3Key;
-  }
-
-  @BeforeToEntity()
-  private before(payload: Record<string, any>) {
-    payload.rawTouched = true;
-  }
-
-  @AfterToEntity()
-  private async after(payload: Record<string, any>) {
-    await saveToS3(payload.s3Key);
-  }
-}
-```
 
 ### Storage Gateway
 
@@ -347,6 +304,25 @@ class S3Gateway implements StorageGateway {
 class FileService {
   @Storage('S3Gateway')
   private readonly storage!: StorageGateway;
+}
+```
+
+### Event Dispatcher
+
+Use `@EventDispatcher` para enfileirar tarefas ou eventos de background com interface `EventDispatcher`.
+
+```ts
+import { EventDispatcher } from './src';
+
+type QueueEvent = { name: string; payload?: Record<string, any> };
+
+class QueueService {
+  @EventDispatcher('QueueDispatcher')
+  private readonly dispatcher!: { dispatch: (event: QueueEvent) => Promise<void> };
+
+  async enqueue(payload: Record<string, any>) {
+    await this.dispatcher.dispatch({ name: 'jobs.create', payload });
+  }
 }
 ```
 
@@ -401,15 +377,16 @@ Quando um erro e lancado, o handler padroniza a resposta. Erros de dominio (`App
 
 Interfaces tipadas para padrao de repositorio:
 
-- `RepositoryCreate<T extends Entity>`
-- `RepositoryUpdate<T extends Entity>`
+- `RepositoryModel<E extends Entity, M>`
+- `RepositoryCreate<E extends Entity, M>`
+- `RepositoryUpdate<E extends Entity, M>`
 - `RepositoryRemove`
-- `RepositoryRestore<T extends Entity>`
-- `RepositoryRemoveBy<T>`
-- `RepositoryRestoreBy<T>`
-- `RepositoryExistsBy<T>`
-- `RepositoryNotExistsBy<T>`
-- `RepositoryPagination<T>`
+- `RepositoryRestore<E extends Entity, M>`
+- `RepositoryRemoveBy<E>`
+- `RepositoryRestoreBy<E>`
+- `RepositoryExistsBy<E>`
+- `RepositoryNotExistsBy<E>`
+- `RepositoryPagination<E extends Entity, M>`
 
 ## Exemplos
 
@@ -447,49 +424,24 @@ app.registerControllers([ExampleController]);
 app.listen();
 ```
 
-### Fila com AfterToEntity
+### Background com EventDispatcher
 
 ```ts
-import { Entity, AfterToEntity } from './src';
+import { EventDispatcher } from './src';
 
-type QueueJob = { type: string; payload: Record<string, any> };
+type QueueEvent = { name: string; payload: Record<string, any> };
 
-type Queue = { enqueue(job: QueueJob): Promise<void> };
+class FileService {
+  @EventDispatcher('QueueDispatcher')
+  private readonly dispatcher!: { dispatch: (event: QueueEvent) => Promise<void> };
 
-const queue: Queue = {
-  async enqueue(job) {
-    console.log('queued job', job);
-  }
-};
-
-class FileEntity extends Entity {
-  private readonly name: string;
-  private readonly s3Key: string;
-
-  private constructor({ name, s3Key }: { name: string; s3Key: string }) {
-    super();
-    this.name = name;
-    this.s3Key = s3Key;
-  }
-
-  @AfterToEntity()
-  private async enqueueFileSync(payload: Record<string, any>) {
-    await queue.enqueue({
-      type: 'files.create',
-      payload: {
-        name: payload.name,
-        s3Key: payload.s3Key
-      }
+  async enqueueFile(input: { name: string; s3Key: string }) {
+    await this.dispatcher.dispatch({
+      name: 'files.create',
+      payload: input
     });
   }
-
-  static create(input: { name: string; s3Key: string }) {
-    return new FileEntity(input);
-  }
 }
-
-const entity = FileEntity.create({ name: 'report', s3Key: 's3://bucket/report.pdf' });
-const serialized = entity.toEntity();
 ```
 
 ## Testes

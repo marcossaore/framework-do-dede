@@ -13,6 +13,17 @@ export interface CacheGateway {
   delete(key: string): Promise<boolean> | boolean
 }
 
+export type EventPayload = Record<string, any>;
+
+export type Event = {
+  name: string
+  payload?: EventPayload
+};
+
+export interface EventDispatcher {
+  dispatch(event: Event): Promise<void> | void
+}
+
 function defineGatewayProperty(
   target: any,
   propertyKey: string,
@@ -63,6 +74,21 @@ export function CacheGateway(gatewayName: string, container?: Container) {
       container,
       (dependency) => !!dependency?.get && !!dependency?.set && !!dependency?.delete,
       `${gatewayName} is not a valid CacheGateway`
+    );
+  };
+}
+
+export function EventDispatcher(dispatcherName: string, container?: Container) {
+  return function (target: any, propertyKey?: string): void {
+    const resolvedProperty = propertyKey ?? 'eventDispatcher';
+    const resolvedTarget = propertyKey ? target : target.prototype;
+    defineGatewayProperty(
+      resolvedTarget,
+      resolvedProperty,
+      dispatcherName,
+      container,
+      (dependency) => !!dependency?.dispatch,
+      `${dispatcherName} is not a valid EventDispatcher`
     );
   };
 }
