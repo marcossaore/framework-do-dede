@@ -1,4 +1,4 @@
-import { Entity, Serialize, Restrict, VirtualProperty, GetterPrefix } from '@/application';
+import { Entity, Transform, Restrict, VirtualProperty, GetterPrefix } from '@/application';
 
 describe('Entity', () => {
   class Email {
@@ -50,14 +50,14 @@ describe('Entity', () => {
 
     private readonly name: string;
 
-    @Serialize((email: Email) => email.getValue())
+    @Transform((email: Email) => email.getValue())
     private readonly email: Email;
 
     @Restrict()
     private readonly secret: string;
 
     @GetterPrefix('has')
-    @Serialize((complex: Complex) => ({ id: complex.getComplexId(), value: complex.getComplexValue() }))
+    @Transform((complex: Complex) => ({ id: complex.getComplexId(), value: complex.getComplexValue() }))
     private readonly complex?: Complex
 
     @GetterPrefix('is')
@@ -103,10 +103,10 @@ describe('Entity', () => {
     }
   }
 
-  class TestEntitySerializedObjectSync extends Entity {
+  class TestEntityTransformedObjectSync extends Entity {
     private readonly name: string;
 
-    @Serialize((document: DocumentRef) => ({ documentUrl: document.getUrl() }))
+    @Transform((document: DocumentRef) => ({ documentUrl: document.getUrl() }))
     private readonly document: DocumentRef;
 
     private constructor({ name, document }: { name: string; document: string }) {
@@ -116,7 +116,7 @@ describe('Entity', () => {
     }
 
     static create(input: { name: string; document: string }) {
-      return new TestEntitySerializedObjectSync(input);
+      return new TestEntityTransformedObjectSync(input);
     }
   }
 
@@ -154,7 +154,7 @@ describe('Entity', () => {
     expect(entity.getTestId()).toBe('simpleId');
   });
 
-  it('should serialize properties correctly when toEntity is called', () => {
+  it('should trnasform properties correctly when from is called', () => {
     const entity = TestEntitySync.create({
       name: 'test',
       email: '4YlYX@example.com',
@@ -162,7 +162,7 @@ describe('Entity', () => {
       complex: { id: 1, value: 'abc' },
       firstAccess: true
     });
-    const result = entity.toEntity();
+    const result = entity.from();
 
     expect(result).toEqual({
       name: 'test',
@@ -176,13 +176,13 @@ describe('Entity', () => {
     expect(result).not.toHaveProperty('complex');
   });
 
-  it('should serialize object properties by using returned key when toEntity is called', () => {
-    const entity = TestEntitySerializedObjectSync.create({
+  it('should transform object properties by using returned key when from is called', () => {
+    const entity = TestEntityTransformedObjectSync.create({
       name: 'test',
       document: '12345'
     });
 
-    const result = entity.toEntity();
+    const result = entity.from();
 
     expect(result).toEqual({
       name: 'test',
@@ -190,13 +190,13 @@ describe('Entity', () => {
     });
   });
 
-  it('should serialize properties correctly when toEntity is called with undefined properties', () => {
+  it('should transform properties correctly when from is called with undefined properties', () => {
     const entity = TestEntitySync.create({
       name: 'test',
       email: '4YlYX@example.com',
       secret: 'confidential'
     });
-    const result = entity.toEntity();
+    const result = entity.from();
 
     expect(result).toEqual({
       name: 'test',
@@ -206,13 +206,13 @@ describe('Entity', () => {
     });
   });
 
-  it('should get properties correctly when toData is called - without serialize', () => {
+  it('should get properties correctly when to is called - without transform', () => {
     const entity = TestEntitySync.create({
       name: 'test',
       email: '4YlYX@example.com',
       secret: 'confidential'
     });
-    const result = entity.toData();
+    const result = entity.to(false);
 
     expect(result.email).toBeInstanceOf(Email);
     expect(result.name).toBe('test');
@@ -220,13 +220,13 @@ describe('Entity', () => {
     expect(result.testId).toBe('simpleId');
   });
 
-  it('should get properties correctly when toData is called - with serialize', () => {
+  it('should get properties correctly when to is called - with transform', () => {
     const entity = TestEntitySync.create({
       name: 'test',
       email: '4YlYX@example.com',
       secret: 'confidential'
     });
-    const result = entity.toData({ serialize: true });
+    const result = entity.to();
 
     expect(result.email).toBe('4YlYX@example.com');
     expect(result.complex).toBeUndefined();
@@ -242,7 +242,7 @@ describe('Entity', () => {
       secret: 'confidential'
     });
 
-    const result = entity.toData();
+    const result = entity.to();
 
     expect(result.computed).toBe('TEST');
   });

@@ -9,6 +9,8 @@ import {
     Entity, Restrict, 
     VirtualProperty, GetterPrefix,
     Model,
+    model,
+    column,
     // entity
 
     // usecase
@@ -29,7 +31,7 @@ import { AppError } from './domain/errors/app-error'
 import type { ValidatorDefinition } from './interface/validation/validator'
 import type { StorageGateway, Event, EventPayload } from './application'
 
-import type { RepositoryModel, RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryExistsBy, RepositoryRestore, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination } from './protocols/repository'
+import type { RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryExistsBy, RepositoryRestore, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination } from './protocols/repository'
 
 export {
     Controller, Post, Get, Put, Delete, Patch, Input,
@@ -39,6 +41,8 @@ export {
     Entity, Restrict, 
     VirtualProperty, GetterPrefix,
     Model,
+    model,
+    column,
 
     UseCase, DecorateUseCase,
 
@@ -54,7 +58,7 @@ export {
     ServerError, NotFound, Forbidden, Conflict, Unauthorized, UnprocessableEntity, BadRequest, InternalServerError, CustomServerError,
     AppError,
 
-    RepositoryModel, RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryRestore, RepositoryExistsBy, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination
+    RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryRestore, RepositoryExistsBy, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination
 }
 
 export type { ValidatorDefinition, StorageGateway, Event, EventPayload }

@@ -3,7 +3,7 @@ import { Entity as DomainEntity } from "@/domain/entity";
 export abstract class Entity extends DomainEntity {
     [x: string]: any;
 
-    toEntity(): Record<string, any> {
+    from(): Record<string, any> {
         // @ts-ignore
         const propertiesConfigs = this.constructor.propertiesConfigs as Record<string, any>;
         const result: Record<string, any> = {};
@@ -13,18 +13,18 @@ export abstract class Entity extends DomainEntity {
             if (typeof value === 'function') continue;
             if (value === undefined) continue;
             // @ts-ignore
-            if (propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
-                const serializedValue = propertiesConfigs[propName].serialize(value);
-                if (serializedValue && typeof serializedValue === 'object' && !Array.isArray(serializedValue)) {
-                    const entries = Object.entries(serializedValue);
-                    for (const [serializedKey, serializedPropValue] of entries) {
-                        let currentValue = serializedPropValue;
+            if (propertiesConfigs && propertiesConfigs[propName]?.transform && value) {
+                const transformedValue = propertiesConfigs[propName].transform(value);
+                if (transformedValue && typeof transformedValue === 'object' && !Array.isArray(transformedValue)) {
+                    const entries = Object.entries(transformedValue);
+                    for (const [transformedKey, transformedPropValue] of entries) {
+                        let currentValue = transformedPropValue;
                         if (!currentValue) currentValue = null;
-                        result[serializedKey] = currentValue;
+                        result[transformedKey] = currentValue;
                     }
                     continue;
                 } else {
-                    value = serializedValue;
+                    value = transformedValue;
                 }
             }
             if (value === undefined || value === null) value = null;
@@ -33,7 +33,7 @@ export abstract class Entity extends DomainEntity {
         return result;
     }
 
-    toData({ serialize = false }: { serialize?: boolean } = {}): Record<string, any> {
+    to(transform = true): Record<string, any> {
         // @ts-ignore
         const propertiesConfigs = this.constructor.propertiesConfigs as Record<string, any>;
         // @ts-ignore
@@ -44,8 +44,8 @@ export abstract class Entity extends DomainEntity {
             if (typeof (this as any)[propName] === 'function') continue;
             // @ts-ignore
             let value = (this as any)[propName];
-            if (serialize && propertiesConfigs && propertiesConfigs[propName]?.serialize && value) {
-                value = propertiesConfigs[propName].serialize(value);
+            if (transform && propertiesConfigs && propertiesConfigs[propName]?.transform && value) {
+                value = propertiesConfigs[propName].transform(value);
             }
             result[propName] = value;
         }
@@ -79,10 +79,10 @@ export function VirtualProperty(propertyName: string) {
     };
 }
 
-export function Serialize(callback: (value: any) => any): PropertyDecorator {
+export function Transform(callback: (value: any) => any): PropertyDecorator {
     return function (target: any, propertyKey: string | symbol) {
         loadPropertiesConfig(target, propertyKey as string);
-        target.constructor.propertiesConfigs[propertyKey].serialize = callback;
+        target.constructor.propertiesConfigs[propertyKey].transform = callback;
     };
 }
 

@@ -3,9 +3,9 @@ import {
     type Middleware, type Input, type Tracer, type TracerData
 } from './controller';
 import {
-    Entity, Restrict, VirtualProperty, GetterPrefix, Serialize
+    Entity, Restrict, VirtualProperty, GetterPrefix, Transform
 } from '../infra/serialization/entity'
-import { Model } from '../infra/model/model'
+import { Model, model, column } from '../infra/model/model'
 import { DecorateUseCase, UseCase } from './usecase'
 
 export {
@@ -13,8 +13,10 @@ export {
     Post, Get, Put, Delete, Patch,
     Tracing,
     DecorateUseCase, UseCase,
-    Entity, Restrict, VirtualProperty, GetterPrefix, Serialize,
+    Entity, Restrict, VirtualProperty, GetterPrefix, Transform,
     Model,
+    model,
+    column,
 }
 
 export { Storage, CacheGateway, EventDispatcher } from './services'

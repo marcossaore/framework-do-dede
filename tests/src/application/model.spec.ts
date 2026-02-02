@@ -1,63 +1,53 @@
-import { Entity, Model } from '@/application';
+import { Model, model, column } from '@/application';
 
 describe('Model', () => {
-  class User extends Entity {
-    private readonly id: string;
-    private readonly name: string;
+  type UserTable = 'users';
 
-    private constructor({ id, name }: { id: string; name: string }) {
+  @model<UserTable>('users')
+  class UserModel extends Model<UserTable> {
+    @column('id')
+    id!: string;
+
+    @column('name_test')
+    name!: string;
+
+    constructor(input?: { id: string; name: string }) {
       super();
-      this.id = id;
-      this.name = name;
-      this.generateGetters();
-    }
-
-    static create(name: string) {
-      return new User({ id: 'user-1', name });
-    }
-
-    static restore(input: { id: string; name: string }) {
-      return new User(input);
+      if (input) {
+        this.id = input.id;
+        this.name = input.name;
+      }
     }
   }
 
-  type UserRow = { id: string; name: string };
+  it('registers table name on the model', () => {
+    const modelInstance = new UserModel();
 
-  class UserModel extends Model<User, UserRow> {
-    toModel(entity: User): UserRow {
-      return { id: entity.getId(), name: entity.getName() };
-    }
-
-    toEntity(model: UserRow): User {
-      return User.restore(model);
-    }
-  }
-
-  it('converts between entity and model', () => {
-    const model = new UserModel();
-    const entity = User.create('Ayla');
-
-    expect(model.toModel(entity)).toEqual({ id: 'user-1', name: 'Ayla' });
-    expect(model.toEntity({ id: 'user-2', name: 'Ana' }).getName()).toBe('Ana');
+    expect(modelInstance.table).toBe('users');
   });
 
-  it('converts lists of entities and models with array maps', () => {
-    const model = new UserModel();
-    const entities = [User.create('Lia'), User.create('Noah')];
+  it('registers columns on the model constructor', () => {
+    const modelInstance = new UserModel();
 
-    const rows = entities.map((entity) => model.toModel(entity));
-
-    expect(rows).toEqual([
-      { id: 'user-1', name: 'Lia' },
-      { id: 'user-1', name: 'Noah' }
+    expect(modelInstance.columns).toEqual([
+      { column: 'id', property: 'id' },
+      { column: 'name_test', property: 'name' }
     ]);
+  });
 
-    const restored = [
-      { id: 'u-1', name: 'Beto' },
-      { id: 'u-2', name: 'Rafa' }
-    ].map((row) => model.toEntity(row));
+  it('allows assigning values through the constructor', () => {
+    const modelInstance = new UserModel({ id: 'u-1', name: 'Ayla' });
 
-    expect(restored[0].getId()).toBe('u-1');
-    expect(restored[1].getName()).toBe('Rafa');
+    expect(modelInstance.id).toBe('u-1');
+    expect(modelInstance.name).toBe('Ayla');
+  });
+
+  it('maps properties to a record using column names', () => {
+    const modelInstance = new UserModel({ id: 'u-2', name: 'Luna' });
+
+    expect(modelInstance.toPersistence()).toEqual({
+      id: 'u-2',
+      name_test: 'Luna'
+    });
   });
 });

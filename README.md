@@ -252,40 +252,53 @@ class CreateUserUseCase extends UseCase<{ name: string }, { id: string }> {
 
 ### Entity e Model
 
-Entities sao dominio puro. Use `Model` para converter entre Entity e o objeto do banco.
+Entities sao dominio puro. Use `Model` para mapear coluna/property e construir o objeto de persistencia.
 
 ```ts
-import { Entity, Model } from './src';
+import { Entity, Model, model, column } from './src';
 
-class User extends Entity {
+class Order extends Entity {
   private readonly id: string;
-  private readonly email: string;
+  private readonly name: string;
+  private readonly amount: number;
 
-  constructor(id: string, email: string) {
+  constructor(id: string, name: string, amount: number) {
     super();
     this.id = id;
-    this.email = email;
+    this.name = name;
+    this.amount = amount;
     this.generateGetters();
   }
 }
 
-type UserRow = { id: string; email: string };
+type OrderTable = 'orders';
 
-class UserModel extends Model<User, UserRow> {
-  toModel(entity: User): UserRow {
-    return { id: entity.getId(), email: entity.getEmail() };
-  }
+@model<OrderTable>('orders')
+class OrderModel extends Model<OrderTable> {
+  @column('id')
+  id!: string;
 
-  toEntity(model: UserRow): User {
-    return new User(model.id, model.email);
+  @column('name')
+  name!: string;
+
+  @column('amount')
+  amount!: number;
+
+  constructor(order?: Order) {
+    super();
+    if (order) {
+      this.id = order.getId();
+      this.name = order.getName();
+      this.amount = order.getAmount();
+    }
   }
 }
 ```
 
 Regras principais:
 
-- `Model` centraliza conversoes entre dominio e persistencia
-- use `toModel` e `toEntity`
+- `Model` guarda metadados de coluna (via `@column`) e nome da tabela (via `@model`)
+- a conversao entity -> model acontece no construtor do Model (ou em um factory)
 - `generateGetters()` cria getters para campos (ex.: `getName`, `isActive`, `hasProfile`)
 
 ### Storage Gateway
@@ -377,16 +390,15 @@ Quando um erro e lancado, o handler padroniza a resposta. Erros de dominio (`App
 
 Interfaces tipadas para padrao de repositorio:
 
-- `RepositoryModel<E extends Entity, M>`
-- `RepositoryCreate<E extends Entity, M>`
-- `RepositoryUpdate<E extends Entity, M>`
+- `RepositoryCreate<T extends Entity>`
+- `RepositoryUpdate<T extends Entity>`
 - `RepositoryRemove`
-- `RepositoryRestore<E extends Entity, M>`
-- `RepositoryRemoveBy<E>`
-- `RepositoryRestoreBy<E>`
-- `RepositoryExistsBy<E>`
-- `RepositoryNotExistsBy<E>`
-- `RepositoryPagination<E extends Entity, M>`
+- `RepositoryRestore<T extends Entity>`
+- `RepositoryRemoveBy<T>`
+- `RepositoryRestoreBy<T>`
+- `RepositoryExistsBy<T>`
+- `RepositoryNotExistsBy<T>`
+- `RepositoryPagination<T>`
 
 ## Exemplos
 
