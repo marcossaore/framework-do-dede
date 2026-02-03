@@ -1,22 +1,42 @@
-import { Model, model, column } from '@/application';
+import { Model, model, column, Entity } from '@/application';
 
 describe('Model', () => {
   type UserTable = 'users';
 
+  class Name {
+    private value: string;
+    constructor(value: string) {
+      this.value = value;
+    }
+
+    getValue() {
+      return this.value;
+    }
+  }
+
+  class UserEntity extends Entity {
+
+    private id: string;
+    private name: Name;
+    constructor(data: any) {
+      super();
+      this.id = data.id;
+      this.name = new Name(data.name);
+      this.generateGetters();
+    }
+  }
+
   @model<UserTable>('users')
   class UserModel extends Model<UserTable> {
+
     @column('id')
     id!: string;
 
     @column('name_test')
     name!: string;
 
-    constructor(input?: { id: string; name: string }) {
-      super();
-      if (input) {
-        this.id = input.id;
-        this.name = input.name;
-      }
+    public toEntity(): Entity {
+      return new UserEntity(this);
     }
   }
 
@@ -45,9 +65,17 @@ describe('Model', () => {
   it('maps properties to a record using column names', () => {
     const modelInstance = new UserModel({ id: 'u-2', name: 'Luna' });
 
-    expect(modelInstance.toPersistence()).toEqual({
+    expect(modelInstance.toModel()).toEqual({
       id: 'u-2',
       name_test: 'Luna'
     });
+  });
+
+  it('maps properties to a entity instance toEntity', () => {
+    const modelInstance = new UserModel({ id: 'u-3', name: 'Luna' });
+
+    expect(modelInstance.toEntity()).toBeInstanceOf(UserEntity);
+    expect(modelInstance.toEntity().getId()).toBe('u-3');
+    expect(modelInstance.toEntity().getName().getValue()).toBe('Luna');
   });
 });
