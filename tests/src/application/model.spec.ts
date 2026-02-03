@@ -71,11 +71,47 @@ describe('Model', () => {
     });
   });
 
-  it('maps properties to a entity instance toEntity', () => {
-    const modelInstance = new UserModel({ id: 'u-3', name: 'Luna' });
+
+  it("should works model to entity", () => {
+    const modelInstance = new UserModel({ id: 'u-4', name: 'Luna' });
 
     expect(modelInstance.toEntity()).toBeInstanceOf(UserEntity);
-    expect(modelInstance.toEntity().getId()).toBe('u-3');
+    expect(modelInstance.toEntity().getId()).toBe('u-4');
     expect(modelInstance.toEntity().getName().getValue()).toBe('Luna');
+  });
+
+  it("should works entity to model", () => {
+    const modelInstance = new UserModel({ id: 'u-4', name: 'Luna' });
+
+    expect(modelInstance.toModel()).toEqual({
+      id: 'u-4',
+      name_test: 'Luna'
+    });
+  });
+
+  it("should works when loaded as model - then instance call toEntity then same instance calls toModel()", () => {
+    const modelInstance = new UserModel({ id: 'u-4', name: 'Luna' });
+
+    expect(modelInstance.toEntity()).toBeInstanceOf(UserEntity);
+    expect(modelInstance.toEntity().getId()).toBe('u-4');
+    expect(modelInstance.toEntity().getName().getValue()).toBe('Luna');
+
+    expect(modelInstance.toModel()).toEqual({
+      id: 'u-4',
+      name_test: 'Luna'
+    });
+  });
+
+  it("should works when loaded as entity - then instance call toModel then same instance calls toEntity()", () => {
+    const modelInstance = new UserModel({ id: 'u-4', name: 'Luna' });
+
+    expect(modelInstance.toEntity()).toBeInstanceOf(UserEntity);
+    expect(modelInstance.toEntity().getId()).toBe('u-4');
+    expect(modelInstance.toEntity().getName().getValue()).toBe('Luna');
+
+    expect(modelInstance.toModel()).toEqual({
+      id: 'u-4',
+      name_test: 'Luna'
+    });
   });
 });

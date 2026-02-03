@@ -15,9 +15,9 @@ export abstract class Model<TTable = string> {
     let data = {};
     if (input instanceof Entity) {
       data = input.from();
-      return;
+    } else {
+      data = input;
     }
-    data = input;
     for (const [property, value] of Object.entries(data)) {
       this[property] = value;
     }
