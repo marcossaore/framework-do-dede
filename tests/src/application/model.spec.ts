@@ -36,7 +36,13 @@ describe('Model', () => {
     name!: string;
 
     public toEntity(): Entity {
-      return new UserEntity(this);
+      return new UserEntity({ id: this.id, name: this.name });
+    }
+
+    public fromEntity(entity: Entity): Model {
+      this.id = entity.id;
+      this.name = entity.name.getValue();
+      return this;
     }
   }
 
@@ -55,46 +61,38 @@ describe('Model', () => {
     ]);
   });
 
-  it('allows assigning values through the constructor', () => {
-    const modelInstance = new UserModel({ id: 'u-1', name: 'Ayla' });
+  it('maps column names to properties when using fromModel', () => {
+    const modelInstance = new UserModel().fromModel({ id: 'u-1', name_test: 'Ayla' });
 
     expect(modelInstance.id).toBe('u-1');
     expect(modelInstance.name).toBe('Ayla');
   });
 
-  it('maps properties to a record using column names', () => {
-    const modelInstance = new UserModel({ id: 'u-2', name: 'Luna' });
+  it('assigns unknown properties when using fromModel', () => {
+    const modelInstance = new UserModel().fromModel({ id: 'u-2', name_test: 'Luna', status: 'active' });
+
+    expect(modelInstance.id).toBe('u-2');
+    expect(modelInstance.name).toBe('Luna');
+    expect(modelInstance.status).toBe('active');
+  });
+
+  it('maps properties to a record using column names and keeps non-mapped fields', () => {
+    const modelInstance = new UserModel().fromModel({ id: 'u-3', name_test: 'Luna', role: 'admin' });
 
     expect(modelInstance.toModel()).toEqual({
-      id: 'u-2',
-      name_test: 'Luna'
+      id: 'u-3',
+      name_test: 'Luna',
+      role: 'admin'
     });
   });
 
-
-  it("should works model to entity", () => {
-    const modelInstance = new UserModel({ id: 'u-4', name: 'Luna' });
-
-    expect(modelInstance.toEntity()).toBeInstanceOf(UserEntity);
-    expect(modelInstance.toEntity().getId()).toBe('u-4');
-    expect(modelInstance.toEntity().getName().getValue()).toBe('Luna');
-  });
-
-  it("should works entity to model", () => {
-    const modelInstance = new UserModel({ id: 'u-4', name: 'Luna' });
-
-    expect(modelInstance.toModel()).toEqual({
-      id: 'u-4',
-      name_test: 'Luna'
-    });
-  });
-
-  it("should works when loaded as model - then instance call toEntity then same instance calls toModel()", () => {
-    const modelInstance = new UserModel({ id: 'u-4', name: 'Luna' });
-
-    expect(modelInstance.toEntity()).toBeInstanceOf(UserEntity);
-    expect(modelInstance.toEntity().getId()).toBe('u-4');
-    expect(modelInstance.toEntity().getName().getValue()).toBe('Luna');
+  it('omits internal metadata fields from toModel', () => {
+    const modelInstance = new UserModel().fromModel({ id: 'u-4', name_test: 'Luna' });
+    (modelInstance as any).table = 'users';
+    (modelInstance as any).columns = [
+      { column: 'id', property: 'id' },
+      { column: 'name_test', property: 'name' }
+    ];
 
     expect(modelInstance.toModel()).toEqual({
       id: 'u-4',
@@ -102,16 +100,16 @@ describe('Model', () => {
     });
   });
 
-  it("should works when loaded as entity - then instance call toModel then same instance calls toEntity()", () => {
-    const modelInstance = new UserModel({ id: 'u-4', name: 'Luna' });
+  it('converts between model and entity', () => {
+    const modelInstance = new UserModel().fromModel({ id: 'u-5', name_test: 'Sami' });
+    const entity = modelInstance.toEntity();
 
-    expect(modelInstance.toEntity()).toBeInstanceOf(UserEntity);
-    expect(modelInstance.toEntity().getId()).toBe('u-4');
-    expect(modelInstance.toEntity().getName().getValue()).toBe('Luna');
+    expect(entity).toBeInstanceOf(UserEntity);
+    expect(entity.getId()).toBe('u-5');
+    expect(entity.getName().getValue()).toBe('Sami');
 
-    expect(modelInstance.toModel()).toEqual({
-      id: 'u-4',
-      name_test: 'Luna'
-    });
+    const roundTripModel = new UserModel().fromEntity(entity);
+    expect(roundTripModel.id).toBe('u-5');
+    expect(roundTripModel.name).toBe('Sami');
   });
 });

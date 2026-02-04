@@ -3,36 +3,6 @@ import { Entity as DomainEntity } from "@/domain/entity";
 export abstract class Entity extends DomainEntity {
     [x: string]: any;
 
-    from(): Record<string, any> {
-        // @ts-ignore
-        const propertiesConfigs = this.constructor.propertiesConfigs as Record<string, any>;
-        const result: Record<string, any> = {};
-        for (const [propName] of Object.entries(this)) {
-            let propertyName = propName;
-            let value = (this as any)[propName];
-            if (typeof value === 'function') continue;
-            if (value === undefined) continue;
-            // @ts-ignore
-            if (propertiesConfigs && propertiesConfigs[propName]?.transform && value) {
-                const transformedValue = propertiesConfigs[propName].transform(value);
-                if (transformedValue && typeof transformedValue === 'object' && !Array.isArray(transformedValue)) {
-                    const entries = Object.entries(transformedValue);
-                    for (const [transformedKey, transformedPropValue] of entries) {
-                        let currentValue = transformedPropValue;
-                        if (!currentValue) currentValue = null;
-                        result[transformedKey] = currentValue;
-                    }
-                    continue;
-                } else {
-                    value = transformedValue;
-                }
-            }
-            if (value === undefined || value === null) value = null;
-            result[propertyName] = value;
-        }
-        return result;
-    }
-
     to(transform = true): Record<string, any> {
         // @ts-ignore
         const propertiesConfigs = this.constructor.propertiesConfigs as Record<string, any>;

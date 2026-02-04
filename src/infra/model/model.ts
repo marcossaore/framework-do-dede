@@ -10,18 +10,17 @@ export abstract class Model<TTable = string> {
   declare columns: ColumnDefinition[];
   [property: string]: any;
 
-  constructor(input?: Record<string, any> | Entity) {
-    if (!input) return;
-    let data = {};
-    if (input instanceof Entity) {
-      data = input.from();
-    } else {
-      data = input;
+  fromModel(input: Record<string, any>): Model {
+    const columns = this.columns ?? [];
+    const columnByName = new Map(columns.map((column) => [column.column, column.property]));
+    for (const [property, value] of Object.entries(input)) {
+      const mappedProperty = columnByName.get(property);
+      this[mappedProperty ?? property] = value;
     }
-    for (const [property, value] of Object.entries(data)) {
-      this[property] = value;
-    }
+    return this as Model;
   }
+
+  public abstract fromEntity(entity: Entity): Model;
 
   toModel(): Record<string, any> {
     const record: Record<string, any> = {};

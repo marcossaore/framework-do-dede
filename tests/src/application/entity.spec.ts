@@ -154,58 +154,6 @@ describe('Entity', () => {
     expect(entity.getTestId()).toBe('simpleId');
   });
 
-  it('should trnasform properties correctly when from is called', () => {
-    const entity = TestEntitySync.create({
-      name: 'test',
-      email: '4YlYX@example.com',
-      secret: 'confidential',
-      complex: { id: 1, value: 'abc' },
-      firstAccess: true
-    });
-    const result = entity.from();
-
-    expect(result).toEqual({
-      name: 'test',
-      email: '4YlYX@example.com',
-      secret: 'confidential',
-      id: 1,
-      value: 'ABC',
-      firstAccess: true,
-      testId: 'simpleId'
-    });
-    expect(result).not.toHaveProperty('complex');
-  });
-
-  it('should transform object properties by using returned key when from is called', () => {
-    const entity = TestEntityTransformedObjectSync.create({
-      name: 'test',
-      document: '12345'
-    });
-
-    const result = entity.from();
-
-    expect(result).toEqual({
-      name: 'test',
-      documentUrl: 'https://documents.com/12345'
-    });
-  });
-
-  it('should transform properties correctly when from is called with undefined properties', () => {
-    const entity = TestEntitySync.create({
-      name: 'test',
-      email: '4YlYX@example.com',
-      secret: 'confidential'
-    });
-    const result = entity.from();
-
-    expect(result).toEqual({
-      name: 'test',
-      email: '4YlYX@example.com',
-      secret: 'confidential',
-      testId: 'simpleId'
-    });
-  });
-
   it('should get properties correctly when to is called - without transform', () => {
     const entity = TestEntitySync.create({
       name: 'test',
