@@ -235,7 +235,7 @@ class CreateUserUseCase extends UseCase<{ name: string }, { id: string }> {
 }
 ```
 
-Decorator `@DecorateUseCase` permite executar use cases antes do principal (chaining).
+Decorator `@DecorateUseCase` permite compor use cases ao redor do método.
 
 ```ts
 import { UseCase, DecorateUseCase } from './src';
@@ -247,6 +247,46 @@ class AuditUseCase extends UseCase<any, void> {
 @DecorateUseCase({ useCase: AuditUseCase })
 class CreateUserUseCase extends UseCase<{ name: string }, { id: string }> {
   async execute() { return { id: 'new-id' }; }
+}
+```
+
+Hooks oferecem uma alternativa simples para acoplar eventos sem depender de `data`/`context` da request. O use case dispara o hook e decide qual payload enviar. Cada use case registra **um HookBefore e/ou um HookAfter**.
+
+```ts
+import { UseCase, HookAfter, HookBefore, AfterHook, BeforeHook } from './src';
+
+class SavePhoto extends AfterHook<{ id: string }> {
+  async use(payload: { id: string }) {
+    // this.notify() é chamado automaticamente após o execute
+    console.log('photo saved:', payload.id);
+  }
+}
+
+class ValidatePhoto extends BeforeHook<{ name: string }> {
+  async use(payload: { name: string }) {
+    console.log('validating:', payload.name);
+  }
+}
+
+@HookBefore(ValidatePhoto)
+@HookAfter(SavePhoto)
+class CreatePhotoUseCase extends UseCase<{ name: string }, { id: string }> {
+  async execute() {
+    const photo = { id: 'photo-1', name: this.data?.name ?? 'no-name' };
+    this.afterHook.use({ id: photo.id });
+    return photo;
+  }
+}
+```
+
+`HookAfter` não executa quando o método lança erro. Para executar mesmo em erro:
+
+```ts
+@HookAfter(SavePhoto, { runOnError: true })
+class CreatePhotoUseCase extends UseCase<void, void> {
+  async execute() {
+    throw new Error('boom');
+  }
 }
 ```
 

@@ -14,7 +14,7 @@ import {
     // entity
 
     // usecase
-    UseCase, DecorateUseCase, 
+    UseCase, DecorateUseCase, Hook, BeforeHook, AfterHook, HookBefore, HookAfter,
     // usecase
 
     // storage
@@ -44,7 +44,7 @@ export {
     model,
     column,
 
-    UseCase, DecorateUseCase,
+    UseCase, DecorateUseCase, Hook, BeforeHook, AfterHook, HookBefore, HookAfter,
 
     Storage, CacheGateway, EventDispatcher,
 

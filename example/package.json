@@ -1,5 +1,6 @@
 {
   "name": "example",
+  "version": "5.4.0",
   "module": "index.ts",
   "type": "module",
   "private": true,

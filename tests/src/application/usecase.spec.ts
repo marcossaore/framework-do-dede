@@ -1,4 +1,11 @@
-import { DecorateUseCase, UseCase } from "@/application";
+import {
+  DecorateUseCase,
+  UseCase,
+  HookAfter,
+  HookBefore,
+  AfterHook,
+  BeforeHook,
+} from "@/application";
 
 // Mock UseCases para teste
 class MockUseCaseA extends UseCase<{ value: string }, string> {
@@ -193,5 +200,109 @@ describe('DecorateUseCase', () => {
     const result = await useCase.execute();
 
     expect(result).toBe('Original: test-value');
+  });
+});
+
+describe('HookBefore/HookAfter', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(console, 'log').mockImplementation();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('should run HookBefore before the method and HookAfter after it', async () => {
+    class SaveBefore extends BeforeHook<void> {
+      async use() {
+        console.log('SaveBefore executed');
+      }
+    }
+
+    class SaveAfter extends AfterHook<void> {
+      async use() {
+        console.log('SaveAfter executed');
+      }
+    }
+
+    @HookBefore(SaveBefore)
+    @HookAfter(SaveAfter)
+    class HookedUseCase extends UseCase<void, string> {
+      async execute(): Promise<string> {
+        console.log('HookedUseCase executed');
+        return 'ok';
+      }
+    }
+
+    const useCase = new HookedUseCase();
+    const result = await useCase.execute();
+
+    expect(result).toBe('ok');
+    const calls = (console.log as jest.Mock).mock.calls;
+    expect(calls[0][0]).toBe('SaveBefore executed');
+    expect(calls[1][0]).toBe('HookedUseCase executed');
+    expect(calls[2][0]).toBe('SaveAfter executed');
+  });
+
+  it('should pass payload when hooks.use is called', async () => {
+    class SavePhoto extends AfterHook<{ id: string }> {
+      async use(payload: { id: string }) {
+        console.log('SavePhoto payload:', payload);
+      }
+    }
+
+    @HookAfter(SavePhoto)
+    class CreatePhotoUseCase extends UseCase<void, { id: string }> {
+      async execute(): Promise<{ id: string }> {
+        const product = { id: 'photo-1' };
+        this.afterHook.use(product);
+        return product;
+      }
+    }
+
+    const useCase = new CreatePhotoUseCase();
+    const result = await useCase.execute();
+
+    expect(result).toEqual({ id: 'photo-1' });
+    expect(console.log).toHaveBeenCalledWith('SavePhoto payload:', { id: 'photo-1' });
+  });
+
+  it('should not run HookAfter on error by default', async () => {
+    class SaveAfter extends AfterHook<void> {
+      async use() {
+        console.log('SaveAfter executed');
+      }
+    }
+
+    @HookAfter(SaveAfter)
+    class FailingUseCase extends UseCase<void, void> {
+      async execute(): Promise<void> {
+        throw new Error('boom');
+      }
+    }
+
+    const useCase = new FailingUseCase();
+    await expect(useCase.execute()).rejects.toThrow('boom');
+    expect(console.log).not.toHaveBeenCalledWith('SaveAfter executed');
+  });
+
+  it('should run HookAfter on error when runOnError is true', async () => {
+    class SaveAfter extends AfterHook<void> {
+      async use() {
+        console.log('SaveAfter executed');
+      }
+    }
+
+    @HookAfter(SaveAfter, { runOnError: true })
+    class FailingUseCase extends UseCase<void, void> {
+      async execute(): Promise<void> {
+        throw new Error('boom');
+      }
+    }
+
+    const useCase = new FailingUseCase();
+    await expect(useCase.execute()).rejects.toThrow('boom');
+    expect(console.log).toHaveBeenCalledWith('SaveAfter executed');
   });
 });
