@@ -154,13 +154,13 @@ describe('Entity', () => {
     expect(entity.getTestId()).toBe('simpleId');
   });
 
-  it('should get properties correctly when to is called - without transform', () => {
+  it('should get properties correctly when data is called - without transform', async () => {
     const entity = TestEntitySync.create({
       name: 'test',
       email: '4YlYX@example.com',
       secret: 'confidential'
     });
-    const result = entity.to(false);
+    const result = await entity.data(false);
 
     expect(result.email).toBeInstanceOf(Email);
     expect(result.name).toBe('test');
@@ -168,13 +168,13 @@ describe('Entity', () => {
     expect(result.testId).toBe('simpleId');
   });
 
-  it('should get properties correctly when to is called - with transform', () => {
+  it('should get properties correctly when data is called - with transform', async () => {
     const entity = TestEntitySync.create({
       name: 'test',
       email: '4YlYX@example.com',
       secret: 'confidential'
     });
-    const result = entity.to();
+    const result = await entity.data();
 
     expect(result.email).toBe('4YlYX@example.com');
     expect(result.complex).toBeUndefined();
@@ -183,15 +183,36 @@ describe('Entity', () => {
     expect(result).not.toHaveProperty('secret');
   });
 
-  it('should get property from virtual', () => {
+  it('should get property from virtual', async () => {
     const entity = TestEntitySync.create({
       name: 'test',
       email: '4YlYX@example.com',
       secret: 'confidential'
     });
 
-    const result = entity.to();
+    const result = await entity.data();
 
     expect(result.computed).toBe('TEST');
+  });
+
+  it('should support async transform callbacks', async () => {
+    class TestEntityAsyncTransform extends Entity {
+      @Transform(async (email: Email) => email.getValue())
+      private readonly email: Email;
+
+      private constructor({ email }: { email: string }) {
+        super();
+        this.email = new Email(email);
+      }
+
+      static create(input: { email: string }) {
+        return new TestEntityAsyncTransform(input);
+      }
+    }
+
+    const entity = TestEntityAsyncTransform.create({ email: '4YlYX@example.com' });
+    const result = await entity.data();
+
+    expect(result.email).toBe('4YlYX@example.com');
   });
 });

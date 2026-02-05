@@ -3,7 +3,7 @@ import { Entity as DomainEntity } from "@/domain/entity";
 export abstract class Entity extends DomainEntity {
     [x: string]: any;
 
-    to(transform = true): Record<string, any> {
+    async data(transform = true): Promise<Record<string, any>> {
         // @ts-ignore
         const propertiesConfigs = this.constructor.propertiesConfigs as Record<string, any>;
         // @ts-ignore
@@ -15,7 +15,7 @@ export abstract class Entity extends DomainEntity {
             // @ts-ignore
             let value = (this as any)[propName];
             if (transform && propertiesConfigs && propertiesConfigs[propName]?.transform && value) {
-                value = propertiesConfigs[propName].transform(value);
+                value = await propertiesConfigs[propName].transform(value);
             }
             result[propName] = value;
         }
@@ -49,7 +49,7 @@ export function VirtualProperty(propertyName: string) {
     };
 }
 
-export function Transform(callback: (value: any) => any): PropertyDecorator {
+export function Transform(callback: (value: any) => any | Promise<any>): PropertyDecorator {
     return function (target: any, propertyKey: string | symbol) {
         loadPropertiesConfig(target, propertyKey as string);
         target.constructor.propertiesConfigs[propertyKey].transform = callback;
