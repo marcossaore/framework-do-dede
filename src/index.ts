@@ -7,7 +7,7 @@ import {
 
     // entity
     Entity, Restrict, 
-    VirtualProperty, GetterPrefix,
+    VirtualProperty, GetterPrefix, Transform,
     Model,
     model,
     column,
@@ -39,7 +39,7 @@ export {
     Tracer, Tracing, TracerData,
 
     Entity, Restrict, 
-    VirtualProperty, GetterPrefix,
+    VirtualProperty, GetterPrefix, Transform,
     Model,
     model,
     column,
