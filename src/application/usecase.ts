@@ -61,38 +61,40 @@ function registerHook(target: any, metadata: HookMetadata) {
 	(target as any)[USE_CASE_HOOKS] = [...existing, metadata];
 }
 
-function wrapUseCaseWithHooks<T extends UseCaseConstructor>(target: T): T {
-	if ((target as any)[USE_CASE_HOOKS_WRAPPED]) {
+function ensureHookedExecution<T extends UseCaseConstructor>(target: T): T {
+	const prototype = target.prototype as any;
+	const original = prototype.execute;
+	if (typeof original !== 'function') {
+		return target;
+	}
+	if ((original as any)[USE_CASE_HOOKS_WRAPPED]) {
 		return target;
 	}
 
-	class HookedUseCase extends target {
-		async execute(): Promise<any> {
-			const beforeHook = (this as any).beforeHook as HookManager;
-			const afterHook = (this as any).afterHook as HookManager;
-			await beforeHook.notifyBefore();
+	const wrapped = async function executeWithHooks(this: UseCase<any, any>, ...args: any[]) {
+		const beforeHook = (this as any).beforeHook as HookManager;
+		const afterHook = (this as any).afterHook as HookManager;
+		await beforeHook.notifyBefore();
 
-			let result: any;
-			let originalError: unknown;
-			try {
-				result = await super.execute();
-			} catch (error) {
-				originalError = error;
-			}
-
-			await afterHook.notifyAfter(!!originalError);
-
-			if (originalError) {
-				throw originalError;
-			}
-			return result;
+		let result: any;
+		let originalError: unknown;
+		try {
+			result = await original.apply(this, args);
+		} catch (error) {
+			originalError = error;
 		}
-	}
 
-	(HookedUseCase as any)[USE_CASE_HOOKS_WRAPPED] = true;
-	(HookedUseCase as any)[USE_CASE_HOOKS] = getHookMetadata(target);
+		await afterHook.notifyAfter(!!originalError);
 
-	return HookedUseCase as T;
+		if (originalError) {
+			throw originalError;
+		}
+		return result;
+	};
+
+	(wrapped as any)[USE_CASE_HOOKS_WRAPPED] = true;
+	prototype.execute = wrapped;
+	return target;
 }
 
 export abstract class Hook<Payload = any, Context = any> {
@@ -219,13 +221,13 @@ export function DecorateUseCase(options: DecorateUseCaseOptions) {
 export function HookBefore(hookClass: HookConstructor) {
 	return <T extends UseCaseConstructor>(target: T) => {
 		registerHook(target, { hookClass, position: 'before' });
-		return wrapUseCaseWithHooks(target);
+		return ensureHookedExecution(target);
 	};
 }
 
 export function HookAfter(hookClass: HookConstructor, options: HookOptions = {}) {
 	return <T extends UseCaseConstructor>(target: T) => {
 		registerHook(target, { hookClass, position: 'after', runOnError: options.runOnError });
-		return wrapUseCaseWithHooks(target);
+		return ensureHookedExecution(target);
 	};
 }
