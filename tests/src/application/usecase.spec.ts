@@ -268,6 +268,48 @@ describe('HookBefore/HookAfter', () => {
     expect(console.log).toHaveBeenCalledWith('SavePhoto payload:', { id: 'photo-1' });
   });
 
+  it('should default HookBefore payload to input data when unset', async () => {
+    class ValidatePhoto extends BeforeHook<{ name: string }> {
+      async use(payload: { name: string }) {
+        console.log('ValidatePhoto payload:', payload);
+      }
+    }
+
+    @HookBefore(ValidatePhoto)
+    class CreatePhotoUseCase extends UseCase<{ name: string }, { id: string }> {
+      async execute(): Promise<{ id: string }> {
+        return { id: 'photo-1' };
+      }
+    }
+
+    const useCase = new CreatePhotoUseCase({ data: { name: 'test-name' } });
+    const result = await useCase.execute();
+
+    expect(result).toEqual({ id: 'photo-1' });
+    expect(console.log).toHaveBeenCalledWith('ValidatePhoto payload:', { name: 'test-name' });
+  });
+
+  it('should default HookAfter payload to input data when unset', async () => {
+    class SavePhoto extends AfterHook<{ name: string }> {
+      async use(payload: { name: string }) {
+        console.log('SavePhoto payload:', payload);
+      }
+    }
+
+    @HookAfter(SavePhoto)
+    class CreatePhotoUseCase extends UseCase<{ name: string }, { id: string }> {
+      async execute(): Promise<{ id: string }> {
+        return { id: 'photo-1' };
+      }
+    }
+
+    const useCase = new CreatePhotoUseCase({ data: { name: 'test-name' } });
+    const result = await useCase.execute();
+
+    expect(result).toEqual({ id: 'photo-1' });
+    expect(console.log).toHaveBeenCalledWith('SavePhoto payload:', { name: 'test-name' });
+  });
+
   it('should not run HookAfter on error by default', async () => {
     class SaveAfter extends AfterHook<void> {
       async use() {

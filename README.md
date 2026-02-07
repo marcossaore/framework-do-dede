@@ -279,6 +279,8 @@ class CreatePhotoUseCase extends UseCase<{ name: string }, { id: string }> {
 }
 ```
 
+Por padrão, `HookBefore` e `HookAfter` recebem `this.data` se nenhum payload for definido manualmente. Apenas `HookAfter` pode ser sobrescrito via `this.afterHook.use(...)`. O `HookBefore` não recebe o retorno do `execute()` por ser um evento before.
+
 `HookAfter` não executa quando o método lança erro. Para executar mesmo em erro:
 
 ```ts

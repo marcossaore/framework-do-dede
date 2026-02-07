@@ -43,6 +43,7 @@ interface HookMetadata {
 interface HookEntry {
 	metadata: HookMetadata;
 	instance: Hook<any, any>;
+	payloadSet: boolean;
 	setPayload(payload: unknown): void;
 }
 
@@ -74,6 +75,7 @@ function ensureHookedExecution<T extends UseCaseConstructor>(target: T): T {
 	const wrapped = async function executeWithHooks(this: UseCase<any, any>, ...args: any[]) {
 		const beforeHook = (this as any).beforeHook as HookManager;
 		const afterHook = (this as any).afterHook as HookManager;
+		beforeHook.useIfUnset((this as any).data);
 		await beforeHook.notifyBefore();
 
 		let result: any;
@@ -84,6 +86,7 @@ function ensureHookedExecution<T extends UseCaseConstructor>(target: T): T {
 			originalError = error;
 		}
 
+		afterHook.useIfUnset((this as any).data);
 		await afterHook.notifyAfter(!!originalError);
 
 		if (originalError) {
@@ -131,7 +134,19 @@ class HookManager {
 	}
 
 	use(payload: unknown) {
-		this.entry?.setPayload(payload);
+		if (!this.entry) {
+			return;
+		}
+		this.entry.setPayload(payload);
+		this.entry.payloadSet = true;
+	}
+
+	useIfUnset(payload: unknown) {
+		if (!this.entry || this.entry.payloadSet) {
+			return;
+		}
+		this.entry.setPayload(payload);
+		this.entry.payloadSet = true;
 	}
 
 	async notifyBefore() {
@@ -160,6 +175,7 @@ class HookManager {
 		return {
 			metadata: entry,
 			instance,
+			payloadSet: false,
 			setPayload: (payload: unknown) => {
 				instance.setPayload(payload as any, (this.owner as any).context);
 			},
