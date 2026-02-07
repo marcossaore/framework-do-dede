@@ -43,6 +43,7 @@ interface HookMetadata {
 interface HookEntry {
 	metadata: HookMetadata;
 	instance: Hook<any, any>;
+	payload?: unknown;
 	payloadSet: boolean;
 	setPayload(payload: unknown): void;
 }
@@ -151,7 +152,7 @@ class HookManager {
 
 	async notifyBefore() {
 		if (this.position === 'before' && this.entry?.metadata.position === 'before') {
-			await this.entry.instance.notify();
+			await this.notifyEntry(this.entry);
 		}
 	}
 
@@ -162,7 +163,7 @@ class HookManager {
 		if (onError && !this.entry.metadata.runOnError) {
 			return;
 		}
-		await this.entry.instance.notify();
+		await this.notifyEntry(this.entry);
 	}
 
 	private buildEntry(): HookEntry | undefined {
@@ -172,14 +173,26 @@ class HookManager {
 			return undefined;
 		}
 		const instance = new entry.hookClass();
-		return {
+		const hookEntry: HookEntry = {
 			metadata: entry,
 			instance,
+			payload: undefined,
 			payloadSet: false,
 			setPayload: (payload: unknown) => {
+				hookEntry.payload = payload;
 				instance.setPayload(payload as any, (this.owner as any).context);
 			},
 		};
+		return hookEntry;
+	}
+
+	private async notifyEntry(entry: HookEntry) {
+		const proto = Object.getPrototypeOf(entry.instance);
+		const usesBaseNotify = proto.notify === Hook.prototype.notify;
+		if (!usesBaseNotify) {
+			await entry.instance.use(entry.payload as any, (entry.instance as any).context);
+		}
+		await entry.instance.notify();
 	}
 }
 
