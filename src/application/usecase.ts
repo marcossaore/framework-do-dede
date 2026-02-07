@@ -22,7 +22,7 @@ export abstract class UseCase<UseCaseInput, UseCaseOutput, UseCaseContext = any>
 
 type UseCaseConstructor = new (...args: any[]) => UseCase<any, any>;
 
-type HookConstructor = new () => Hook<any, any>;
+type HookConstructor = new (...args: any[]) => Hook<any, any>;
 type HookPosition = 'before' | 'after';
 
 interface HookOptions {
