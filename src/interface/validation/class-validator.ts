@@ -1,5 +1,6 @@
 import { CustomServerError } from '@/http/errors/server'
-import type { ValidationError } from 'class-validator'
+import { plainToInstance } from 'class-transformer'
+import type { ValidationError, ValidatorOptions } from 'class-validator'
 import { validate } from 'class-validator'
 
 export type ValidationErrorMap = Record<string, string[]>
@@ -7,6 +8,7 @@ export type ValidationErrorMap = Record<string, string[]>
 export type ValidationErrorOptions = {
   statusCode?: number
   errorName?: string
+  validatorOptions?: ValidatorOptions
 }
 
 export async function validateWithClassValidator<T extends object>(
@@ -14,8 +16,12 @@ export async function validateWithClassValidator<T extends object>(
   input: T,
   options: ValidationErrorOptions = {}
 ): Promise<void> {
-  const instance = Object.assign(new dtoClass(), input)
-  const errors = await validate(instance)
+  const instance = plainToInstance(dtoClass, input)
+  const validatorOptions: ValidatorOptions = {
+    forbidUnknownValues: false,
+    ...(options.validatorOptions ?? {})
+  }
+  const errors = await validate(instance, validatorOptions)
   if (errors.length === 0) return
 
   const details = flattenErrors(errors)
