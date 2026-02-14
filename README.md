@@ -111,6 +111,11 @@ Opções de rota (comuns):
 - `responseType`: `"json" | "text" | "html"`
 - `validator`: pode ser uma classe com decorators do `class-validator` **ou** um objeto com `validate(data)` (sync/async)
 
+Nota sobre `validator`:
+- Apenas propriedades com decorators do `class-validator` são transformadas pelo `class-transformer`.
+- Propriedades sem decorators têm o valor original preservado.
+- Se você precisa transformar um campo opcional, adicione pelo menos um decorator do `class-validator` (ex.: `@IsOptional()`).
+
 ### Versionamento e Prefixo
 
 Você pode definir um prefixo e uma versão global ao criar a aplicação. A versão vira `v{numero}` logo após o prefixo (se existir):

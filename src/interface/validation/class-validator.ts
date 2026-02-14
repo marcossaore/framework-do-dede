@@ -1,7 +1,7 @@
 import { CustomServerError } from '@/http/errors/server'
 import { plainToInstance } from 'class-transformer'
 import type { ValidationError, ValidatorOptions } from 'class-validator'
-import { validate } from 'class-validator'
+import { getMetadataStorage, validate } from 'class-validator'
 
 export type ValidationErrorMap = Record<string, string[]>
 
@@ -17,6 +17,7 @@ export async function validateWithClassValidator<T extends object>(
   options: ValidationErrorOptions = {}
 ): Promise<T> {
   const instance = plainToInstance(dtoClass, input)
+  restoreExtraneousInput(instance, input, dtoClass)
   const validatorOptions: ValidatorOptions = {
     forbidUnknownValues: false,
     ...(options.validatorOptions ?? {})
@@ -46,4 +47,27 @@ function flattenErrors(errors: ValidationError[], parentPath = ''): ValidationEr
     }
   }
   return output
+}
+
+function restoreExtraneousInput<T extends object>(
+  instance: T,
+  input: T,
+  dtoClass: new () => T
+) {
+  if (!input || typeof input !== 'object') return
+
+  const metadataStorage = getMetadataStorage()
+  const metadatas = metadataStorage.getTargetValidationMetadatas(
+    dtoClass,
+    '',
+    false,
+    false
+  )
+  const validatedProps = new Set(metadatas.map(meta => meta.propertyName))
+
+  for (const key of Object.keys(input)) {
+    if (!validatedProps.has(key)) {
+      ;(instance as any)[key] = (input as any)[key]
+    }
+  }
 }
