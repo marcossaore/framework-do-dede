@@ -65,7 +65,11 @@ export default class ControllerHandler {
                             }
 
                             if (typeof validatorLike === 'function') {
-                                await validateWithClassValidator(validatorLike, request.data, options)
+                                request.data = await validateWithClassValidator(
+                                    validatorLike,
+                                    request.data,
+                                    options
+                                )
                             } else if (typeof validatorLike.validate === 'function') {
                                 await validatorLike.validate(request.data)
                             } else {

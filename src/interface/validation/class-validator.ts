@@ -15,14 +15,14 @@ export async function validateWithClassValidator<T extends object>(
   dtoClass: new () => T,
   input: T,
   options: ValidationErrorOptions = {}
-): Promise<void> {
+): Promise<T> {
   const instance = plainToInstance(dtoClass, input)
   const validatorOptions: ValidatorOptions = {
     forbidUnknownValues: false,
     ...(options.validatorOptions ?? {})
   }
   const errors = await validate(instance, validatorOptions)
-  if (errors.length === 0) return
+  if (errors.length === 0) return instance
 
   const details = flattenErrors(errors)
   const statusCode = options.statusCode ?? 400
