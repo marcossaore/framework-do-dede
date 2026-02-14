@@ -2,14 +2,17 @@ export abstract class Entity {
     [x: string]: any;
 
     protected generateGetters() {
-        for (const property of Object.keys(this)) {
+        // @ts-ignore
+        const propertiesConfigs = (this.constructor.propertiesConfigs || {}) as Record<string, any>;
+        const properties = new Set<string>([...Object.keys(this), ...Object.keys(propertiesConfigs)]);
+
+        for (const property of properties) {
             if (typeof this[property] === 'function') continue;
             let prefixName = null;
 
             // @ts-ignore
-            if (this.constructor.propertiesConfigs && this.constructor.propertiesConfigs[property] && this.constructor.propertiesConfigs[property].prefix) {
-                // @ts-ignore
-                prefixName = this.constructor.propertiesConfigs[property].prefix;
+            if (propertiesConfigs[property] && propertiesConfigs[property].prefix) {
+                prefixName = propertiesConfigs[property].prefix;
             } else {
                 const isBoolean = this[property] ? typeof this[property] === 'boolean' : false;
                 prefixName = isBoolean ? 'is' : 'get';

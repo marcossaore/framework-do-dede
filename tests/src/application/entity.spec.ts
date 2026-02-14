@@ -151,6 +151,8 @@ describe('Entity', () => {
     expect(entity.getName()).toBe('test');
     expect(entity.getEmail().getValue()).toBe('4YlYX@example.com');
     expect(entity.getSecret()).toBe('confidential');
+    expect(entity.hasComplex()).toBeUndefined();
+    expect(entity.isFirstAccess()).toBeUndefined();
     expect(entity.getTestId()).toBe('simpleId');
   });
 

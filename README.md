@@ -341,7 +341,7 @@ Regras principais:
 
 - `Model` guarda metadados de coluna (via `@column`) e nome da tabela (via `@model`)
 - a conversao entity -> model acontece no construtor do Model (ou em um factory)
-- `generateGetters()` cria getters para campos (ex.: `getName`, `isActive`, `hasProfile`)
+- `generateGetters()` cria getters para campos (ex.: `getName`, `isActive`, `hasProfile`), mesmo quando o valor não foi definido.
 
 ### Storage Gateway
 
