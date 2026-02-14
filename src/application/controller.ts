@@ -48,6 +48,19 @@ export function Tracing<R>(tracer: Tracer<R>) {
     };
 }
 
+export function Version(version: number) {
+    return function (target: any, propertyKey?: string) {
+        if (!Number.isInteger(version) || version <= 0) {
+            throw new FrameworkError('Version must be a positive integer');
+        }
+        if (!propertyKey) {
+            Reflect.defineMetadata('version', version, target);
+        } else {
+            Reflect.defineMetadata('version', version, target, propertyKey);
+        }
+    };
+}
+
 function isClass(fn: Function): boolean {
     return /^\s*class\s/.test(Function.prototype.toString.call(fn));
 }

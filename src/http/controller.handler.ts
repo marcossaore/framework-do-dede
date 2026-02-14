@@ -19,8 +19,16 @@ export default class ControllerHandler {
     private readonly requestMapper = new HttpRequestMapper();
     private readonly middlewareExecutor = new MiddlewareExecutor();
     private readonly errorMapper = new HttpErrorMapper();
+    private readonly prefix?: string;
+    private readonly version?: number;
 
-    constructor(httpServer: HttpServer, controllers: any[] = []) {
+    constructor(
+        httpServer: HttpServer,
+        controllers: any[] = [],
+        options: { prefix?: string, version?: number } = {}
+    ) {
+        this.prefix = options.prefix;
+        this.version = options.version;
         for (const { handler, middlewares, validator, method, route, statusCode, params, query, headers, body, bodyFilter, responseType } of this.registryControllers(controllers)) {
             httpServer.register(
                 {
@@ -107,15 +115,19 @@ export default class ControllerHandler {
             const basePath = Reflect.getMetadata('basePath', controller);
             const methodNames = Object.getOwnPropertyNames(controller.prototype).filter(method => method !== 'constructor')
             let tracer = Reflect.getMetadata('tracer', controller) || null;
+            const controllerVersion = Reflect.getMetadata('version', controller);
             const instance = new controller();
             for (const methodName of methodNames) {
                 const routeConfig = Reflect.getMetadata('route', controller.prototype, methodName);
                 const middlewares: MiddlewareDefinition[] = Reflect.getMetadata('middlewares', controller.prototype, methodName);
                 const responseType = Reflect.getMetadata('responseType', controller.prototype, methodName) || 'json';
                 tracer = Reflect.getMetadata('tracer', controller.prototype, methodName) || tracer as Tracer<void>;
+                const methodVersion = Reflect.getMetadata('version', controller.prototype, methodName);
+                const resolvedVersion = methodVersion ?? controllerVersion ?? this.version;
+                const route = this.buildRoute(basePath + routeConfig.path, resolvedVersion, this.prefix);
                 controllers.push({
                     method: routeConfig.method,
-                    route: basePath + routeConfig.path,
+                    route,
                     params: routeConfig.params,
                     query: routeConfig.query,
                     headers: routeConfig.headers,
@@ -157,6 +169,39 @@ export default class ControllerHandler {
         return middleware;
     }
 
+    private buildRoute(baseRoute: string, version?: number, prefix?: string) {
+        let route = baseRoute;
+        if (version !== undefined) {
+            route = this.joinSegments(`v${version}`, route);
+        }
+        if (prefix) {
+            route = this.joinSegments(prefix, route);
+        }
+        return route;
+    }
+
+    private joinSegments(left: string, right: string) {
+        const normalizedLeft = this.trimSlashes(left);
+        const normalizedRight = this.trimLeadingSlash(right);
+        const combined = [normalizedLeft, normalizedRight].filter(Boolean).join('/');
+        return combined ? `/${combined}` : '/';
+    }
+
+    private trimLeadingSlash(value: string) {
+        return value.startsWith('/') ? value.slice(1) : value;
+    }
+
+    private trimTrailingSlash(value: string) {
+        if (value === '/') return '';
+        return value.endsWith('/') ? value.slice(0, -1) : value;
+    }
+
+    private trimSlashes(value: string) {
+        if (value === '/') return '';
+        let trimmed = this.trimLeadingSlash(value);
+        trimmed = this.trimTrailingSlash(trimmed);
+        return trimmed;
+    }
 }
 
 function isValidatorDefinition(value: unknown): value is Exclude<ValidatorDefinition, ValidatorLike> {

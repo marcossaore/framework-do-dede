@@ -1,5 +1,5 @@
 import ControllerHandler from '@/http/controller.handler';
-import { Controller, Get, Middleware, Post, UseMiddleware, UseMiddlewares } from '@/application';
+import { Controller, Get, Middleware, Post, UseMiddleware, UseMiddlewares, Version } from '@/application';
 import HttpServer, { HttpServerParams } from '@/http/http-server';
 
 class FakeHttpServer extends HttpServer {
@@ -235,5 +235,74 @@ describe('ControllerHandler body filtering', () => {
     expect(response).toEqual({
       price: 10.5
     });
+  });
+});
+
+describe('ControllerHandler versioning and prefix', () => {
+  it('applies global prefix and version to routes', () => {
+    @Controller('/users')
+    class UserController {
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, [UserController], { prefix: '/api', version: 2 });
+
+    expect(server.registrations[0].params.route).toBe('/api/v2/users/list');
+  });
+
+   it('should works if none version is provided', () => {
+    @Controller('/users')
+    class UserController {
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, [UserController]);
+
+    expect(server.registrations[0].params.route).toBe('/users/list');
+  });
+
+  it('should works if only prefix is provided', () => {
+    @Controller('/users')
+    class UserController {
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, [UserController], { prefix: '/api' });
+
+    expect(server.registrations[0].params.route).toBe('/api/users/list');
+  });
+
+  it('should works if only version is provided', () => {
+    @Version(4)
+    @Controller('/users')
+    class UserController {
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, [UserController]);
+
+    expect(server.registrations[0].params.route).toBe('/v4/users/list');
+  });
+
+  it('method version overrides global version', () => {
+    @Controller('/users')
+    class UserController {
+      @Version(3)
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, [UserController], { prefix: '/api', version: 1 });
+
+    expect(server.registrations[0].params.route).toBe('/api/v3/users/list');
   });
 });

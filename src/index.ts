@@ -1,6 +1,6 @@
 import { 
     // controller
-    Post, Get, Put, Delete, Patch, Controller, Input,
+    Post, Get, Put, Delete, Patch, Controller, Input, Version,
     Middleware, UseMiddleware, UseMiddlewares,
     Tracer, Tracing, TracerData,
     // controller
@@ -34,7 +34,7 @@ import type { StorageGateway, Event, EventPayload } from './application'
 import type { RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryExistsBy, RepositoryRestore, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination } from './protocols/repository'
 
 export {
-    Controller, Post, Get, Put, Delete, Patch, Input,
+    Controller, Post, Get, Put, Delete, Patch, Input, Version,
     Middleware, UseMiddleware, UseMiddlewares,
     Tracer, Tracing, TracerData,
 

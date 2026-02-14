@@ -100,6 +100,7 @@ Decorators disponíveis:
 
 - `@Controller(basePath?: string)`
 - `@Get`, `@Post`, `@Put`, `@Patch`, `@Delete`
+- `@Version(version: number)`
 
 Opções de rota (comuns):
 
@@ -109,6 +110,38 @@ Opções de rota (comuns):
 - `bodyFilter`: `"restrict" | "none"`
 - `responseType`: `"json" | "text" | "html"`
 - `validator`: pode ser uma classe com decorators do `class-validator` **ou** um objeto com `validate(data)` (sync/async)
+
+### Versionamento e Prefixo
+
+Você pode definir um prefixo e uma versão global ao criar a aplicação. A versão vira `v{numero}` logo após o prefixo (se existir):
+
+```ts
+const app = await Dede.create({
+  framework: { use: 'express', port: 3000 },
+  registries: [],
+  prefix: '/api',
+  version: 1
+});
+
+// rota final: /api/v1/users/list
+```
+
+Para sobrescrever a versão global em um controller ou método, use `@Version`:
+
+```ts
+import { Controller, Get, Version } from './src';
+
+@Version(2)
+@Controller('/users')
+class UsersController {
+  @Get({ path: '/list' })
+  async list() {}
+
+  @Version(3)
+  @Get({ path: '/featured' })
+  async featured() {}
+}
+```
 
 ### Input, params e filtros
 

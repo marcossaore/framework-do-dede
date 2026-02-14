@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, UseMiddleware, UseMiddlewares, Post, Put, Middleware } from '@/application';
+import { Controller, Delete, Get, UseMiddleware, UseMiddlewares, Post, Put, Middleware, Version } from '@/application';
 import { Tracer, TracerData, Tracing } from '@/application/controller';
 
 describe('Controller', () => {
@@ -255,6 +255,27 @@ describe('Controller', () => {
         expect(Reflect.getMetadata('tracer', UserController.prototype, 'test1')).toBeInstanceOf(TracerMock)
         expect(Reflect.getMetadata('tracer', UserController)).toBeUndefined()
         expect(Reflect.getMetadata('tracer', UserController.prototype, 'test2')).toBeUndefined()
+      });
+    });
+
+    describe('@Version', () => {
+      it('should register version on controller', () => {
+        @Version(2)
+        @Controller('/users')
+        class UserController { }
+
+        expect(Reflect.getMetadata('version', UserController)).toBe(2);
+      });
+
+      it('should register version on method', () => {
+        @Controller('/users')
+        class UserController {
+          @Version(3)
+          @Get({ path: '/list' })
+          list() { }
+        }
+
+        expect(Reflect.getMetadata('version', UserController.prototype, 'list')).toBe(3);
       });
     });
   });

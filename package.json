@@ -1,6 +1,6 @@
 {
   "name": "framework-do-dede",
-  "version": "5.4.11",
+  "version": "5.5.0",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
