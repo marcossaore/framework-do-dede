@@ -61,6 +61,17 @@ export function Version(version: number) {
     };
 }
 
+export function PresetIgnore(ignorePrefix: boolean = true, ignoreVersion: boolean = true) {
+    return function (target: any, propertyKey?: string) {
+        const ignoreConfig = { prefix: ignorePrefix, version: ignoreVersion };
+        if (!propertyKey) {
+            Reflect.defineMetadata('presetIgnore', ignoreConfig, target);
+        } else {
+            Reflect.defineMetadata('presetIgnore', ignoreConfig, target, propertyKey);
+        }
+    };
+}
+
 function isClass(fn: Function): boolean {
     return /^\s*class\s/.test(Function.prototype.toString.call(fn));
 }

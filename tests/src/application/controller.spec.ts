@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, UseMiddleware, UseMiddlewares, Post, Put, Middleware, Version } from '@/application';
+import { Controller, Delete, Get, UseMiddleware, UseMiddlewares, Post, Put, Middleware, Version, PresetIgnore } from '@/application';
 import { Tracer, TracerData, Tracing } from '@/application/controller';
 
 describe('Controller', () => {
@@ -276,6 +276,27 @@ describe('Controller', () => {
         }
 
         expect(Reflect.getMetadata('version', UserController.prototype, 'list')).toBe(3);
+      });
+    });
+
+    describe('@PresetIgnore', () => {
+      it('should register ignore config on controller', () => {
+        @PresetIgnore()
+        @Controller('/users')
+        class UserController { }
+
+        expect(Reflect.getMetadata('presetIgnore', UserController)).toEqual({ prefix: true, version: true });
+      });
+
+      it('should register ignore config on method', () => {
+        @Controller('/users')
+        class UserController {
+          @PresetIgnore(false, true)
+          @Get({ path: '/list' })
+          list() { }
+        }
+
+        expect(Reflect.getMetadata('presetIgnore', UserController.prototype, 'list')).toEqual({ prefix: false, version: true });
       });
     });
   });

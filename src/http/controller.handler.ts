@@ -120,6 +120,7 @@ export default class ControllerHandler {
             const methodNames = Object.getOwnPropertyNames(controller.prototype).filter(method => method !== 'constructor')
             let tracer = Reflect.getMetadata('tracer', controller) || null;
             const controllerVersion = Reflect.getMetadata('version', controller);
+            const controllerPresetIgnore = Reflect.getMetadata('presetIgnore', controller) as { prefix: boolean, version: boolean } | undefined;
             const instance = new controller();
             for (const methodName of methodNames) {
                 const routeConfig = Reflect.getMetadata('route', controller.prototype, methodName);
@@ -127,8 +128,13 @@ export default class ControllerHandler {
                 const responseType = Reflect.getMetadata('responseType', controller.prototype, methodName) || 'json';
                 tracer = Reflect.getMetadata('tracer', controller.prototype, methodName) || tracer as Tracer<void>;
                 const methodVersion = Reflect.getMetadata('version', controller.prototype, methodName);
-                const resolvedVersion = methodVersion ?? controllerVersion ?? this.version;
-                const route = this.buildRoute(basePath + routeConfig.path, resolvedVersion, this.prefix);
+                const methodPresetIgnore = Reflect.getMetadata('presetIgnore', controller.prototype, methodName) as { prefix: boolean, version: boolean } | undefined;
+                const presetIgnore = methodPresetIgnore ?? controllerPresetIgnore;
+                const ignoreGlobalVersion = presetIgnore?.version === true;
+                const ignoreGlobalPrefix = presetIgnore?.prefix === true;
+                const resolvedVersion = methodVersion ?? controllerVersion ?? (ignoreGlobalVersion ? undefined : this.version);
+                const resolvedPrefix = ignoreGlobalPrefix ? undefined : this.prefix;
+                const route = this.buildRoute(basePath + routeConfig.path, resolvedVersion, resolvedPrefix);
                 controllers.push({
                     method: routeConfig.method,
                     route,

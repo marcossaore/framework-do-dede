@@ -1,5 +1,5 @@
 import ControllerHandler from '@/http/controller.handler';
-import { Controller, Get, Middleware, Post, UseMiddleware, UseMiddlewares, Version } from '@/application';
+import { Controller, Get, Middleware, Post, UseMiddleware, UseMiddlewares, Version, PresetIgnore } from '@/application';
 import HttpServer, { HttpServerParams } from '@/http/http-server';
 
 class FakeHttpServer extends HttpServer {
@@ -250,6 +250,35 @@ describe('ControllerHandler versioning and prefix', () => {
     new ControllerHandler(server, [UserController], { prefix: '/api', version: 2 });
 
     expect(server.registrations[0].params.route).toBe('/api/v2/users/list');
+  });
+
+  it('ignores global prefix and version when annotated', () => {
+    @PresetIgnore(true, true)
+    @Controller('/health')
+    class HealthController {
+      @Get({ path: '/ping' })
+      ping() {}
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, [HealthController], { prefix: '/api', version: 2 });
+
+    expect(server.registrations[0].params.route).toBe('/health/ping');
+  });
+
+  it('method preset overrides controller preset', () => {
+    @PresetIgnore(true, true)
+    @Controller('/users')
+    class UserController {
+      @PresetIgnore(true, false)
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, [UserController], { prefix: '/api', version: 2 });
+
+    expect(server.registrations[0].params.route).toBe('/v2/users/list');
   });
 
    it('should works if none version is provided', () => {
