@@ -46,6 +46,30 @@ describe('CacheGateway', () => {
     expect(cache.set).toHaveBeenCalledWith('key', 'value');
   });
 
+  it('passes toObject flag to cache.get', async () => {
+    const container = new Container();
+    const cache = {
+      get: jest.fn().mockResolvedValue({ ok: true }),
+      set: jest.fn(),
+      delete: jest.fn()
+    };
+    container.load('MyCache', cache);
+
+    @CacheGateway('MyCache', container)
+    class CachedService {
+      declare cache: { get: (key: string, toObject?: boolean) => Promise<{ ok: boolean }> }
+      async read(key: string, toObject?: boolean) {
+        return this.cache.get(key, toObject);
+      }
+    }
+
+    const service = new CachedService();
+    const value = await service.read('abc', true);
+
+    expect(cache.get).toHaveBeenCalledWith('abc', true);
+    expect(value).toEqual({ ok: true });
+  });
+
   it('throws when dependency does not match cache contract', () => {
     const container = new Container();
     container.load('BadCache', {});

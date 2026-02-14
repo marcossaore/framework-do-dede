@@ -8,7 +8,7 @@ export interface StorageGateway {
 }
 
 export interface CacheGateway {
-  get<T = unknown>(key: string): Promise<T | null> | T | null
+  get<T = unknown>(key: string, toObject?: boolean): Promise<T | null> | T | null
   set<T = unknown>(key: string, value: T, ttl?: number): Promise<void> | void
   delete(key: string): Promise<boolean> | boolean
 }
