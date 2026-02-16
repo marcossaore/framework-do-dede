@@ -66,6 +66,31 @@ describe('HttpServer', () => {
         });
     });
 
+    describe('mountRoute()', () => {
+        const mount = (server: MockHttpServer, route: string, params?: string[]) => {
+            return (server as any).mountRoute({ route, params } as HttpServerParams);
+        };
+
+        it('keeps static routes unchanged', () => {
+            expect(mount(server, '/pets')).toBe('/pets');
+            expect(mount(server, '/pets/ideias/:id')).toBe('/pets/ideias/:id');
+            expect(mount(server, '/pets/example/noparams')).toBe('/pets/example/noparams');
+        });
+
+        it('does not duplicate params already present in path', () => {
+            expect(mount(server, '/pets/:id', ['id'])).toBe('/pets/:id');
+            expect(mount(server, '/pets/:id/services', ['id'])).toBe('/pets/:id/services');
+            expect(mount(server, '/pets/:id/services/:serviceId', ['id', 'serviceId']))
+                .toBe('/pets/:id/services/:serviceId');
+        });
+
+        it('appends missing params to the end of the route', () => {
+            expect(mount(server, '/pets', ['id'])).toBe('/pets/:id');
+            expect(mount(server, '/pets/:id/services', ['serviceId']))
+                .toBe('/pets/:id/services/:serviceId');
+        });
+    });
+
     describe('listen()', () => {
         it('should start listening on specified port', () => {
             server.listen(3000);

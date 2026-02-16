@@ -79,9 +79,11 @@ export default abstract class HttpServer {
     private mountRoute(httpServerParams: HttpServerParams) {
         const params = httpServerParams.params?.map((param) => param.split('|')[0])
         if (params && params.length > 0) {
-            const paramsMounted = params.map((v) => {
-                return v.includes('_') ? `${v.replace('_', '/')}` : `/:${v}`
-            }).join('')
+            const routeSegments = httpServerParams.route.split('/')
+            const paramsMounted = params
+                .filter((v) => !routeSegments.includes(`:${v}`))
+                .map((v) => `/:${v}`)
+                .join('')
             return `${httpServerParams.route}${paramsMounted}`
         }
         return httpServerParams.route
