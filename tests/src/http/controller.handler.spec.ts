@@ -57,6 +57,38 @@ describe('ControllerHandler middleware resolution', () => {
     expect(resolved).toBeInstanceOf(AuthMiddleware);
   });
 
+  it('resolves controller-level middleware on all routes', () => {
+    @Controller('/users')
+    @UseMiddleware(AuthMiddleware)
+    class UserController {
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const handler = Object.create(ControllerHandler.prototype) as ControllerHandler;
+    const routes = (handler as any).registryControllers([UserController]);
+
+    const resolved = routes[0].middlewares?.[0];
+    expect(resolved).toBeInstanceOf(AuthMiddleware);
+  });
+
+  it('merges controller and method middlewares preserving order', () => {
+    @Controller('/users')
+    @UseMiddleware(LoggerMiddleware)
+    class UserController {
+      @UseMiddleware(AuthMiddleware)
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const handler = Object.create(ControllerHandler.prototype) as ControllerHandler;
+    const routes = (handler as any).registryControllers([UserController]);
+
+    const middlewares = routes[0].middlewares || [];
+    expect(middlewares[0]).toBeInstanceOf(LoggerMiddleware);
+    expect(middlewares[1]).toBeInstanceOf(AuthMiddleware);
+  });
+
   it('keeps middleware instance when provided', () => {
     const instance = new AuthMiddleware();
 

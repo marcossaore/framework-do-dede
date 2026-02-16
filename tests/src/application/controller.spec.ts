@@ -173,6 +173,21 @@ describe('Controller', () => {
         expect(metadata[0]).toBe(AuthMiddleware);
       });
 
+      it('should register middleware at controller level', () => {
+        @Controller('/users')
+        @UseMiddleware(AuthMiddleware)
+        class UserController {
+          testMethod(input: any) {
+            console.log('testMethod called with input', input);
+          }
+        }
+
+        const metadata = Reflect.getMetadata('middlewares', UserController);
+        expect(metadata).toBeDefined();
+        expect(metadata.length).toBe(1);
+        expect(metadata[0]).toBe(AuthMiddleware);
+      });
+
       it('should register multiple middlewares', () => {
         @Controller('/users')
         class UserController {

@@ -121,10 +121,12 @@ export default class ControllerHandler {
             let tracer = Reflect.getMetadata('tracer', controller) || null;
             const controllerVersion = Reflect.getMetadata('version', controller);
             const controllerPresetIgnore = Reflect.getMetadata('presetIgnore', controller) as { prefix: boolean, version: boolean } | undefined;
+            const controllerMiddlewares: MiddlewareDefinition[] = Reflect.getMetadata('middlewares', controller) || [];
             const instance = new controller();
             for (const methodName of methodNames) {
                 const routeConfig = Reflect.getMetadata('route', controller.prototype, methodName);
-                const middlewares: MiddlewareDefinition[] = Reflect.getMetadata('middlewares', controller.prototype, methodName);
+                const methodMiddlewares: MiddlewareDefinition[] = Reflect.getMetadata('middlewares', controller.prototype, methodName) || [];
+                const middlewares: MiddlewareDefinition[] = [...controllerMiddlewares, ...methodMiddlewares];
                 const responseType = Reflect.getMetadata('responseType', controller.prototype, methodName) || 'json';
                 tracer = Reflect.getMetadata('tracer', controller.prototype, methodName) || tracer as Tracer<void>;
                 const methodVersion = Reflect.getMetadata('version', controller.prototype, methodName);
@@ -151,7 +153,7 @@ export default class ControllerHandler {
                         tracer
                     },
                     responseType,
-                    middlewares: middlewares ? middlewares.map(middleware => this.resolveMiddleware(middleware)) : [],
+                    middlewares: middlewares.length ? middlewares.map(middleware => this.resolveMiddleware(middleware)) : [],
                 });
             }
         }

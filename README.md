@@ -218,6 +218,7 @@ vira:
 ### Middlewares
 
 Middlewares devem implementar `execute(input: Input<any>)`. Podem ser classe, factory ou instancia.
+Podem ser aplicados no controller (valem para todas as rotas) e/ou no método.
 
 ```ts
 import { Middleware, UseMiddleware, UseMiddlewares, Input } from './src';
@@ -228,7 +229,14 @@ class AuthMiddleware implements Middleware {
   }
 }
 
+class LoggerMiddleware implements Middleware {
+  async execute(input: Input<any>) {
+    input.context.logged = true;
+  }
+}
+
 @Controller('/secure')
+@UseMiddleware(LoggerMiddleware)
 class SecureController {
   @Get()
   @UseMiddleware(AuthMiddleware)

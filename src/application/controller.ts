@@ -77,27 +77,41 @@ function isClass(fn: Function): boolean {
 }
 
 export function UseMiddleware(middlewareClass: MiddlewareDefinition) {
-    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyKey?: string, descriptor?: PropertyDescriptor) {
         if (typeof middlewareClass !== 'function' && !middlewareClass?.execute) {
             throw new FrameworkError('Middleware must implement execute()');
         }
         if (typeof middlewareClass === 'function' && isClass(middlewareClass) && !middlewareClass.prototype?.execute) {
             throw new FrameworkError('Middleware must implement execute()');
         }
+        const metadataTarget = propertyKey ? target : target;
+        const metadataKey = propertyKey ?? undefined;
         if (typeof middlewareClass === 'function' && middlewareClass.prototype?.execute) {
-            const middlewares: MiddlewareDefinition[] = Reflect.getMetadata('middlewares', target, propertyKey) || [];
+            const middlewares: MiddlewareDefinition[] = metadataKey
+                ? Reflect.getMetadata('middlewares', metadataTarget, metadataKey) || []
+                : Reflect.getMetadata('middlewares', metadataTarget) || [];
             middlewares.push(middlewareClass);
-            Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
+            if (metadataKey) {
+                Reflect.defineMetadata('middlewares', middlewares, metadataTarget, metadataKey);
+            } else {
+                Reflect.defineMetadata('middlewares', middlewares, metadataTarget);
+            }
             return;
         }
-        const middlewares: MiddlewareDefinition[] = Reflect.getMetadata('middlewares', target, propertyKey) || [];
+        const middlewares: MiddlewareDefinition[] = metadataKey
+            ? Reflect.getMetadata('middlewares', metadataTarget, metadataKey) || []
+            : Reflect.getMetadata('middlewares', metadataTarget) || [];
         middlewares.push(middlewareClass as MiddlewareDefinition);
-        Reflect.defineMetadata('middlewares', middlewares, target, propertyKey);
+        if (metadataKey) {
+            Reflect.defineMetadata('middlewares', middlewares, metadataTarget, metadataKey);
+        } else {
+            Reflect.defineMetadata('middlewares', middlewares, metadataTarget);
+        }
     };
 }
 
 export function UseMiddlewares(middlewareClasses: MiddlewareDefinition[]) {
-    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyKey?: string, descriptor?: PropertyDescriptor) {
         for (const middlewareClass of middlewareClasses) {
             if (typeof middlewareClass !== 'function' && !middlewareClass?.execute) {
                 throw new FrameworkError('Middleware must implement execute()');
@@ -106,10 +120,17 @@ export function UseMiddlewares(middlewareClasses: MiddlewareDefinition[]) {
                 throw new FrameworkError('Middleware must implement execute()');
             }
         }
-        const existingMiddlewares: MiddlewareDefinition[] = 
-            Reflect.getMetadata('middlewares', target, propertyKey) || [];
+        const metadataTarget = propertyKey ? target : target;
+        const metadataKey = propertyKey ?? undefined;
+        const existingMiddlewares: MiddlewareDefinition[] = metadataKey
+            ? Reflect.getMetadata('middlewares', metadataTarget, metadataKey) || []
+            : Reflect.getMetadata('middlewares', metadataTarget) || [];
         existingMiddlewares.push(...middlewareClasses);
-        Reflect.defineMetadata('middlewares', existingMiddlewares, target, propertyKey);
+        if (metadataKey) {
+            Reflect.defineMetadata('middlewares', existingMiddlewares, metadataTarget, metadataKey);
+        } else {
+            Reflect.defineMetadata('middlewares', existingMiddlewares, metadataTarget);
+        }
     };
 }
 
