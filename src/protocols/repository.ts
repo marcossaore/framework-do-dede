@@ -1,11 +1,10 @@
-import { Optional } from "@/domain";
-import { RepositoryModel } from "@/protocols/model";
+import { Entity, Optional } from "@/domain";
 
-export interface RepositoryCreate<T extends RepositoryModel> {
+export interface RepositoryCreate<T extends Entity> {
     create(input: T): Promise<void>
 }
 
-export interface RepositoryUpdate<T extends RepositoryModel> {
+export interface RepositoryUpdate<T extends Entity> {
     update(input: T): Promise<void>
 }
 
@@ -13,7 +12,7 @@ export interface RepositoryRemove {
     remove(id: string | number): Promise<void>
 }
 
-export interface RepositoryRestore<T extends RepositoryModel> {
+export interface RepositoryRestore<T extends Entity> {
     restore(id: string | number): Promise<Optional<T>>
 }
 

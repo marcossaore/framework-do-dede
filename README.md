@@ -491,11 +491,10 @@ Quando um erro e lancado, o handler padroniza a resposta. Erros de dominio (`App
 Interfaces tipadas para padrao de repositorio:
 
 - `Optional<T>` (helper inspirado em micronaut/spring)
-- `RepositoryModel` (base para o acoplamento do repositorio com Model)
-- `RepositoryCreate<T extends RepositoryModel>`
-- `RepositoryUpdate<T extends RepositoryModel>`
+- `RepositoryCreate<T extends Entity>`
+- `RepositoryUpdate<T extends Entity>`
 - `RepositoryRemove`
-- `RepositoryRestore<T extends RepositoryModel>`
+- `RepositoryRestore<T extends Entity>`
 - `RepositoryRemoveBy<T>`
 - `RepositoryRestoreBy<T>`
 - `RepositoryExistsBy<T>`
@@ -508,7 +507,7 @@ Interfaces tipadas para padrao de repositorio:
 import { Optional } from './src';
 
 class UserRepository {
-  async restore(id: string): Promise<Optional<UserModel>> {
+  async restore(id: string): Promise<Optional<User>> {
     const result = await this.orm
       .select()
       .from(userTable)
@@ -516,12 +515,19 @@ class UserRepository {
 
     const row = result[0] ?? null;
     const model = row ? new UserModel().fromModel(row) : null;
-    return Optional.ofNullable(model);
+    const entity = model ? model.toEntity() : null;
+    return Optional.ofNullable(entity);
   }
 }
 
 const user = await repo.restore('1').orElseThrow('Usuario nao encontrado');
 const userByEmail = await repo.restoreByEmail('a@b.com').orElseNull();
+const userOrThrow = await repo.restoreByEmail('a@b.com').orElseThrow(
+  () => new Unauthorized('Usuario ou senha invalida')
+);
+const userOrThrow2 = await repo.restoreByEmail('a@b.com').orElseThrow(
+  new Unauthorized('Usuario ou senha invalida')
+);
 ```
 
 ## Exemplos
