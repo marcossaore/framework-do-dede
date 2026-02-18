@@ -346,12 +346,9 @@ class CreatePhotoUseCase extends UseCase<void, void> {
 Entities sao dominio puro. `Model` vive na borda e faz o mapeamento banco <-> model, alem de converter `Entity` <-> `Model`. Repositorios trabalham com `Model`, nao com `Entity`.
 
 ```ts
-import { Entity, Model, model, column } from './src';
+import { Entity, Model, column } from './src';
 
-type UserTable = 'users';
-
-@model<UserTable>('users')
-class UserModel extends Model<UserTable, User> {
+class UserModel extends Model<User> {
   @column('id')
   id!: string;
 
@@ -398,7 +395,7 @@ return Optional.ofNullable(model);
 
 Regras principais:
 
-- `Model` guarda metadados de coluna (via `@column`) e nome da tabela (via `@model`)
+- `Model` guarda metadados de coluna (via `@column`)
 - `fromModel` aplica o mapeamento coluna -> propriedade e ignora `null/undefined` (retorna o proprio model)
 - `fromEntity` / `toEntity` fazem a conversao entity <-> model
 - `Entity` recebe o `Model` no construtor (acoplamento forte na borda)

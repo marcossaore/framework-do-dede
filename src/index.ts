@@ -9,7 +9,6 @@ import {
     Entity, Restrict, 
     VirtualProperty, GetterPrefix, Transform,
     Model,
-    model,
     column,
     // entity
 
@@ -43,7 +42,6 @@ export {
     Entity, Restrict, 
     VirtualProperty, GetterPrefix, Transform,
     Model,
-    model,
     column,
 
     UseCase, DecorateUseCase, Hook, BeforeHook, AfterHook, HookBefore, HookAfter,

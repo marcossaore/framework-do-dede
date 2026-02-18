@@ -1,8 +1,6 @@
-import { Model, model, column, Entity } from '@/application';
+import { Model, column, Entity } from '@/application';
 
 describe('Model', () => {
-  type UserTable = 'users';
-
   class Name {
     private value: string;
     constructor(value: string) {
@@ -14,8 +12,7 @@ describe('Model', () => {
     }
   }
 
-  @model<UserTable>('users')
-  class UserModel extends Model<UserTable, UserEntity> {
+  class UserModel extends Model<UserEntity> {
 
     @column('id')
     id!: string;
@@ -44,12 +41,6 @@ describe('Model', () => {
       this.generateGetters();
     }
   }
-
-  it('registers table name on the model', () => {
-    const modelInstance = new UserModel();
-
-    expect(modelInstance.table).toBe('users');
-  });
 
   it('registers columns on the model constructor', () => {
     const modelInstance = new UserModel();
@@ -87,7 +78,6 @@ describe('Model', () => {
 
   it('omits internal metadata fields from toModel', () => {
     const modelInstance = new UserModel().fromModel({ id: 'u-4', name_test: 'Luna' });
-    (modelInstance as any).table = 'users';
     (modelInstance as any).columns = [
       { column: 'id', property: 'id' },
       { column: 'name_test', property: 'name' }

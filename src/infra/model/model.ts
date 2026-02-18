@@ -1,3 +1,4 @@
+import { Entity } from "@/infra/serialization/entity";
 import { RepositoryModel } from "@/protocols/model";
 
 export type ColumnDefinition = {
@@ -5,8 +6,7 @@ export type ColumnDefinition = {
   property: string
 };
 
-export abstract class Model<TTable = string, TEntity = any> extends RepositoryModel<TEntity> {
-  declare table: TTable;
+export abstract class Model<TEntity extends Entity = Entity> extends RepositoryModel<TEntity> {
   declare columns: ColumnDefinition[];
   [property: string]: any;
 
@@ -46,12 +46,6 @@ export abstract class Model<TTable = string, TEntity = any> extends RepositoryMo
   }
 
   public abstract toEntity(): TEntity;
-}
-
-export function model<TTable>(table: TTable) {
-  return function (target: any) {
-    target.prototype.table = table;
-  };
 }
 
 export function column(columnName: string) {
