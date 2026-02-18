@@ -501,12 +501,26 @@ Interfaces tipadas para padrao de repositorio:
 - `RepositoryNotExistsBy<T>`
 - `RepositoryPagination<T>`
 
-`RepositoryRestore` e `RepositoryRestoreBy` retornam `Optional<T>` para desacoplar a mensagem de erro do repositório:
+`RepositoryRestore` e `RepositoryRestoreBy` podem retornar a entidade diretamente (padrão) ou `Optional<T>` quando quiser usar `orElse*`:
 
 ```ts
 import { Optional } from './src';
 
 class UserRepository {
+  async restore(id: string): Promise<User> {
+    const result = await this.orm
+      .select()
+      .from(userTable)
+      .where(eq(userTable.id, id));
+
+    const row = result[0] ?? null;
+    const model = row ? new UserModel().fromModel(row) : null;
+    if (!model) throw new Error('Usuario nao encontrado');
+    return model.toEntity();
+  }
+}
+
+class UserRepositoryOptional implements RepositoryRestore<User, User, true> {
   async restore(id: string): Promise<Optional<User>> {
     const result = await this.orm
       .select()
@@ -520,12 +534,12 @@ class UserRepository {
   }
 }
 
-const user = await repo.restore('1').orElseThrow('Usuario nao encontrado');
-const userByEmail = await repo.restoreByEmail('a@b.com').orElseNull();
-const userOrThrow = await repo.restoreByEmail('a@b.com').orElseThrow(
+const user = await repo.restore('1');
+const userByEmail = await repo.restoreByEmail('a@b.com');
+const userOrThrow = await repoOptional.restoreByEmail('a@b.com').orElseThrow(
   () => new Unauthorized('Usuario ou senha invalida')
 );
-const userOrThrow2 = await repo.restoreByEmail('a@b.com').orElseThrow(
+const userOrThrow2 = await repoOptional.restoreByEmail('a@b.com').orElseThrow(
   new Unauthorized('Usuario ou senha invalida')
 );
 ```
