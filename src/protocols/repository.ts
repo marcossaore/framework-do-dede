@@ -20,8 +20,8 @@ export type RepositoryRemoveBy<T> = {
     [K in keyof T & string as `removeBy${Capitalize<K>}`]: (value: T[K]) => Promise<void>;
 };
 
-export type RepositoryRestoreBy<T> = {
-    [K in keyof T & string as `restoreBy${Capitalize<K>}`]: (value: T[K]) => Promise<Optional<T>>;
+export type RepositoryRestoreBy<TKeys, TResult = TKeys> = {
+    [K in keyof TKeys & string as `restoreBy${Capitalize<K>}`]: (value: TKeys[K]) => Promise<Optional<TResult>>;
 };
 
 export type RepositoryExistsBy<T> = {
