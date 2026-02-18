@@ -1,26 +1,29 @@
-import { Entity } from "@/application";
+import { RepositoryModel } from "@/protocols/model";
 
 export type ColumnDefinition = {
   column: string
   property: string
 };
 
-export abstract class Model<TTable = string> {
+export abstract class Model<TTable = string, TEntity = any> extends RepositoryModel<TEntity> {
   declare table: TTable;
   declare columns: ColumnDefinition[];
   [property: string]: any;
 
-  fromModel(input: Record<string, any>): Model {
+  fromModel(input: Record<string, any> | null | undefined): this {
+    if (input === null || input === undefined) {
+      return this;
+    }
     const columns = this.columns ?? [];
     const columnByName = new Map(columns.map((column) => [column.column, column.property]));
     for (const [property, value] of Object.entries(input)) {
       const mappedProperty = columnByName.get(property);
       this[mappedProperty ?? property] = value;
     }
-    return this as Model;
+    return this;
   }
 
-  public abstract fromEntity(entity: Entity): Model;
+  public abstract fromEntity(entity: TEntity): this;
 
   toModel(): Record<string, any> {
     const record: Record<string, any> = {};
@@ -42,7 +45,7 @@ export abstract class Model<TTable = string> {
     return record;
   }
 
-  public abstract toEntity(): Entity;
+  public abstract toEntity(): TEntity;
 }
 
 export function model<TTable>(table: TTable) {

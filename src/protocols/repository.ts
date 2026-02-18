@@ -1,10 +1,11 @@
-import { Entity } from "@/domain";
+import { Optional } from "@/domain";
+import { RepositoryModel } from "@/protocols/model";
 
-export interface RepositoryCreate<T extends Entity> {
+export interface RepositoryCreate<T extends RepositoryModel> {
     create(input: T): Promise<void>
 }
 
-export interface RepositoryUpdate<T extends Entity> {
+export interface RepositoryUpdate<T extends RepositoryModel> {
     update(input: T): Promise<void>
 }
 
@@ -12,8 +13,8 @@ export interface RepositoryRemove {
     remove(id: string | number): Promise<void>
 }
 
-export interface RepositoryRestore<T extends Entity> {
-    restore(id: string | number): Promise<T>
+export interface RepositoryRestore<T extends RepositoryModel> {
+    restore(id: string | number): Promise<Optional<T>>
 }
 
 export type RepositoryRemoveBy<T> = {
@@ -21,7 +22,7 @@ export type RepositoryRemoveBy<T> = {
 };
 
 export type RepositoryRestoreBy<T> = {
-    [K in keyof T & string as `restoreBy${Capitalize<K>}`]: (value: T[K]) => Promise<any>;
+    [K in keyof T & string as `restoreBy${Capitalize<K>}`]: (value: T[K]) => Promise<Optional<T>>;
 };
 
 export type RepositoryExistsBy<T> = {

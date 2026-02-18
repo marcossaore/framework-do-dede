@@ -14,20 +14,8 @@ describe('Model', () => {
     }
   }
 
-  class UserEntity extends Entity {
-
-    private id: string;
-    private name: Name;
-    constructor(data: any) {
-      super();
-      this.id = data.id;
-      this.name = new Name(data.name);
-      this.generateGetters();
-    }
-  }
-
   @model<UserTable>('users')
-  class UserModel extends Model<UserTable> {
+  class UserModel extends Model<UserTable, UserEntity> {
 
     @column('id')
     id!: string;
@@ -35,14 +23,25 @@ describe('Model', () => {
     @column('name_test')
     name!: string;
 
-    public toEntity(): Entity {
-      return new UserEntity({ id: this.id, name: this.name });
+    public toEntity(): UserEntity {
+      return new UserEntity(this);
     }
 
-    public fromEntity(entity: Entity): Model {
-      this.id = entity.id;
-      this.name = entity.name.getValue();
+    public fromEntity(entity: UserEntity): this {
+      this.id = entity.getId();
+      this.name = entity.getName().getValue();
       return this;
+    }
+  }
+
+  class UserEntity extends Entity {
+    private id: string;
+    private name: Name;
+    constructor(model: UserModel) {
+      super();
+      this.id = model.id;
+      this.name = new Name(model.name);
+      this.generateGetters();
     }
   }
 

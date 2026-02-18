@@ -40,7 +40,7 @@ bun run example/express_app/server.ts
 ## Quickstart
 
 ```ts
-import { Controller, Get, Post, UseCase, Dede } from './src';
+import { Controller, Get, Post, UseCase, Dede, Optional } from './src';
 
 @Controller('/hello')
 class HelloController {
@@ -62,6 +62,9 @@ class HelloUseCase extends UseCase<{ name?: string }, { message: string }> {
     return { message: `Hello ${this.data?.name ?? 'world'}` };
   }
 }
+
+const maybeName = Optional.ofNullable(process.env.DEFAULT_NAME);
+const defaultName = maybeName.orElseUndefined();
 
 const app = await Dede.create({
   framework: { use: 'express', port: 3000 },
@@ -340,53 +343,65 @@ class CreatePhotoUseCase extends UseCase<void, void> {
 
 ### Entity e Model
 
-Entities sao dominio puro. Use `Model` para mapear coluna/property e construir o objeto de persistencia.
+Entities sao dominio puro. `Model` vive na borda e faz o mapeamento banco <-> model, alem de converter `Entity` <-> `Model`. Repositorios trabalham com `Model`, nao com `Entity`.
 
 ```ts
 import { Entity, Model, model, column } from './src';
 
-class Order extends Entity {
-  private readonly id: string;
-  private readonly name: string;
-  private readonly amount: number;
+type UserTable = 'users';
 
-  constructor(id: string, name: string, amount: number) {
-    super();
-    this.id = id;
-    this.name = name;
-    this.amount = amount;
-    this.generateGetters();
-  }
-}
-
-type OrderTable = 'orders';
-
-@model<OrderTable>('orders')
-class OrderModel extends Model<OrderTable> {
+@model<UserTable>('users')
+class UserModel extends Model<UserTable, User> {
   @column('id')
   id!: string;
 
-  @column('name')
+  @column('email2')
+  email!: string;
+
   name!: string;
+  password?: string;
 
-  @column('amount')
-  amount!: number;
+  fromEntity(user: User): this {
+    this.id = user.getId();
+    this.email = user.getEmail();
+    this.name = user.getName();
+    return this;
+  }
 
-  constructor(order?: Order) {
-    super();
-    if (order) {
-      this.id = order.getId();
-      this.name = order.getName();
-      this.amount = order.getAmount();
-    }
+  toEntity(): User {
+    return new User(this);
   }
 }
+
+class User extends Entity {
+  private readonly id: string;
+  private readonly email: string;
+  private readonly name: string;
+
+  constructor(model: UserModel) {
+    super();
+    this.id = model.id;
+    this.email = model.email;
+    this.name = model.name;
+    this.generateGetters();
+  }
+}
+```
+
+Carregando do banco:
+
+```ts
+const row = result[0] ?? null;
+const model = row ? new UserModel().fromModel(row) : null;
+return Optional.ofNullable(model);
 ```
 
 Regras principais:
 
 - `Model` guarda metadados de coluna (via `@column`) e nome da tabela (via `@model`)
-- a conversao entity -> model acontece no construtor do Model (ou em um factory)
+- `fromModel` aplica o mapeamento coluna -> propriedade e ignora `null/undefined` (retorna o proprio model)
+- `fromEntity` / `toEntity` fazem a conversao entity <-> model
+- `Entity` recebe o `Model` no construtor (acoplamento forte na borda)
 - `generateGetters()` cria getters para campos (ex.: `getName`, `isActive`, `hasProfile`), mesmo quando o valor não foi definido.
 
 ### Storage Gateway
@@ -478,15 +493,39 @@ Quando um erro e lancado, o handler padroniza a resposta. Erros de dominio (`App
 
 Interfaces tipadas para padrao de repositorio:
 
-- `RepositoryCreate<T extends Entity>`
-- `RepositoryUpdate<T extends Entity>`
+- `Optional<T>` (helper inspirado em micronaut/spring)
+- `RepositoryModel` (base para o acoplamento do repositorio com Model)
+- `RepositoryCreate<T extends RepositoryModel>`
+- `RepositoryUpdate<T extends RepositoryModel>`
 - `RepositoryRemove`
-- `RepositoryRestore<T extends Entity>`
+- `RepositoryRestore<T extends RepositoryModel>`
 - `RepositoryRemoveBy<T>`
 - `RepositoryRestoreBy<T>`
 - `RepositoryExistsBy<T>`
 - `RepositoryNotExistsBy<T>`
 - `RepositoryPagination<T>`
+
+`RepositoryRestore` e `RepositoryRestoreBy` retornam `Optional<T>` para desacoplar a mensagem de erro do repositório:
+
+```ts
+import { Optional } from './src';
+
+class UserRepository {
+  async restore(id: string): Promise<Optional<UserModel>> {
+    const result = await this.orm
+      .select()
+      .from(userTable)
+      .where(eq(userTable.id, id));
+
+    const row = result[0] ?? null;
+    const model = row ? new UserModel().fromModel(row) : null;
+    return Optional.ofNullable(model);
+  }
+}
+
+const user = await repo.restore('1').orElseThrow('Usuario nao encontrado');
+const userByEmail = await repo.restoreByEmail('a@b.com').orElseNull();
+```
 
 ## Exemplos
 

@@ -13,9 +13,9 @@ export type ValidationErrorOptions = {
 
 export async function validateWithClassValidator<T extends object>(
   dtoClass: new () => T,
-  input: T,
+  input: Record<string, any>,
   options: ValidationErrorOptions = {}
-): Promise<T> {
+): Promise<T & Record<string, any>> {
   const instance = plainToInstance(dtoClass, input)
   restoreExtraneousInput(instance, input, dtoClass)
   const validatorOptions: ValidatorOptions = {
@@ -51,7 +51,7 @@ function flattenErrors(errors: ValidationError[], parentPath = ''): ValidationEr
 
 function restoreExtraneousInput<T extends object>(
   instance: T,
-  input: T,
+  input: Record<string, any>,
   dtoClass: new () => T
 ) {
   if (!input || typeof input !== 'object') return
