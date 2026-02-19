@@ -25,12 +25,10 @@ export type RepositoryRemoveBy<T> = {
 };
 
 export type RepositoryRestoreBy<
-    TKeys,
-    TResult = TKeys extends Entity ? TKeys : Entity,
-    TOptional extends boolean = false
+    TKeys
 > = {
     [K in keyof TKeys & string as `restoreBy${Capitalize<K>}`]:
-        (value: TKeys[K]) => Promise<MaybeOptional<TResult, TOptional>>;
+        (value: TKeys[K]) => Promise<any>;
 };
 
 export type RepositoryExistsBy<T> = {
