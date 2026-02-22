@@ -347,4 +347,79 @@ describe('HookBefore/HookAfter', () => {
     await expect(useCase.execute()).rejects.toThrow('boom');
     expect(console.log).toHaveBeenCalledWith('SaveAfter executed');
   });
+
+  it('should run HookAfter after decorator use cases when after is decorator', async () => {
+    class SaveAfter extends AfterHook<void> {
+      async use() {
+        console.log('SaveAfter executed');
+      }
+    }
+
+    @HookAfter(SaveAfter, { after: 'decorator' })
+    @DecorateUseCase({
+      useCase: MockUseCaseA
+    })
+    class DecoratedUseCase extends OriginalUseCase {}
+
+    const useCase = new DecoratedUseCase({
+      data: { value: 'test-value' }
+    });
+
+    await useCase.execute();
+
+    const calls = (console.log as jest.Mock).mock.calls;
+    expect(calls[0][0]).toBe('MockUseCaseA executed with data:');
+    expect(calls[1][0]).toBe('SaveAfter executed');
+    expect(calls[2][0]).toBe('OriginalUseCase executed with data:');
+  });
+
+  it('should run HookAfter after main use case when after is main', async () => {
+    class SaveAfter extends AfterHook<void> {
+      async use() {
+        console.log('SaveAfter executed');
+      }
+    }
+
+    @HookAfter(SaveAfter, { after: 'main' })
+    @DecorateUseCase({
+      useCase: MockUseCaseA
+    })
+    class DecoratedUseCase extends OriginalUseCase {}
+
+    const useCase = new DecoratedUseCase({
+      data: { value: 'test-value' }
+    });
+
+    await useCase.execute();
+
+    const calls = (console.log as jest.Mock).mock.calls;
+    expect(calls[0][0]).toBe('MockUseCaseA executed with data:');
+    expect(calls[1][0]).toBe('OriginalUseCase executed with data:');
+    expect(calls[2][0]).toBe('SaveAfter executed');
+  });
+
+  it('should default HookAfter to run after the full flow regardless of decorator order', async () => {
+    class SaveAfter extends AfterHook<void> {
+      async use() {
+        console.log('SaveAfter executed');
+      }
+    }
+
+    @DecorateUseCase({
+      useCase: MockUseCaseA
+    })
+    @HookAfter(SaveAfter)
+    class DecoratedUseCase extends OriginalUseCase {}
+
+    const useCase = new DecoratedUseCase({
+      data: { value: 'test-value' }
+    });
+
+    await useCase.execute();
+
+    const calls = (console.log as jest.Mock).mock.calls;
+    expect(calls[0][0]).toBe('MockUseCaseA executed with data:');
+    expect(calls[1][0]).toBe('OriginalUseCase executed with data:');
+    expect(calls[2][0]).toBe('SaveAfter executed');
+  });
 });

@@ -24,9 +24,11 @@ type UseCaseConstructor = new (...args: any[]) => UseCase<any, any>;
 
 type HookConstructor = new (...args: any[]) => Hook<any, any>;
 type HookPosition = 'before' | 'after';
+type HookAfterStage = 'decorator' | 'main';
 
 interface HookOptions {
 	runOnError?: boolean;
+	after?: HookAfterStage;
 }
 
 interface DecorateUseCaseOptions {
@@ -38,6 +40,7 @@ interface HookMetadata {
 	hookClass: HookConstructor;
 	position: HookPosition;
 	runOnError?: boolean;
+	after?: HookAfterStage;
 }
 
 interface HookEntry {
@@ -88,7 +91,7 @@ function ensureHookedExecution<T extends UseCaseConstructor>(target: T): T {
 		}
 
 		afterHook.useIfUnset((this as any).data);
-		await afterHook.notifyAfter(!!originalError);
+		await afterHook.notifyAfter(!!originalError, 'main');
 
 		if (originalError) {
 			throw originalError;
@@ -156,8 +159,12 @@ class HookManager {
 		}
 	}
 
-	async notifyAfter(onError: boolean) {
+	async notifyAfter(onError: boolean, stage: HookAfterStage = 'main') {
 		if (!this.entry || this.position !== 'after' || this.entry.metadata.position !== 'after') {
+			return;
+		}
+		const hookStage = this.entry.metadata.after ?? 'main';
+		if (hookStage !== stage) {
 			return;
 		}
 		if (onError && !this.entry.metadata.runOnError) {
@@ -222,7 +229,7 @@ function buildUseCaseInstances(
 export function DecorateUseCase(options: DecorateUseCaseOptions) {
 	return <T extends UseCaseConstructor>(target: T) => {
 		const stateKey = Symbol('decoratorUseCases');
-		return class extends target {
+		const decorated = class extends target {
 			constructor(...args: any[]) {
 				super(...args);
 
@@ -238,12 +245,31 @@ export function DecorateUseCase(options: DecorateUseCaseOptions) {
 					original: () => Promise<any>;
 				};
 				
-				for (const useCase of state.useCases) {
-					await useCase.execute();
+				let decoratorError: unknown;
+				try {
+					for (const useCase of state.useCases) {
+						await useCase.execute();
+					}
+				} catch (error) {
+					decoratorError = error;
+				}
+
+				const afterHook = (this as any).afterHook as HookManager;
+				afterHook.useIfUnset((this as any).data);
+				await afterHook.notifyAfter(!!decoratorError, 'decorator');
+
+				if (decoratorError) {
+					throw decoratorError;
 				}
 				return await state.original.call(this);
 			}
 		} as T;
+
+		const hooks = getHookMetadata(target);
+		if (hooks.length) {
+			(decorated as any)[USE_CASE_HOOKS] = [...hooks];
+		}
+		return ensureHookedExecution(decorated);
 	};
 }
 
@@ -256,7 +282,12 @@ export function HookBefore(hookClass: HookConstructor) {
 
 export function HookAfter(hookClass: HookConstructor, options: HookOptions = {}) {
 	return <T extends UseCaseConstructor>(target: T) => {
-		registerHook(target, { hookClass, position: 'after', runOnError: options.runOnError });
+		registerHook(target, {
+			hookClass,
+			position: 'after',
+			runOnError: options.runOnError,
+			after: options.after,
+		});
 		return ensureHookedExecution(target);
 	};
 }

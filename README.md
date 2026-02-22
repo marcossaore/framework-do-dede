@@ -341,6 +341,26 @@ class CreatePhotoUseCase extends UseCase<void, void> {
 }
 ```
 
+Quando `@DecorateUseCase` está presente, `HookAfter` roda **depois de todo o fluxo** por padrão
+(use cases decoradores + use case principal), independentemente da ordem dos decorators.
+
+```ts
+@DecorateUseCase({ useCase: AuditUseCase })
+@HookAfter(SavePhoto)
+class CreateUserUseCase extends UseCase<void, void> {}
+// ordem: AuditUseCase -> CreateUserUseCase -> SavePhoto
+```
+
+Se precisar executar o HookAfter **logo após os use cases decoradores** (antes do principal),
+defina `after: 'decorator'`.
+
+```ts
+@HookAfter(SavePhoto, { after: 'decorator' })
+@DecorateUseCase({ useCase: AuditUseCase })
+class CreateUserUseCase extends UseCase<void, void> {}
+// ordem: AuditUseCase -> SavePhoto -> CreateUserUseCase
+```
+
 ### Entity e Model
 
 Entities sao dominio puro. `Model` vive na borda e faz o mapeamento banco <-> model, alem de converter `Entity` <-> `Model`. Repositorios trabalham com `Model`, nao com `Entity`.
