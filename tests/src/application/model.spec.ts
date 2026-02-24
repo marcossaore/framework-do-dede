@@ -76,6 +76,25 @@ describe('Model', () => {
     });
   });
 
+  it('omits id when ignoreId is true', () => {
+    const modelInstance = new UserModel().fromModel({ id: 'u-3', name_test: 'Luna', role: 'admin' });
+
+    expect(modelInstance.toModel(true)).toEqual({
+      name_test: 'Luna',
+      role: 'admin'
+    });
+  });
+
+  it('renames id when ignoreId is true and namedId is provided', () => {
+    const modelInstance = new UserModel().fromModel({ id: 'u-3', name_test: 'Luna', role: 'admin' });
+
+    expect(modelInstance.toModel(true, 'uuid')).toEqual({
+      uuid: 'u-3',
+      name_test: 'Luna',
+      role: 'admin'
+    });
+  });
+
   it('omits internal metadata fields from toModel', () => {
     const modelInstance = new UserModel().fromModel({ id: 'u-4', name_test: 'Luna' });
     (modelInstance as any).columns = [

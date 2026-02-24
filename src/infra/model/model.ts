@@ -25,10 +25,11 @@ export abstract class Model<TEntity extends Entity = Entity> extends RepositoryM
 
   public abstract fromEntity(entity: TEntity): this;
 
-  toModel(): Record<string, any> {
+  toModel(ignoreId = false, namedId?: string): Record<string, any> {
     const record: Record<string, any> = {};
     const columns = this.columns ?? [];
     const mappedProperties = new Set<string>();
+    const idColumn = columns.find((column) => column.property === "id")?.column ?? "id";
     for (const column of columns) {
       record[column.column] = this[column.property];
       mappedProperties.add(column.property);
@@ -41,6 +42,13 @@ export abstract class Model<TEntity extends Entity = Entity> extends RepositoryM
         continue;
       }
       record[property] = this[property];
+    }
+    const idValue = (this as any).id ?? record[idColumn];
+    if (namedId && idValue !== undefined) {
+      record[namedId] = idValue;
+    }
+    if (ignoreId) {
+      delete record[idColumn];
     }
     return record;
   }
