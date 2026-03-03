@@ -25,6 +25,13 @@ export interface Tracer<R> {
    trace(data: TracerData): R
 }
 
+export type TracerFromContainer = {
+    fromContainer: true
+    token: string
+}
+
+export const DEFAULT_TRACER_TOKEN = 'Tracer'
+
 export interface Input<T, K = any> {
     data: T
     context?: K
@@ -39,12 +46,16 @@ export function Controller(basePath: string = '/') {
     };
 }
 
-export function Tracing<R>(tracer: Tracer<R>) {
+export function Tracing<R>(tracer?: Tracer<R>) {
     return function (target: any, propertyKey?: string) {
+        const tracerMetadata = tracer ?? {
+            fromContainer: true,
+            token: DEFAULT_TRACER_TOKEN
+        };
         if (!propertyKey) {
-            Reflect.defineMetadata('tracer', tracer, target);
+            Reflect.defineMetadata('tracer', tracerMetadata, target);
         } else {
-            Reflect.defineMetadata('tracer', tracer, target, propertyKey);
+            Reflect.defineMetadata('tracer', tracerMetadata, target, propertyKey);
         }
     };
 }

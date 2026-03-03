@@ -1,6 +1,8 @@
 import ControllerHandler from '@/http/controller.handler';
 import { Controller, Get, Middleware, Post, UseMiddleware, UseMiddlewares, Version, PresetIgnore } from '@/application';
+import { Tracer, TracerData, Tracing } from '@/application/controller';
 import HttpServer, { HttpServerParams } from '@/http/http-server';
+import { Container, setDefaultContainer } from '@/infra/di/registry';
 
 class FakeHttpServer extends HttpServer {
   public registrations: { params: HttpServerParams; handler: CallableFunction }[] = [];
@@ -28,6 +30,10 @@ class FakeHttpServer extends HttpServer {
     return;
   }
 }
+
+beforeEach(() => {
+  setDefaultContainer(new Container());
+});
 
 describe('ControllerHandler middleware resolution', () => {
   class AuthMiddleware implements Middleware {
@@ -165,6 +171,120 @@ describe('ControllerHandler middleware resolution', () => {
       'Content-Disposition': 'attachment; filename="file.bin"',
       'Cache-Control': 'public, max-age=31536000'
     });
+  });
+
+  it('resolves tracer from container when @Tracing() is used without args', () => {
+    class TracerMock implements Tracer<void> {
+      trace(_: TracerData): void {}
+    }
+
+    const container = new Container();
+    container.load('Tracer', new TracerMock());
+    setDefaultContainer(container);
+
+    @Controller('/users')
+    class UserController {
+      @Tracing()
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const handler = Object.create(ControllerHandler.prototype) as ControllerHandler;
+    const routes = (handler as any).registryControllers([UserController]);
+
+    expect(routes[0].handler.tracer).toBeInstanceOf(TracerMock);
+  });
+
+  it('keeps explicit tracer instance when @Tracing(new Tracer()) is used', () => {
+    class TracerMock implements Tracer<void> {
+      trace(_: TracerData): void {}
+    }
+
+    @Controller('/users')
+    class UserController {
+      @Tracing(new TracerMock())
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const handler = Object.create(ControllerHandler.prototype) as ControllerHandler;
+    const routes = (handler as any).registryControllers([UserController]);
+
+    expect(routes[0].handler.tracer).toBeInstanceOf(TracerMock);
+  });
+
+  it('throws when @Tracing() is used and Tracer is not in container', () => {
+    setDefaultContainer(new Container());
+
+    @Controller('/users')
+    class UserController {
+      @Tracing()
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const handler = Object.create(ControllerHandler.prototype) as ControllerHandler;
+    expect(() => (handler as any).registryControllers([UserController])).toThrow('Tracer not found in container: Tracer');
+  });
+
+  it('resolves tracer for all routes when tracer option is enabled', () => {
+    class TracerMock implements Tracer<void> {
+      trace(_: TracerData): void {}
+    }
+
+    const container = new Container();
+    container.load('Tracer', new TracerMock());
+    setDefaultContainer(container);
+
+    @Controller('/users')
+    class UserController {
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, [UserController], { tracer: true });
+
+    expect(server.registrations[0].params.handler.tracer).toBeInstanceOf(TracerMock);
+  });
+
+  it('throws when tracer option is enabled and Tracer is not in container', () => {
+    setDefaultContainer(new Container());
+
+    @Controller('/users')
+    class UserController {
+      @Get({ path: '/list' })
+      list() {}
+    }
+
+    const server = new FakeHttpServer();
+    expect(() => new ControllerHandler(server, [UserController], { tracer: true }))
+      .toThrow('Tracer not found in container: Tracer');
+  });
+
+  it('does not leak method tracer to other methods without tracing metadata', () => {
+    class TracerMock implements Tracer<void> {
+      trace(_: TracerData): void {}
+    }
+
+    @Controller('/users')
+    class UserController {
+      @Tracing(new TracerMock())
+      @Get({ path: '/a' })
+      a() {}
+
+      @Get({ path: '/b' })
+      b() {}
+    }
+
+    const handler = Object.create(ControllerHandler.prototype) as ControllerHandler;
+    const routes = (handler as any).registryControllers([UserController]);
+
+    const routeA = routes.find((route: HttpServerParams) => route.route.endsWith('/a'));
+    const routeB = routes.find((route: HttpServerParams) => route.route.endsWith('/b'));
+
+    expect(routeA?.handler.tracer).toBeInstanceOf(TracerMock);
+    expect(routeB?.handler.tracer).toBeUndefined();
   });
 });
 

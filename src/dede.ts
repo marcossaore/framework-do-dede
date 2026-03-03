@@ -14,7 +14,8 @@ export type Options = {
     framework: {
         use: 'elysia' | 'express',
         port?: number,
-        middlewares?: CallableFunction[]
+        middlewares?: CallableFunction[],
+        tracer?: boolean
     },
     controllers?: any[],
     registries: Register[],
@@ -36,7 +37,8 @@ export class Dede {
         private readonly framework: {
             use: 'elysia' | 'express',
             port?: number,
-            middlewares?: CallableFunction[]
+            middlewares?: CallableFunction[],
+            tracer?: boolean
         },
         private readonly defaultServerError?: string,
         private readonly container: Container = DefaultContainer,
@@ -78,7 +80,11 @@ export class Dede {
 
     registerControllers(controllers: any[]) {
         if (this.controllersRegistered) return;
-        new ControllerHandler(this.httpServer, controllers, { prefix: this.prefix, version: this.version });
+        new ControllerHandler(this.httpServer, controllers, {
+            prefix: this.prefix,
+            version: this.version,
+            tracer: this.framework.tracer
+        });
         this.controllersRegistered = true;
     }
 

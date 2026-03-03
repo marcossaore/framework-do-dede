@@ -274,6 +274,20 @@ describe('Controller', () => {
         expect(Reflect.getMetadata('tracer', UserController)).toBeUndefined()
         expect(Reflect.getMetadata('tracer', UserController.prototype, 'test2')).toBeUndefined()
       });
+
+      it('should register tracer from container when @Tracing() has no args', () => {
+        @Controller('/users')
+        class UserController {
+          @Tracing()
+          @Get({ path: '/list' })
+          list() {}
+        }
+
+        expect(Reflect.getMetadata('tracer', UserController.prototype, 'list')).toEqual({
+          fromContainer: true,
+          token: 'Tracer'
+        });
+      });
     });
 
     describe('@Version', () => {

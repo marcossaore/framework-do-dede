@@ -1,11 +1,12 @@
 import HttpServer, { HttpServerParams, Request } from "@/http/http-server"
-import { Middleware, MiddlewareDefinition, Tracer } from "../application/controller"
+import { DEFAULT_TRACER_TOKEN, Middleware, MiddlewareDefinition, Tracer, TracerFromContainer } from "../application/controller"
 import type { ValidatorDefinition, ValidatorLike } from "@/interface/validation/validator"
 import { FrameworkError } from "@/http/errors/framework"
 import { HttpRequestMapper } from "@/interface/http/request-mapper"
 import { MiddlewareExecutor } from "@/interface/http/middleware-executor"
 import { HttpErrorMapper } from "@/interface/errors/http-error-mapper"
 import { validateWithClassValidator } from "@/interface/validation/class-validator"
+import { DefaultContainer } from "@/infra/di/registry"
 
 type Input = {
     headers: any
@@ -21,14 +22,16 @@ export default class ControllerHandler {
     private readonly errorMapper = new HttpErrorMapper();
     private readonly prefix?: string;
     private readonly version?: number;
+    private readonly tracerEnabled: boolean;
 
     constructor(
         httpServer: HttpServer,
         controllers: any[] = [],
-        options: { prefix?: string, version?: number } = {}
+        options: { prefix?: string, version?: number, tracer?: boolean } = {}
     ) {
         this.prefix = options.prefix;
         this.version = options.version;
+        this.tracerEnabled = options.tracer === true;
         for (const { handler, middlewares, validator, method, route, statusCode, params, query, headers, body, bodyFilter, responseType, useHeaders } of this.registryControllers(controllers)) {
             httpServer.register(
                 {
@@ -119,7 +122,8 @@ export default class ControllerHandler {
         for (const controller of controllersList) {
             const basePath = Reflect.getMetadata('basePath', controller);
             const methodNames = Object.getOwnPropertyNames(controller.prototype).filter(method => method !== 'constructor')
-            let tracer = Reflect.getMetadata('tracer', controller) || null;
+            const controllerTracerMetadata = Reflect.getMetadata('tracer', controller)
+                || (this.tracerEnabled ? { fromContainer: true, token: DEFAULT_TRACER_TOKEN } : null);
             const controllerVersion = Reflect.getMetadata('version', controller);
             const controllerPresetIgnore = Reflect.getMetadata('presetIgnore', controller) as { prefix: boolean, version: boolean } | undefined;
             const controllerMiddlewares: MiddlewareDefinition[] = Reflect.getMetadata('middlewares', controller) || [];
@@ -129,7 +133,9 @@ export default class ControllerHandler {
                 const methodMiddlewares: MiddlewareDefinition[] = Reflect.getMetadata('middlewares', controller.prototype, methodName) || [];
                 const middlewares: MiddlewareDefinition[] = [...controllerMiddlewares, ...methodMiddlewares];
                 const responseType = routeConfig.responseType || 'json';
-                tracer = Reflect.getMetadata('tracer', controller.prototype, methodName) || tracer as Tracer<void>;
+                const methodTracerMetadata = Reflect.getMetadata('tracer', controller.prototype, methodName);
+                const tracerMetadata = methodTracerMetadata || controllerTracerMetadata as Tracer<void> | TracerFromContainer | null;
+                const tracer = this.resolveTracer(tracerMetadata);
                 const methodVersion = Reflect.getMetadata('version', controller.prototype, methodName);
                 const methodPresetIgnore = Reflect.getMetadata('presetIgnore', controller.prototype, methodName) as { prefix: boolean, version: boolean } | undefined;
                 const presetIgnore = methodPresetIgnore ?? controllerPresetIgnore;
@@ -181,6 +187,34 @@ export default class ControllerHandler {
             throw new FrameworkError('Middleware must implement execute()');
         }
         return middleware;
+    }
+
+    private resolveTracer(tracer?: Tracer<void> | TracerFromContainer | null): Tracer<void> | undefined {
+        if (!tracer) return undefined;
+        if (this.isTracerFromContainer(tracer)) {
+            const token = tracer.token || DEFAULT_TRACER_TOKEN;
+            try {
+                const tracerDependency = DefaultContainer.inject(token);
+                if (!tracerDependency?.trace || typeof tracerDependency.trace !== 'function') {
+                    throw new FrameworkError('Tracer must implement trace()');
+                }
+                return tracerDependency;
+            } catch (error: any) {
+                throw new FrameworkError(`Tracer not found in container: ${token}`);
+            }
+        }
+        if (!tracer?.trace || typeof tracer.trace !== 'function') {
+            throw new FrameworkError('Tracer must implement trace()');
+        }
+        return tracer;
+    }
+
+    private isTracerFromContainer(value: unknown): value is TracerFromContainer {
+        return !!value
+            && typeof value === 'object'
+            && 'fromContainer' in value
+            && (value as any).fromContainer === true
+            && 'token' in value;
     }
 
     private buildRoute(baseRoute: string, version?: number, prefix?: string) {
