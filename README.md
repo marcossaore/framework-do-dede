@@ -111,8 +111,25 @@ Opções de rota (comuns):
 - `statusCode`: number
 - `params`, `query`, `headers`, `body`: array de strings no formato `campo|tipo`
 - `bodyFilter`: `"restrict" | "none"`
-- `responseType`: `"json" | "text" | "html"`
+- `responseType`: `"json" | "text" | "html" | "<mime>/<subtype>"`
+- `useHeaders`: objeto com headers de resposta (`Record<string, string>`)
 - `validator`: pode ser uma classe com decorators do `class-validator` **ou** um objeto com `validate(data)` (sync/async)
+
+Exemplo de resposta binária com headers customizados:
+
+```ts
+@Get({
+  path: '/download',
+  responseType: 'application/octet-stream',
+  useHeaders: {
+    'Content-Disposition': 'attachment; filename="report.bin"',
+    'Cache-Control': 'public, max-age=31536000'
+  }
+})
+async download() {
+  return Buffer.from([0x01, 0x02, 0x03]);
+}
+```
 
 Nota sobre `validator`:
 - Apenas propriedades com decorators do `class-validator` são transformadas pelo `class-transformer`.
@@ -253,6 +270,8 @@ class SecureController {
 
 Use `@Tracing` no controller ou em um metodo para capturar metadados de request.
 
+Modo explicito (legado, continua suportado):
+
 ```ts
 import { Tracing, Tracer, TracerData } from './src';
 
@@ -269,6 +288,34 @@ class TraceController {
   async get() { return { ok: true }; }
 }
 ```
+
+Modo via container:
+
+```ts
+import { Tracing } from './src';
+
+@Controller('/trace')
+class TraceController {
+  @Tracing()
+  @Get()
+  async get() { return { ok: true }; }
+}
+```
+
+Quando usar `@Tracing()`, o framework tenta resolver `Tracer` no container (`registries`).
+Se nao encontrar, lança exceção: `Tracer not found in container: Tracer`.
+
+Tracing global sem decorator:
+
+```ts
+const app = await Dede.create({
+  framework: { use: 'express', port: 3000, tracer: true },
+  registries: [{ name: 'Tracer', classLoader: new ConsoleTracer() }]
+});
+```
+
+Com `framework.tracer: true`, todos os controllers/metodos passam a usar tracer por padrao.
+`@Tracing(new MeuTracer())` ainda sobrescreve por controller/metodo.
 
 ### UseCase e Decorators
 
@@ -464,13 +511,20 @@ class QueueService {
 Registre dependencias ao iniciar o server (usando o container padrão):
 
 ```ts
-import { Dede } from './src';
+import { Dede, Tracer, TracerData } from './src';
+
+class ConsoleTracer implements Tracer<void> {
+  trace(data: TracerData) {
+    console.log(data);
+  }
+}
 
 class UserRepository { /* ... */ }
 
 const app = await Dede.create({
-  framework: { use: 'express', port: 3000 },
+  framework: { use: 'express', port: 3000, tracer: true },
   registries: [
+    { name: 'Tracer', classLoader: new ConsoleTracer() },
     { name: 'UserRepository', classLoader: UserRepository }
   ]
 });
