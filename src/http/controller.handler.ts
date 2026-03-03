@@ -29,7 +29,7 @@ export default class ControllerHandler {
     ) {
         this.prefix = options.prefix;
         this.version = options.version;
-        for (const { handler, middlewares, validator, method, route, statusCode, params, query, headers, body, bodyFilter, responseType } of this.registryControllers(controllers)) {
+        for (const { handler, middlewares, validator, method, route, statusCode, params, query, headers, body, bodyFilter, responseType, useHeaders } of this.registryControllers(controllers)) {
             httpServer.register(
                 {
                     method,
@@ -41,7 +41,8 @@ export default class ControllerHandler {
                     headers,
                     middlewares,
                     validator,
-                    responseType
+                    responseType,
+                    useHeaders
                 },
                 async (input: Input) => {
                     let requestedAt = new Date();
@@ -127,7 +128,7 @@ export default class ControllerHandler {
                 const routeConfig = Reflect.getMetadata('route', controller.prototype, methodName);
                 const methodMiddlewares: MiddlewareDefinition[] = Reflect.getMetadata('middlewares', controller.prototype, methodName) || [];
                 const middlewares: MiddlewareDefinition[] = [...controllerMiddlewares, ...methodMiddlewares];
-                const responseType = Reflect.getMetadata('responseType', controller.prototype, methodName) || 'json';
+                const responseType = routeConfig.responseType || 'json';
                 tracer = Reflect.getMetadata('tracer', controller.prototype, methodName) || tracer as Tracer<void>;
                 const methodVersion = Reflect.getMetadata('version', controller.prototype, methodName);
                 const methodPresetIgnore = Reflect.getMetadata('presetIgnore', controller.prototype, methodName) as { prefix: boolean, version: boolean } | undefined;
@@ -143,6 +144,7 @@ export default class ControllerHandler {
                     params: routeConfig.params,
                     query: routeConfig.query,
                     headers: routeConfig.headers,
+                    useHeaders: routeConfig.useHeaders,
                     body: routeConfig.body,
                     bodyFilter: routeConfig.bodyFilter,
                     statusCode: routeConfig.statusCode,

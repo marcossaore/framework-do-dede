@@ -32,6 +32,7 @@ describe('Controller', () => {
             statusCode: 201,
             params: ['id'],
             query: ['filter'],
+            useHeaders: { 'Cache-Control': 'public, max-age=60' }
           }
         },
         {
@@ -71,6 +72,7 @@ describe('Controller', () => {
           params: config.params || undefined,
           query: config.query || undefined,
           headers: config.headers || undefined,
+          useHeaders: config.useHeaders || undefined,
           responseType: config.responseType || 'json'
         });
       });
@@ -120,6 +122,7 @@ describe('Controller', () => {
           params: undefined,
           query: undefined,
           headers: undefined,
+          useHeaders: undefined,
           responseType: 'json'
         });
       });

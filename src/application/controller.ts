@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { FrameworkError } from "@/http/errors/framework";
+import type { HttpResponseHeaders, HttpResponseType } from "@/http/http-server";
 import type { ValidatorDefinition } from "@/interface/validation/validator";
 
 export interface Middleware {
@@ -134,7 +135,7 @@ export function UseMiddlewares(middlewareClasses: MiddlewareDefinition[]) {
     };
 }
 
-export function Post(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorDefinition } = {}) {
+export function Post(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], useHeaders?: HttpResponseHeaders, body?: string[], bodyFilter?: BodyFilter, responseType?: HttpResponseType, validator?: ValidatorDefinition } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'post',
@@ -142,6 +143,7 @@ export function Post(config: { path?: string, statusCode?: number, params?: stri
             params: config.params,
             query: config.query,
             headers: config.headers,
+            useHeaders: config.useHeaders,
             body: config.body,
             bodyFilter: config.bodyFilter || 'none',
             statusCode: config.statusCode || 200,
@@ -151,7 +153,7 @@ export function Post(config: { path?: string, statusCode?: number, params?: stri
     };
 }
 
-export function Get(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], responseType?: 'json' | 'text' | 'html', validator?: ValidatorDefinition } = {}) {
+export function Get(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], useHeaders?: HttpResponseHeaders, responseType?: HttpResponseType, validator?: ValidatorDefinition } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'get',
@@ -159,6 +161,7 @@ export function Get(config: { path?: string, statusCode?: number, params?: strin
             params: config.params,
             query: config.query,
             headers: config.headers,
+            useHeaders: config.useHeaders,
             statusCode: config.statusCode || 200,
             responseType: config.responseType || 'json',
             validator: config.validator
@@ -166,7 +169,7 @@ export function Get(config: { path?: string, statusCode?: number, params?: strin
     };
 }
 
-export function Put(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorDefinition } = {}) {
+export function Put(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], useHeaders?: HttpResponseHeaders, body?: string[], bodyFilter?: BodyFilter, responseType?: HttpResponseType, validator?: ValidatorDefinition } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'put',
@@ -174,6 +177,7 @@ export function Put(config: { path?: string, statusCode?: number, params?: strin
             params: config.params,
             query: config.query,
             headers: config.headers,
+            useHeaders: config.useHeaders,
             body: config.body,
             bodyFilter: config.bodyFilter || 'none',
             statusCode: config.statusCode || 200,
@@ -183,7 +187,7 @@ export function Put(config: { path?: string, statusCode?: number, params?: strin
     };
 }
 
-export function Patch(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorDefinition } = {}) {
+export function Patch(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], useHeaders?: HttpResponseHeaders, body?: string[], bodyFilter?: BodyFilter, responseType?: HttpResponseType, validator?: ValidatorDefinition } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'patch',
@@ -191,6 +195,7 @@ export function Patch(config: { path?: string, statusCode?: number, params?: str
             params: config.params,
             query: config.query,
             headers: config.headers,
+            useHeaders: config.useHeaders,
             body: config.body,
             bodyFilter: config.bodyFilter || 'none',
             statusCode: config.statusCode || 200,
@@ -200,7 +205,7 @@ export function Patch(config: { path?: string, statusCode?: number, params?: str
     };
 }
 
-export function Delete(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], body?: string[], bodyFilter?: BodyFilter, responseType?: 'json' | 'text' | 'html', validator?: ValidatorDefinition } = {}) {
+export function Delete(config: { path?: string, statusCode?: number, params?: string[], query?: string[], headers?: string[], useHeaders?: HttpResponseHeaders, body?: string[], bodyFilter?: BodyFilter, responseType?: HttpResponseType, validator?: ValidatorDefinition } = {}) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         Reflect.defineMetadata('route', {
             method: 'delete',
@@ -208,6 +213,7 @@ export function Delete(config: { path?: string, statusCode?: number, params?: st
             params: config.params,
             query: config.query,
             headers: config.headers,
+            useHeaders: config.useHeaders,
             body: config.body,
             bodyFilter: config.bodyFilter || 'none',
             statusCode: config.statusCode || 200,

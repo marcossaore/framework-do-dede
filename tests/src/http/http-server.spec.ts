@@ -105,3 +105,123 @@ describe('HttpServer', () => {
         });
     });
 });
+
+describe('HttpServer response serialization', () => {
+    it('applies useHeaders and custom mime type on express', async () => {
+        let registeredHandler: CallableFunction | undefined;
+        const expressFramework = {
+            listen: jest.fn(),
+            use: jest.fn(),
+            get: jest.fn((_route: string, handler: CallableFunction) => {
+                registeredHandler = handler;
+            }),
+            post: jest.fn(),
+            put: jest.fn(),
+            delete: jest.fn(),
+            patch: jest.fn(),
+        };
+
+        class ExpressHttpServer extends HttpServer {
+            async close(): Promise<void> {
+                return;
+            }
+            constructor() {
+                super(expressFramework as any, 'express');
+            }
+        }
+
+        const server = new ExpressHttpServer();
+        server.register(
+            {
+                method: 'get',
+                route: '/download',
+                statusCode: 200,
+                handler: { instance: {}, methodName: 'download' },
+                responseType: 'application/octet-stream',
+                useHeaders: {
+                    'Content-Disposition': 'attachment; filename="file.bin"',
+                    'Cache-Control': 'public, max-age=31536000'
+                }
+            },
+            async () => Buffer.from([1, 2, 3])
+        );
+
+        const response = {
+            status: jest.fn().mockReturnThis(),
+            set: jest.fn().mockReturnThis(),
+            json: jest.fn().mockReturnThis(),
+            type: jest.fn().mockReturnThis(),
+            send: jest.fn().mockReturnThis()
+        };
+
+        await registeredHandler?.(
+            { headers: {}, query: {}, params: {}, body: {}, ip: '127.0.0.1' },
+            response
+        );
+
+        expect(response.status).toHaveBeenCalledWith(200);
+        expect(response.set).toHaveBeenCalledWith('Content-Disposition', 'attachment; filename="file.bin"');
+        expect(response.set).toHaveBeenCalledWith('Cache-Control', 'public, max-age=31536000');
+        expect(response.type).toHaveBeenCalledWith('application/octet-stream');
+        expect(response.send).toHaveBeenCalledWith(Buffer.from([1, 2, 3]));
+    });
+
+    it('applies useHeaders and custom mime type on elysia', async () => {
+        let registeredHandler: CallableFunction | undefined;
+        const elysiaFramework = {
+            server: {
+                requestIP: () => ({ address: '127.0.0.1' })
+            },
+            listen: jest.fn(),
+            use: jest.fn(),
+            get: jest.fn((_route: string, handler: CallableFunction) => {
+                registeredHandler = handler;
+            }),
+            post: jest.fn(),
+            put: jest.fn(),
+            delete: jest.fn(),
+            patch: jest.fn(),
+        };
+
+        class ElysiaHttpServer extends HttpServer {
+            async close(): Promise<void> {
+                return;
+            }
+            constructor() {
+                super(elysiaFramework as any, 'elysia');
+            }
+        }
+
+        const server = new ElysiaHttpServer();
+        server.register(
+            {
+                method: 'get',
+                route: '/download',
+                statusCode: 200,
+                handler: { instance: {}, methodName: 'download' },
+                responseType: 'application/octet-stream',
+                useHeaders: {
+                    'Content-Disposition': 'attachment; filename="file.bin"',
+                    'Cache-Control': 'public, max-age=31536000'
+                }
+            },
+            async () => Buffer.from([1, 2, 3])
+        );
+
+        const set = { status: 0, headers: {} as Record<string, string> };
+        const output = await registeredHandler?.({
+            headers: {},
+            set,
+            query: {},
+            params: {},
+            body: {},
+            request: {}
+        });
+
+        expect(set.status).toBe(200);
+        expect(set.headers['Content-Disposition']).toBe('attachment; filename="file.bin"');
+        expect(set.headers['Cache-Control']).toBe('public, max-age=31536000');
+        expect(set.headers['content-type']).toBe('application/octet-stream');
+        expect(output).toEqual(Buffer.from([1, 2, 3]));
+    });
+});

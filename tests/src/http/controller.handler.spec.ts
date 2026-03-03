@@ -142,6 +142,30 @@ describe('ControllerHandler middleware resolution', () => {
     expect(middlewares[1]).toBe(instance);
     expect(middlewares[2]).toBeInstanceOf(AuthMiddleware);
   });
+
+  it('maps responseType and useHeaders from route metadata', () => {
+    @Controller('/files')
+    class FileController {
+      @Get({
+        path: '/download',
+        responseType: 'application/octet-stream',
+        useHeaders: {
+          'Content-Disposition': 'attachment; filename="file.bin"',
+          'Cache-Control': 'public, max-age=31536000'
+        }
+      })
+      download() {}
+    }
+
+    const handler = Object.create(ControllerHandler.prototype) as ControllerHandler;
+    const routes = (handler as any).registryControllers([FileController]);
+
+    expect(routes[0].responseType).toBe('application/octet-stream');
+    expect(routes[0].useHeaders).toEqual({
+      'Content-Disposition': 'attachment; filename="file.bin"',
+      'Cache-Control': 'public, max-age=31536000'
+    });
+  });
 });
 
 describe('ControllerHandler multipart form-data normalization', () => {

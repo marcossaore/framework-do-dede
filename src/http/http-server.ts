@@ -10,6 +10,8 @@ export type Request = {
 export type HttpStatusCode = 200 | 201 | 204 | 401 | 403 | 404 | 409 | 422 | 500
 
 export type AllowedMethods = 'get' | 'post' | 'put' | 'delete' | 'patch'
+export type HttpResponseType = 'json' | 'text' | 'html' | `${string}/${string}`
+export type HttpResponseHeaders = Record<string, string>
 
 export type HttpServerParams = {
     method: AllowedMethods,
@@ -19,7 +21,7 @@ export type HttpServerParams = {
         methodName: string,
         tracer?: Tracer<any>
     },
-    responseType: 'json' | 'text' | 'html'
+    responseType: HttpResponseType
     middlewares?: Middleware[],
     validator?: ValidatorDefinition,
     statusCode?: number,
@@ -27,7 +29,8 @@ export type HttpServerParams = {
     query?: string[],
     body?: string[],
     bodyFilter?: 'none' | 'restrict',
-    headers?: string[]
+    headers?: string[],
+    useHeaders?: HttpResponseHeaders
 }
 
 type FrameworkWeb = {
@@ -101,6 +104,18 @@ export default abstract class HttpServer {
                 params,
                 body
             })
+            if (httpServerParams.useHeaders) {
+                for (const [headerName, headerValue] of Object.entries(httpServerParams.useHeaders)) {
+                    set.headers[headerName] = headerValue
+                }
+            }
+            if (httpServerParams.responseType === 'html') {
+                set.headers['content-type'] = 'text/html; charset=utf-8'
+            } else if (httpServerParams.responseType === 'text') {
+                set.headers['content-type'] = 'text/plain; charset=utf-8'
+            } else if (httpServerParams.responseType !== 'json') {
+                set.headers['content-type'] = httpServerParams.responseType
+            }
             return output
         })
     }
@@ -117,8 +132,15 @@ export default abstract class HttpServer {
                 params: request.params,
                 body: method !== 'get' ? request.body : {}
             })
-            const type = httpServerParams.responseType === 'html' ? 'text' : httpServerParams.responseType;
-            return res[type](output)
+            if (httpServerParams.useHeaders) {
+                for (const [headerName, headerValue] of Object.entries(httpServerParams.useHeaders)) {
+                    res.set(headerName, headerValue)
+                }
+            }
+            if (httpServerParams.responseType === 'json') return res.json(output)
+            if (httpServerParams.responseType === 'html') return res.type('text/html').send(output)
+            if (httpServerParams.responseType === 'text') return res.type('text/plain').send(output)
+            return res.type(httpServerParams.responseType).send(output)
         })
     };
 }
