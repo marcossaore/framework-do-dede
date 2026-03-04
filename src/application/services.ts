@@ -3,7 +3,7 @@ import 'reflect-metadata';
 
 export interface StorageGateway {
   save(file: File, path: string): Promise<void>
-  get(key: string): Promise<string>
+  get<T>(key: string): Promise<T>
   delete(key: string): Promise<boolean>
 }
 
