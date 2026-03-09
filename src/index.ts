@@ -1,6 +1,6 @@
 import { 
     // controller
-    Post, Get, Put, Delete, Patch, Controller, Input, Version, PresetIgnore,
+    Post, Get, Put, Delete, Patch, Controller, Input, Version, PresetIgnore, NoTracing,
     Middleware, UseMiddleware, UseMiddlewares,
     Tracer, Tracing, TracerData,
     // controller
@@ -35,7 +35,7 @@ import { RepositoryModel } from './protocols/model'
 import type { RepositoryCreate, RepositoryUpdate, RepositoryRemove, RepositoryRemoveBy, RepositoryExistsBy, RepositoryRestore, RepositoryRestoreBy, RepositoryNotExistsBy, RepositoryPagination } from './protocols/repository'
 
 export {
-    Controller, Post, Get, Put, Delete, Patch, Input, Version, PresetIgnore,
+    Controller, Post, Get, Put, Delete, Patch, Input, Version, PresetIgnore, NoTracing,
     Middleware, UseMiddleware, UseMiddlewares,
     Tracer, Tracing, TracerData,
 
