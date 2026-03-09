@@ -60,6 +60,16 @@ export function Tracing<R>(tracer?: Tracer<R>) {
     };
 }
 
+export function NoTracing() {
+    return function (target: any, propertyKey?: string) {
+        if (!propertyKey) {
+            Reflect.defineMetadata('noTracing', true, target);
+        } else {
+            Reflect.defineMetadata('noTracing', true, target, propertyKey);
+        }
+    };
+}
+
 export function Version(version: number) {
     return function (target: any, propertyKey?: string) {
         if (!Number.isInteger(version) || version <= 0) {

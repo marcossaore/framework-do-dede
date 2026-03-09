@@ -317,6 +317,26 @@ const app = await Dede.create({
 Com `framework.tracer: true`, todos os controllers/metodos passam a usar tracer por padrao.
 `@Tracing(new MeuTracer())` ainda sobrescreve por controller/metodo.
 
+Para ignorar tracing em um controller/rota especifica quando o tracing global estiver ligado, use `@NoTracing()`:
+
+```ts
+import { NoTracing } from './src';
+
+@NoTracing()
+@Controller('/health')
+class HealthController {
+  @Get('/ping')
+  async ping() { return { ok: true }; }
+}
+
+@Controller('/users')
+class UserController {
+  @NoTracing()
+  @Get('/public')
+  async publicRoute() { return { ok: true }; }
+}
+```
+
 ### UseCase e Decorators
 
 UseCase provê `data` e `context` do request.

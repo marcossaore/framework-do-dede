@@ -1,5 +1,5 @@
 import ControllerHandler from '@/http/controller.handler';
-import { Controller, Get, Middleware, Post, UseMiddleware, UseMiddlewares, Version, PresetIgnore } from '@/application';
+import { Controller, Get, Middleware, Post, UseMiddleware, UseMiddlewares, Version, PresetIgnore, NoTracing } from '@/application';
 import { Tracer, TracerData, Tracing } from '@/application/controller';
 import HttpServer, { HttpServerParams } from '@/http/http-server';
 import { Container, setDefaultContainer } from '@/infra/di/registry';
@@ -285,6 +285,61 @@ describe('ControllerHandler middleware resolution', () => {
 
     expect(routeA?.handler.tracer).toBeInstanceOf(TracerMock);
     expect(routeB?.handler.tracer).toBeUndefined();
+  });
+
+  it('disables global tracer for all controller routes when @NoTracing() is used on controller', () => {
+    class TracerMock implements Tracer<void> {
+      trace(_: TracerData): void {}
+    }
+
+    const container = new Container();
+    container.load('Tracer', new TracerMock());
+    setDefaultContainer(container);
+
+    @NoTracing()
+    @Controller('/users')
+    class UserController {
+      @Get({ path: '/a' })
+      a() {}
+
+      @Get({ path: '/b' })
+      b() {}
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, [UserController], { tracer: true });
+
+    expect(server.registrations[0].params.handler.tracer).toBeUndefined();
+    expect(server.registrations[1].params.handler.tracer).toBeUndefined();
+  });
+
+  it('disables global tracer only for annotated method when @NoTracing() is used on method', () => {
+    class TracerMock implements Tracer<void> {
+      trace(_: TracerData): void {}
+    }
+
+    const container = new Container();
+    container.load('Tracer', new TracerMock());
+    setDefaultContainer(container);
+
+    @Controller('/users')
+    class UserController {
+      @NoTracing()
+      @Get({ path: '/a' })
+      a() {}
+
+      @Get({ path: '/b' })
+      b() {}
+    }
+
+    const server = new FakeHttpServer();
+    new ControllerHandler(server, [UserController], { tracer: true });
+
+    const routeA = server.registrations.find(route => route.params.route.endsWith('/a'));
+    const routeB = server.registrations.find(route => route.params.route.endsWith('/b'));
+
+    expect(routeA?.params.handler.tracer).toBeUndefined();
+    expect(routeB?.params.handler.tracer).toBeInstanceOf(TracerMock);
   });
 });
 

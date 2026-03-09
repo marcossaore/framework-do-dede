@@ -123,6 +123,7 @@ export default class ControllerHandler {
         for (const controller of controllersList) {
             const basePath = Reflect.getMetadata('basePath', controller);
             const methodNames = Object.getOwnPropertyNames(controller.prototype).filter(method => method !== 'constructor')
+            const controllerNoTracing = Reflect.getMetadata('noTracing', controller) === true;
             const controllerTracerMetadata = Reflect.getMetadata('tracer', controller)
                 || (this.tracerEnabled ? { fromContainer: true, token: DEFAULT_TRACER_TOKEN } : null);
             const controllerVersion = Reflect.getMetadata('version', controller);
@@ -135,7 +136,10 @@ export default class ControllerHandler {
                 const middlewares: MiddlewareDefinition[] = [...controllerMiddlewares, ...methodMiddlewares];
                 const responseType = routeConfig.responseType || 'json';
                 const methodTracerMetadata = Reflect.getMetadata('tracer', controller.prototype, methodName);
-                const tracerMetadata = methodTracerMetadata || controllerTracerMetadata as Tracer<void> | TracerFromContainer | null;
+                const methodNoTracing = Reflect.getMetadata('noTracing', controller.prototype, methodName) === true;
+                const tracerMetadata = (methodNoTracing || controllerNoTracing)
+                    ? null
+                    : methodTracerMetadata || controllerTracerMetadata as Tracer<void> | TracerFromContainer | null;
                 const tracer = this.resolveTracer(tracerMetadata);
                 const methodVersion = Reflect.getMetadata('version', controller.prototype, methodName);
                 const methodPresetIgnore = Reflect.getMetadata('presetIgnore', controller.prototype, methodName) as { prefix: boolean, version: boolean } | undefined;

@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, UseMiddleware, UseMiddlewares, Post, Put, Middleware, Version, PresetIgnore } from '@/application';
+import { Controller, Delete, Get, UseMiddleware, UseMiddlewares, Post, Put, Middleware, Version, PresetIgnore, NoTracing } from '@/application';
 import { Tracer, TracerData, Tracing } from '@/application/controller';
 
 describe('Controller', () => {
@@ -287,6 +287,25 @@ describe('Controller', () => {
           fromContainer: true,
           token: 'Tracer'
         });
+      });
+
+      it('should register noTracing metadata on controller', () => {
+        @NoTracing()
+        @Controller('/users')
+        class UserController {}
+
+        expect(Reflect.getMetadata('noTracing', UserController)).toBe(true);
+      });
+
+      it('should register noTracing metadata on method', () => {
+        @Controller('/users')
+        class UserController {
+          @NoTracing()
+          @Get({ path: '/list' })
+          list() {}
+        }
+
+        expect(Reflect.getMetadata('noTracing', UserController.prototype, 'list')).toBe(true);
       });
     });
 

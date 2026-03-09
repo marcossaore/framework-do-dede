@@ -1,5 +1,5 @@
 import {
-    Controller, Post, Get, Put, Delete, Patch, UseMiddleware, UseMiddlewares, Tracing, Version, PresetIgnore,
+    Controller, Post, Get, Put, Delete, Patch, UseMiddleware, UseMiddlewares, Tracing, NoTracing, Version, PresetIgnore,
     type Middleware, type Input, type Tracer, type TracerData
 } from './controller';
 import {
@@ -20,6 +20,7 @@ export {
     Controller, UseMiddleware, UseMiddlewares,
     Post, Get, Put, Delete, Patch,
     Tracing,
+    NoTracing,
     Version,
     PresetIgnore,
     DecorateUseCase, UseCase,
