@@ -130,6 +130,7 @@ describe('HttpServer response serialization', () => {
             }
         }
 
+        const handler = jest.fn(async () => Buffer.from([1, 2, 3]));
         const server = new ExpressHttpServer();
         server.register(
             {
@@ -143,7 +144,7 @@ describe('HttpServer response serialization', () => {
                     'Cache-Control': 'public, max-age=31536000'
                 }
             },
-            async () => Buffer.from([1, 2, 3])
+            handler
         );
 
         const response = {
@@ -155,10 +156,23 @@ describe('HttpServer response serialization', () => {
         };
 
         await registeredHandler?.(
-            { headers: {}, query: {}, params: {}, body: {}, ip: '127.0.0.1' },
+            {
+                headers: {
+                    host: 'some-url.com',
+                    'x-forwarded-proto': 'https'
+                },
+                protocol: 'http',
+                query: {},
+                params: {},
+                body: {},
+                ip: '127.0.0.1'
+            },
             response
         );
 
+        expect(handler).toHaveBeenCalledWith(expect.objectContaining({
+            host: 'https://some-url.com'
+        }));
         expect(response.status).toHaveBeenCalledWith(200);
         expect(response.set).toHaveBeenCalledWith('Content-Disposition', 'attachment; filename="file.bin"');
         expect(response.set).toHaveBeenCalledWith('Cache-Control', 'public, max-age=31536000');
@@ -192,6 +206,7 @@ describe('HttpServer response serialization', () => {
             }
         }
 
+        const handler = jest.fn(async () => Buffer.from([1, 2, 3]));
         const server = new ElysiaHttpServer();
         server.register(
             {
@@ -205,19 +220,25 @@ describe('HttpServer response serialization', () => {
                     'Cache-Control': 'public, max-age=31536000'
                 }
             },
-            async () => Buffer.from([1, 2, 3])
+            handler
         );
 
         const set = { status: 0, headers: {} as Record<string, string> };
         const output = await registeredHandler?.({
-            headers: {},
+            headers: {
+                host: 'another-url.com.br',
+                'x-forwarded-proto': 'https'
+            },
             set,
             query: {},
             params: {},
             body: {},
-            request: {}
+            request: { url: 'http://localhost:3000/download' }
         });
 
+        expect(handler).toHaveBeenCalledWith(expect.objectContaining({
+            host: 'https://another-url.com.br'
+        }));
         expect(set.status).toBe(200);
         expect(set.headers['Content-Disposition']).toBe('attachment; filename="file.bin"');
         expect(set.headers['Cache-Control']).toBe('public, max-age=31536000');

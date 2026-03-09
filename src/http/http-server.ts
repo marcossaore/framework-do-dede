@@ -97,7 +97,20 @@ export default abstract class HttpServer {
         (this.framework[method])(route, async ({ headers, set, query, params, body, request }: any) => {
             headers['ip'] = (this.framework as any).server?.requestIP(request).address
             set.status = httpServerParams.statusCode ?? 200
-            const host = headers?.host ?? headers?.Host ?? 'localhost'
+            const protocol = String(headers?.['x-forwarded-proto'] ?? '').split(',')[0].trim()
+                || (typeof request?.url === 'string' && request.url.startsWith('https://') ? 'https' : 'http')
+            let hostFromUrl = ''
+            if (typeof request?.url === 'string' && request.url.includes('://')) {
+                try {
+                    hostFromUrl = new URL(request.url).host
+                } catch (error) {
+                    hostFromUrl = ''
+                }
+            }
+            const hostRaw = (headers?.host ?? headers?.Host ?? hostFromUrl) || 'localhost'
+            const host = String(hostRaw).startsWith('http://') || String(hostRaw).startsWith('https://')
+                ? String(hostRaw)
+                : `${protocol}://${hostRaw}`
             const output = await handler({
                 setStatus: (statusCode: HttpStatusCode) => set.status = statusCode,
                 host,
@@ -127,7 +140,13 @@ export default abstract class HttpServer {
         this.framework[method](route, async (request: any, res: any) => {
             request.headers['ip'] = request.ip
             res.status(httpServerParams.statusCode ?? 200)
-            const host = request.headers?.host ?? request.headers?.Host ?? request.hostname ?? 'localhost'
+            const protocol = String(request.headers?.['x-forwarded-proto'] ?? '').split(',')[0].trim()
+                || request.protocol
+                || 'http'
+            const hostRaw = request.headers?.host ?? request.headers?.Host ?? request.hostname ?? 'localhost'
+            const host = String(hostRaw).startsWith('http://') || String(hostRaw).startsWith('https://')
+                ? String(hostRaw)
+                : `${protocol}://${hostRaw}`
             const output = await handler({
                 setStatus: (statusCode: HttpStatusCode) => res.status(statusCode),
                 host,
