@@ -11,6 +11,7 @@ type RouteInputConfig = {
 }
 
 type HttpInput = {
+  host: string
   headers: any
   body: any
   params: any
@@ -28,7 +29,7 @@ export class HttpRequestMapper {
       filterBody = { ...normalizeBody, ...filterBody }
     }
     const mergedParams = { ...filterHeaders, ...filterParams, ...filterQueryParams, ...filterBody }
-    return { data: mergedParams, context: {} }
+    return { data: mergedParams, context: { host: input.host } }
   }
 
   private filter(params: any, filterParams?: string[]): any {

@@ -10,6 +10,7 @@ describe('HttpRequestMapper', () => {
   it('normalizes bracket notation and merges full body when bodyFilter is not restrict', () => {
     const request = mapper.map(
       {
+        host: 'api.example.com',
         headers: { trace: 'abc-123' },
         params: { id: '42' },
         query: { active: 'false' },
@@ -42,6 +43,7 @@ describe('HttpRequestMapper', () => {
   it('keeps only filtered body when bodyFilter is restrict', () => {
     const request = mapper.map(
       {
+        host: 'api.example.com',
         headers: { source: 'unit-test' },
         params: { id: '5' },
         query: { page: '2' },
@@ -70,6 +72,7 @@ describe('HttpRequestMapper', () => {
   it('casts values according to declared types', () => {
     const request = mapper.map(
       {
+        host: 'api.example.com',
         headers: { flag: true, ref: 123 },
         params: { count: '12a' },
         query: { price: '10.50', active: 'true' },

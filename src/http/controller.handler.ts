@@ -9,6 +9,7 @@ import { validateWithClassValidator } from "@/interface/validation/class-validat
 import { DefaultContainer } from "@/infra/di/registry"
 
 type Input = {
+    host: string
     headers: any
     body: any
     params: any

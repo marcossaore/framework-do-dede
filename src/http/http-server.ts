@@ -97,8 +97,10 @@ export default abstract class HttpServer {
         (this.framework[method])(route, async ({ headers, set, query, params, body, request }: any) => {
             headers['ip'] = (this.framework as any).server?.requestIP(request).address
             set.status = httpServerParams.statusCode ?? 200
+            const host = headers?.host ?? headers?.Host ?? 'localhost'
             const output = await handler({
                 setStatus: (statusCode: HttpStatusCode) => set.status = statusCode,
+                host,
                 headers,
                 query,
                 params,
@@ -125,8 +127,10 @@ export default abstract class HttpServer {
         this.framework[method](route, async (request: any, res: any) => {
             request.headers['ip'] = request.ip
             res.status(httpServerParams.statusCode ?? 200)
+            const host = request.headers?.host ?? request.headers?.Host ?? request.hostname ?? 'localhost'
             const output = await handler({
                 setStatus: (statusCode: HttpStatusCode) => res.status(statusCode),
+                host,
                 headers: request.headers,
                 query: request.query,
                 params: request.params,
